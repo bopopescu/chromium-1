@@ -49,6 +49,7 @@ namespace logging {
   BASE_EXPORT bool Context##PmLogEnabled(int level);
 #endif  // defined(USE_PMLOG)
 
+DECLARE_PMLOG_HEADER(Network)
 DECLARE_PMLOG_HEADER(Raw)
 
 }  // namespace logging
