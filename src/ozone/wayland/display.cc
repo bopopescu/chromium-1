@@ -228,6 +228,9 @@ intptr_t WaylandDisplay::GetNativeWindow(unsigned window_handle) {
   DCHECK(widget);
   widget->RealizeAcceleratedWidget();
 
+  VLOG(1) << "GetNativeWindow (id:" << window_handle << ", widget:" << widget
+          << " egl:" << (widget ? widget->egl_window() : 0);
+
   return reinterpret_cast<intptr_t>(widget->egl_window());
 }
 
@@ -341,6 +344,9 @@ void WaylandDisplay::InitializeDisplay() {
 WaylandWindow* WaylandDisplay::CreateAcceleratedSurface(unsigned w) {
   WaylandWindow* window = new WaylandWindow(w);
   widget_map_[w].reset(window);
+
+  VLOG(1) << "CreateAcceleratedSurface (id:" << w << ", widget:" << window
+          << ")";
 
   return window;
 }
