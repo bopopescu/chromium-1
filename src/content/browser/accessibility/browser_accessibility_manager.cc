@@ -334,6 +334,7 @@ void BrowserAccessibilityManager::OnAccessibilityEvents(
   if (delegate_ && !use_custom_device_scale_factor_for_testing_)
     device_scale_factor_ = delegate_->AccessibilityGetDeviceScaleFactor();
 
+  bool should_send_initial_focus = false;
   // Process all changes to the accessibility tree first.
   for (uint32_t index = 0; index < details.updates.size(); ++index) {
     if (!tree_->Unserialize(details.updates[index])) {
@@ -344,6 +345,13 @@ void BrowserAccessibilityManager::OnAccessibilityEvents(
         CHECK(false) << tree_->error();
       }
       return;
+    }
+
+    // Set focus to the root if it's not anywhere else.
+    // For webos, allow initial focus event only when tree root changed
+    if (!last_focused_node_ && !last_focused_manager_) {
+      last_focused_node_ = GetRoot();
+      should_send_initial_focus = true;
     }
   }
 
@@ -371,7 +379,11 @@ void BrowserAccessibilityManager::OnAccessibilityEvents(
   // Screen readers might not do the right thing if they're not aware of what
   // has focus, so always try that first. Nothing will be fired if the window
   // itself isn't focused or if focus hasn't changed.
-  GetRootManager()->FireFocusEventsIfNeeded();
+
+  // For webos, send initial focus when it's allowed
+  if (should_send_initial_focus &&
+      (!delegate_ || delegate_->AccessibilityViewHasFocus()))
+    GetRootManager()->FireFocusEventsIfNeeded();
 
   // Fire any events related to changes to the tree.
   for (auto targeted_event : *this) {
@@ -387,9 +399,15 @@ void BrowserAccessibilityManager::OnAccessibilityEvents(
   for (uint32_t index = 0; index < details.events.size(); index++) {
     const ui::AXEvent& event = details.events[index];
 
-    // We already handled all focus events above.
-    if (delegate_ && !delegate_->AccessibilityViewHasFocus())
-      continue;
+    if (event.event_type == ax::mojom::Event::kFocus ||
+        event.event_type == ax::mojom::Event::kBlur) {
+      if (should_send_initial_focus)
+        continue;
+
+      // We already handled all focus events above.
+      if (delegate_ && !delegate_->AccessibilityViewHasFocus())
+        continue;
+    }
 
     // Fire the native event.
     BrowserAccessibility* event_target = GetFromID(event.id);
