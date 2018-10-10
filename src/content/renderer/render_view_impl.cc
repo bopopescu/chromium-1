@@ -871,6 +871,10 @@ void RenderView::ApplyWebPreferences(const WebPreferences& prefs,
       static_cast<blink::WebEffectiveConnectionType>(
           prefs.network_quality_estimator_web_holdback));
 
+  settings->SetAccessibilityExploreByMouseEnabled(
+      settings->GetAccessibilityExploreByMouseEnabled() &&
+      prefs.accessibility_explore_by_mouse_enabled);
+
 #if defined(OS_ANDROID)
   settings->SetAllowCustomScrollbarInMainFrame(false);
   settings->SetAccessibilityFontScaleFactor(prefs.font_scale_factor);

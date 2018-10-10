@@ -233,6 +233,8 @@ struct CONTENT_EXPORT WebPreferences {
 
   bool text_autosizing_enabled;
 
+  bool accessibility_explore_by_mouse_enabled;
+
 #if defined(OS_ANDROID)
   float font_scale_factor;
   float device_scale_adjustment;
