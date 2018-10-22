@@ -307,6 +307,10 @@ void WebViewBase::RequestGetCookies(const std::string& url) {
   webview_->RequestGetCookies(url);
 }
 
+void WebViewBase::SetAdditionalContentsScale(float scale_x, float scale_y) {
+  webview_->SetAdditionalContentsScale(scale_x, scale_y);
+}
+
 void WebViewBase::SetHardwareResolution(int width, int height) {
   webview_->SetHardwareResolution(width, height);
 }

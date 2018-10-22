@@ -54,6 +54,8 @@ bool StubWindow::HasCapture() const {
 
 void StubWindow::ToggleFullscreen() {}
 
+void StubWindow::ToggleFullscreenWithSize(const gfx::Size&) {}
+
 void StubWindow::Maximize() {}
 
 void StubWindow::Minimize() {}

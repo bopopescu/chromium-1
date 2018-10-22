@@ -289,6 +289,7 @@ class VIEWS_EXPORT DesktopWindowTreeHostOzone
   // Owned by DesktopNativeWidgetAura.
 #if defined(OS_WEBOS)
   WebosDragDropClientWayland* drag_drop_client_;
+  gfx::Size contents_size_;
 #else
   DesktopDragDropClientWayland* drag_drop_client_;
 #endif

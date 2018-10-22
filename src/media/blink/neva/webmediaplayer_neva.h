@@ -52,6 +52,7 @@
 #include "url/gurl.h"
 
 namespace blink {
+enum class WebFullscreenVideoStatus;
 class WebLocalFrame;
 }
 
@@ -172,7 +173,6 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerNeva
   bool HasVideo() const override;
   bool HasAudio() const override;
 
-  bool SupportsFullscreen() const;
   void SetPreload(Preload) override;
 
   // Dimensions of the video.
@@ -247,6 +247,11 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerNeva
       bool flip_y,
       int already_uploaded_id,
       VideoFrameUploadMetadata* out_metadata) override;
+
+  void EnteredFullscreen() override;
+  void ExitedFullscreen() override;
+  void BecameDominantVisibleContent(bool is_dominant) override;
+  void SetIsEffectivelyFullscreen(blink::WebFullscreenVideoStatus) override;
 
   // WebMediaPlayerDelegate::Observer interface stubs
   void OnFrameHidden() override;
@@ -330,9 +335,6 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerNeva
   // size of the video frame).
   // Returns true if the geometry has been changed since the last call.
   bool UpdateBoundaryRectangle();
-
-  void EnteredFullscreen() override;
-  void ExitedFullscreen() override;
 #endif  // defined(VIDEO_HOLE)
 
   // Getter method to |client_|.

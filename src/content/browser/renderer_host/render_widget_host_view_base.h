@@ -599,6 +599,10 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
   void SetHardwareResolution(int width, int height);
 #endif
 
+#if defined(USE_NEVA_MEDIA)
+  void SetAdditionalContentsScale(float scale_x, float scale_y);
+#endif
+
   virtual void DidNavigate();
 
   // Called when the RenderWidgetHostImpl has be initialized.
@@ -740,6 +744,10 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
 
 #if defined(USE_NEVA_APPRUNTIME)
    gfx::Size hardware_resolution_;
+#endif
+
+#if defined(USE_NEVA_MEDIA)
+  gfx::PointF additional_contents_scale_;
 #endif
 
   uint32_t renderer_frame_number_ = 0;

@@ -44,6 +44,7 @@
 #include "media/blink/webmediaplayer_params.h"
 #include "media/blink/webmediaplayer_util.h"
 #include "net/base/mime_util.h"
+#include "third_party/blink/public/platform/web_fullscreen_video_status.h"
 #include "third_party/blink/public/platform/web_media_player_source.h"
 #include "third_party/blink/public/platform/web_rect.h"
 #include "third_party/blink/public/platform/web_size.h"
@@ -431,11 +432,33 @@ void WebMediaPlayerNeva::Pause() {
   }
 }
 
-// TODO(wanchang): need to propagate to MediaPlayerNeva
-bool WebMediaPlayerNeva::SupportsFullscreen() const {
+void WebMediaPlayerNeva::EnteredFullscreen() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
   FUNC_LOG(1);
-  return true;
+  if (!is_fullscreen_mode_) {
+    is_fullscreen_mode_ = true;
+    UpdateVideoHoleBoundary(true);
+  }
+}
+
+void WebMediaPlayerNeva::ExitedFullscreen() {
+  DCHECK(main_task_runner_->BelongsToCurrentThread());
+  FUNC_LOG(1);
+  if (is_fullscreen_mode_) {
+    is_fullscreen_mode_ = false;
+    UpdateVideoHoleBoundary(true);
+  }
+}
+
+void WebMediaPlayerNeva::BecameDominantVisibleContent(bool is_dominant) {
+  DCHECK(main_task_runner_->BelongsToCurrentThread());
+  FUNC_LOG(1) << "is_dominant=" << is_dominant;
+}
+
+void WebMediaPlayerNeva::SetIsEffectivelyFullscreen(
+    blink::WebFullscreenVideoStatus status) {
+  DCHECK(main_task_runner_->BelongsToCurrentThread());
+  FUNC_LOG(1) << "fs status=" << (int)status;
 }
 
 void WebMediaPlayerNeva::Seek(double seconds) {
@@ -1125,24 +1148,6 @@ bool WebMediaPlayerNeva::UpdateBoundaryRectangle() {
       gfx::Rect(rect.x(), rect.y(), rect.width(), rect.height());
 
   return true;
-}
-
-void WebMediaPlayerNeva::EnteredFullscreen() {
-  DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
-  if (!is_fullscreen_mode_) {
-    is_fullscreen_mode_ = true;
-    UpdateVideoHoleBoundary(true);
-  }
-}
-
-void WebMediaPlayerNeva::ExitedFullscreen() {
-  DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
-  if (is_fullscreen_mode_) {
-    is_fullscreen_mode_ = false;
-    UpdateVideoHoleBoundary(true);
-  }
 }
 
 #endif
