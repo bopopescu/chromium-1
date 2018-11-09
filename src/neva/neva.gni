@@ -84,6 +84,9 @@ declare_args() {
 
   # use code cache for local script resource
   use_filescheme_codecache = true
+
+  # Use v8 snapshot feature
+  use_neva_v8_snapshot = false
 }
 
 declare_args() {
