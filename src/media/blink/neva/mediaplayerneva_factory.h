@@ -30,6 +30,7 @@ class MediaPlayerNevaFactory {
  public:
   enum MediaPlayerType {
     MediaPlayerTypeNone,
+    MediaPlayerTypeCamera,
     MediaPlayerTypeUMS,
   };
 

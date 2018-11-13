@@ -60,6 +60,9 @@ void NevaMimeUtil::AddSupportedMediaFormats() {
   AddContainerWithCodecs("application/vnd.oipf.contentaccessdownload+xml",
                          webos_codecs, true);
 #endif
+#if defined(USE_GST_MEDIA)
+  AddContainerWithCodecs("service/webos-camera", webos_codecs, true);
+#endif
 }
 
 }  // namespace internal

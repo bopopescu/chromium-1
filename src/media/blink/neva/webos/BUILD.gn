@@ -34,6 +34,8 @@ source_set("webos") {
     sources += [
       "media_util.cc",
       "media_util.h",
+      "mediaplayer_camera.cc",
+      "mediaplayer_camera.h",
       "system_media_manager.h",
       "system_media_manager_gmp.cc",
       "system_media_manager_gmp.h",

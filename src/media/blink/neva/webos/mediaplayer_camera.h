@@ -1,4 +1,4 @@
-// Copyright 2017-2018 LG Electronics, Inc.
+// Copyright (c) 2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,44 +14,34 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_UMS_H_
-#define MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_UMS_H_
+#ifndef MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_CAMERA_H_
+#define MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_CAMERA_H_
 
-#include <map>
+#include <cstdint>
+#include <memory>
 #include <string>
 
-#include "base/macros.h"
 #include "base/memory/ref_counted.h"
-#include "base/message_loop/message_loop.h"
-#include "base/single_thread_task_runner.h"
+#include "base/memory/weak_ptr.h"
+#include "base/threading/thread.h"
 #include "base/time/time.h"
 #include "base/timer/timer.h"
-#include "content/public/renderer/render_frame_observer.h"
 #include "media/blink/neva/media_player_neva_interface.h"
 #include "media/blink/neva/webos/webos_mediaclient.h"
-#include "url/gurl.h"
 
-namespace blink {
-class WebFrame;
-}
-
-namespace gfx {
-class RectF;
-}
+class GURL;
 
 namespace media {
 
-class MediaPlayerUMS : public base::SupportsWeakPtr<MediaPlayerUMS>,
-                       public media::MediaPlayerNeva {
+class MediaPlayerCamera : public base::SupportsWeakPtr<MediaPlayerCamera>,
+                          public media::MediaPlayerNeva {
  public:
-  // Constructs a RendererMediaPlayerManager object for the |render_frame|.
-  explicit MediaPlayerUMS(MediaPlayerNevaClient*,
-                          const scoped_refptr<base::SingleThreadTaskRunner>&,
-                          const std::string& app_id);
-  ~MediaPlayerUMS() override;
+  explicit MediaPlayerCamera(
+      MediaPlayerNevaClient*,
+      const scoped_refptr<base::SingleThreadTaskRunner>& main_task_runner);
+  ~MediaPlayerCamera() override;
 
-  // media::RendererMediaBuiltinPlayerManagerInterface implementation
-  // Initializes a MediaPlayerAndroid object in browser process.
+  // media::MediaPlayerNeva implementation
   void Initialize(const bool is_video,
                   const double current_time,
                   const std::string& app_id,
@@ -64,58 +54,45 @@ class MediaPlayerUMS : public base::SupportsWeakPtr<MediaPlayerUMS>,
 
   // Starts the player.
   void Start() override;
-
   // Pauses the player.
   void Pause() override;
-
   // Performs seek on the player.
-  void Seek(const base::TimeDelta& time) override;
-
-  void SetRate(double rate) override;
-
+  void Seek(const base::TimeDelta& time) override {}
   // Sets the player volume.
-  void SetVolume(double volume) override;
-
+  void SetVolume(double volume) override {}
   // Sets the poster image.
-  void SetPoster(const GURL& poster) override;
+  void SetPoster(const GURL& poster) override {}
 
-  // bool IsSupportedBackwardTrickPlay() override;
-  void SetPreload(
-      Preload preload) override;  // TODO(wanchang): fix the type of preload
+  void SetRate(double rate) override {}
+  void SetPreload(Preload preload) override {}
   bool IsPreloadable(const std::string& content_media_option) override;
   bool HasVideo() override;
   bool HasAudio() override;
   bool SelectTrack(const MediaTrackType type, const std::string& id) override;
-  // gfx::Size NaturalVideoSize() override;
-  // double Duration() override;
-  // double CurrentTime() override;
   void SwitchToAutoLayout() override;
-  void SetDisplayWindow(const gfx::Rect&,
-                        const gfx::Rect&,
-                        bool fullScreen,
-                        bool forced = false) override;
+  void SetDisplayWindow(const gfx::Rect& out_rect,
+                        const gfx::Rect& in_rect,
+                        bool full_screen,
+                        bool forced) override;
   bool UsesIntrinsicSize() const override;
   std::string MediaId() const override;
-  bool HasAudioFocus() const override;
-  void SetAudioFocus(bool focus) override;
+  void Suspend(SuspendReason reason) override {}
+  void Resume() override {}
+  bool IsRecoverableOnResume() const override { return true; }
+  bool HasAudioFocus() const override { return false; }
+  void SetAudioFocus(bool focus) override {}
   bool HasVisibility() const override;
   void SetVisibility(bool) override;
-  void Suspend(SuspendReason reason) override;
-  void Resume() override;
   bool RequireMediaResource() const override;
-  bool IsRecoverableOnResume() const override;
-  void SetDisableAudio(bool) override;
-  // end of media::RendererMediaBuiltinPlayerManagerInterface
-  //-----------------------------------------------------------------
+  void SetDisableAudio(bool) override {}
 
  private:
-  // umediaclient callbacks
   void OnPlaybackStateChanged(bool playing);
   void OnStreamEnded();
-  void OnSeekDone(PipelineStatus status);
-  void OnError(PipelineStatus error);
+  void OnSeekDone(PipelineStatus status) {}
+  void OnError(PipelineStatus error) {}
   void OnBufferingState(WebOSMediaClient::BufferingState buffering_state);
-  void OnDurationChange();
+  void OnDurationChange() {}
   void OnVideoSizeChange();
   void OnVideoDisplayWindowChange();
   void OnAddAudioTrack(const std::vector<MediaTrackInfo>& audio_track_info);
@@ -123,39 +100,39 @@ class MediaPlayerUMS : public base::SupportsWeakPtr<MediaPlayerUMS>,
                        const std::string& kind,
                        const std::string& language,
                        bool enabled);
-  void UpdateUMSInfo(const std::string& detail);
-  void OnAudioFocusChanged();
-  void ActiveRegionChanged(const gfx::Rect& active_region);
-  void OnWaitingForDecryptionKey();
+  void OnUpdateUMSInfo(const std::string& detail);
+  void OnAudioFocusChanged() {}
+  void OnActiveRegionChanged(const gfx::Rect& active_region);
+  void OnWaitingForDecryptionKey() {}
   void OnEncryptedMediaInitData(const std::string& init_data_type,
                                 const std::vector<uint8_t>& init_data);
 
-  void OnTimeUpdateTimerFired();
-
   base::TimeDelta GetCurrentTime();
+  void OnTimeUpdateTimerFired();
 
   std::unique_ptr<WebOSMediaClient> umedia_client_;
   MediaPlayerNevaClient* client_;
-  bool paused_;
-  base::TimeDelta paused_time_;
-  double playback_rate_;
-  bool is_suspended_;
 
+  std::string app_id_;
+  GURL url_;
+  std::string mime_type_;
+  std::string camera_id_;
+
+  double playback_rate_;
+
+  bool is_video_offscreen_;
   bool fullscreen_;
   gfx::Rect display_window_out_rect_;
   gfx::Rect display_window_in_rect_;
   gfx::Rect active_video_region_;
   bool active_video_region_changed_;
 
-  bool is_video_offscreen_;
-
   base::RepeatingTimer time_update_timer_;
 
   scoped_refptr<base::SingleThreadTaskRunner> main_task_runner_;
-
-  DISALLOW_COPY_AND_ASSIGN(MediaPlayerUMS);
+  DISALLOW_COPY_AND_ASSIGN(MediaPlayerCamera);
 };
 
 }  // namespace media
 
-#endif  // MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_UMS_H_
+#endif  // MEDIA_BLINK_NEVA_WEBOS_MEDIAPLAYER_CAMERA_H_

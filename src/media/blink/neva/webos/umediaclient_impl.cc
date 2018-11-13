@@ -561,6 +561,10 @@ void UMediaClientImpl::DispatchPaused() {
 
   if (!playback_state_cb_.is_null())
     playback_state_cb_.Run(false);
+
+  if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null())
+    update_ums_info_cb_.Run(PlaybackNotificationToJson(
+        MediaId(), PlaybackNotification::NotifyPaused));
 }
 
 bool UMediaClientImpl::onSeekDone() {
@@ -1419,7 +1423,8 @@ bool UMediaClientImpl::IsRequiredUMSInfo() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
   if (media_transport_type_ == "DLNA" || media_transport_type_ == "HLS-LG" ||
       media_transport_type_ == "USB" || media_transport_type_ == "MIRACAST" ||
-      media_transport_type_ == "DPS" || use_umsinfo_)
+      media_transport_type_ == "DPS" || media_transport_type_ == "CAMERA" ||
+      use_umsinfo_)
     return true;
   return false;
 }
@@ -1535,6 +1540,8 @@ bool UMediaClientImpl::CheckAudioOutput(float playback_rate) {
 void UMediaClientImpl::LoadInternal() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
   AudioStreamClass stream_type = kMedia;
+  if (media_transport_type_ == "CAMERA")
+    stream_type = kCamera;
   if (use_pipeline_preload_ && !is_suspended_)
     NotifyForeground();
 
