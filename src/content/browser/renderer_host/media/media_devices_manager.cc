@@ -49,6 +49,10 @@ namespace content {
 
 namespace {
 
+#if defined(OS_WEBOS)
+const char kWebOSDefaultAudioDeviceId[] = "sysdefault:CARD=";
+#endif
+
 // Resolutions used if the source doesn't support capability enumeration.
 struct {
   uint16_t width;
@@ -781,6 +785,14 @@ void MediaDevicesManager::AudioDevicesEnumerated(
 
   MediaDeviceInfoArray snapshot;
   for (const media::AudioDeviceDescription& description : device_descriptions) {
+#if defined(OS_WEBOS)
+    if (type == MEDIA_DEVICE_TYPE_AUDIO_INPUT &&
+        description.unique_id.compare(0,
+                                      arraysize(kWebOSDefaultAudioDeviceId) - 1,
+                                      kWebOSDefaultAudioDeviceId) != 0) {
+      continue;
+    }
+#endif
     snapshot.emplace_back(description);
   }
   DevicesEnumerated(type, snapshot);
