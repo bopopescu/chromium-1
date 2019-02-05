@@ -183,7 +183,29 @@ void AppRuntimeBrowserContext::SetProxyServer(const std::string& ip,
                                               const std::string& port,
                                               const std::string& name,
                                               const std::string& password) {
-  url_request_context_factory_->SetProxyServer(ip, port, name, password);
+  std::string proxy_bypass_list;
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kNevaProxyBypassList)) {
+    proxy_bypass_list =
+        base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+            switches::kNevaProxyBypassList);
+  }
+
+  base::PostTaskWithTraits(
+      FROM_HERE, {content::BrowserThread::IO},
+      base::Bind(&AppRuntimeBrowserContext::SetProxyServerIO,
+                 base::Unretained(this), ip, port, name, password,
+                 proxy_bypass_list));
+}
+
+void AppRuntimeBrowserContext::SetProxyServerIO(
+    const std::string& ip,
+    const std::string& port,
+    const std::string& name,
+    const std::string& password,
+    const std::string& proxy_bypass_list) {
+  url_request_context_factory_->SetProxyServer(ip, port, name, password,
+                                               proxy_bypass_list);
 }
 
 void AppRuntimeBrowserContext::AppendExtraWebSocketHeader(

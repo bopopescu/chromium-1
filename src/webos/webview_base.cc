@@ -28,6 +28,7 @@
 #include "neva/app_runtime/common/app_runtime_user_agent.h"
 #include "neva/app_runtime/public/app_runtime_event.h"
 #include "neva/app_runtime/webview.h"
+#include "neva/app_runtime/webview_profile.h"
 #include "ui/display/display.h"
 #include "ui/display/screen.h"
 #include "webos/browser/webos_webview_renderer_state.h"
@@ -255,7 +256,8 @@ void WebViewBase::SetProxyServer(const std::string& proxyIp,
                                  const std::string& proxyPort,
                                  const std::string& proxyUsername,
                                  const std::string& proxyPassword) {
-  NOTIMPLEMENTED();
+  GetProfile()->SetProxyServer(proxyIp, proxyPort, proxyUsername,
+                               proxyPassword);
 }
 
 void WebViewBase::SetProxyServer(const ProxySettings& proxy_settings) {

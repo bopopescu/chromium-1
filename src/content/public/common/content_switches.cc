@@ -626,6 +626,14 @@ const char kMojoLocalStorage[]              = "mojo-local-storage";
 // signal to dismiss a splash screen.
 const char kNetworkQuietTimeout[] = "network-quiet-timeout";
 
+// Specifies a list of hosts for whom we bypass proxy settings and use direct
+// connections. Ignored if --proxy-auto-detect or --no-proxy-server are also
+// specified. This is a comma-separated list of bypass rules. See:
+// "net/proxy/proxy_bypass_rules.h" for the format of these rules.
+// Named after kNevaProxyBypassList instead of kProxyBypassList to avoid
+// name collision with chrome switches kProxyBypassList when using jumbo builds.
+const char kNevaProxyBypassList[] = "proxy-bypass-list";
+
 // Disables the use of a zygote process for forking child processes. Instead,
 // child processes will be forked and exec'd directly. Note that --no-sandbox
 // should also be used together with this flag because the sandbox needs the
