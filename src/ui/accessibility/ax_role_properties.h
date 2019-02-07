@@ -70,6 +70,9 @@ AX_EXPORT bool IsTableLike(const ax::mojom::Role role);
 // Returns true if the provided role belongs to a table or grid row.
 AX_EXPORT bool IsTableRow(ax::mojom::Role role);
 
+// Returns true if it's a text or line break node.
+AX_EXPORT bool IsTextOrLineBreak(ax::mojom::Role role);
+
 // Returns true if the provided role supports expand/collapse.
 AX_EXPORT bool SupportsExpandCollapse(const ax::mojom::Role role);
 
