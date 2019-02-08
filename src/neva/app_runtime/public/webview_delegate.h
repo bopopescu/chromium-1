@@ -55,6 +55,7 @@ class WebViewDelegate {
   virtual void DidFirstImagePaint() {}
   virtual void DidFirstMeaningfulPaint() {}
   virtual void DidNonFirstMeaningfulPaint() {}
+  virtual void DidDropAllPeerConnections(DropPeerConnectionReason reason) = 0;
 
   // Pluggable delegate
   virtual void SendCookiesForHostname(const std::string& cookies) {}

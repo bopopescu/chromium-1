@@ -29,6 +29,7 @@
 #include "content/common/frame_replication_state.h"
 #include "content/common/navigation_gesture.h"
 #include "content/public/common/common_param_traits.h"
+#include "content/public/common/drop_peer_connection_reason.h"
 #include "content/public/common/menu_item.h"
 #include "content/public/common/page_state.h"
 #include "content/public/common/page_zoom.h"
@@ -221,6 +222,10 @@ IPC_MESSAGE_ROUTED1(ViewMsg_PpapiBrokerPermissionResult,
 // Sent by WAM to replace url for all frames of the page usually of
 // container application
 IPC_MESSAGE_ROUTED1(ViewMsg_ReplaceBaseURL, GURL)
+// Sent by WAM to drop all webRTC communications when application
+// goes background.
+IPC_MESSAGE_ROUTED1(ViewMsg_DropAllPeerConnections,
+                    content::DropPeerConnectionReason)
 #endif
 
 // Sent to the main-frame's view to request performing a page scale animation
@@ -283,6 +288,13 @@ IPC_MESSAGE_ROUTED2(ViewHostMsg_GoToEntryAtOffset,
 // Notifies that the preferred size of the content changed.
 IPC_MESSAGE_ROUTED1(ViewHostMsg_DidContentsPreferredSizeChange,
                     gfx::Size /* pref_size */)
+
+#if defined(USE_NEVA_APPRUNTIME)
+// Sent in reply to ViewMsg_DropAllPeerConnections, but also
+// if the drop has been caused from any other reason.
+IPC_MESSAGE_ROUTED1(ViewHostMsg_DidDropAllPeerConnections,
+                    content::DropPeerConnectionReason /* reason */)
+#endif  // defined(USE_NEVA_APPRUNTIME)
 
 #if BUILDFLAG(ENABLE_PLUGINS)
 // A renderer sends this to the browser process when it wants to access a PPAPI

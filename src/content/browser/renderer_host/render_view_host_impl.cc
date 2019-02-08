@@ -1015,4 +1015,8 @@ std::vector<viz::SurfaceId> RenderViewHostImpl::CollectSurfaceIdsForEviction() {
   return ids;
 }
 
+void RenderViewHostImpl::DropAllPeerConnections(
+    DropPeerConnectionReason reason) {
+  Send(new ViewMsg_DropAllPeerConnections(GetRoutingID(), reason));
+}
 }  // namespace content

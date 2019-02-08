@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "neva/app_runtime/browser/app_runtime_webview_host_impl.h"
+#include "neva/app_runtime/public/app_runtime_constants.h"
 #include "neva/app_runtime/public/webview_delegate.h"
 
 namespace app_runtime {

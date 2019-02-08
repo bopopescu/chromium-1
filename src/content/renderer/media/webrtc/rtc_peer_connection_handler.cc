@@ -1881,6 +1881,10 @@ void RTCPeerConnectionHandler::OnWebRtcEventLogWrite(
   }
 }
 
+bool RTCPeerConnectionHandler::IsOpened() const {
+  return !is_closed_;
+}
+
 blink::WebRTCDataChannelHandler* RTCPeerConnectionHandler::CreateDataChannel(
     const blink::WebString& label,
     const blink::WebRTCDataChannelInit& init) {

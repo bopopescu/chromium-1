@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "neva/wam_demo/wam_demo_webapp.h"
-
 #include "base/strings/string_number_conversions.h"
 
 namespace wam_demo {
@@ -123,6 +122,8 @@ void BlinkView::NavigationHistoryChanged() {
             << "(): Navigation history changed notification is delivered";
 }
 
+void BlinkView::DidDropAllPeerConnections(
+    app_runtime::DropPeerConnectionReason reason) {}
 void BlinkView::Close() {}
 
 bool BlinkView::DecidePolicyForResponse(bool is_main_frame,

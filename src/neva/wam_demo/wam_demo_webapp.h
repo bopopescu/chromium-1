@@ -19,6 +19,7 @@
 
 #include "base/time/time.h"
 #include "content/public/common/main_function_params.h"
+#include "neva/app_runtime/public/app_runtime_constants.h"
 #include "neva/app_runtime/public/injection_browser_control_handler.h"
 #include "neva/app_runtime/public/webapp_window_base.h"
 #include "neva/app_runtime/public/webview_base.h"
@@ -89,6 +90,7 @@ class BlinkView : public app_runtime::WebViewBase,
   void DidHistoryBackOnTopPage() override;
   void DidClearWindowObject() override;
   void DidSwapCompositorFrame() override;
+  void DidDropAllPeerConnections(app_runtime::DropPeerConnectionReason reason);
 
   // Additional methods for testing
   void SetMediaCapturePermission();

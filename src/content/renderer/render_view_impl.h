@@ -29,6 +29,7 @@
 #include "content/common/frame_message_enums.h"
 #include "content/public/common/browser_controls_state.h"
 #include "content/public/common/drop_data.h"
+#include "content/public/common/drop_peer_connection_reason.h"
 #include "content/public/common/page_zoom.h"
 #include "content/public/common/referrer.h"
 #include "content/public/common/renderer_preference_watcher.mojom.h"
@@ -210,6 +211,10 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
 
   void DidCommitProvisionalHistoryLoad();
 
+#if defined(USE_NEVA_APPRUNTIME)
+  // Common implementation for dropping all peer connections.
+  void DropAllPeerConnections(DropPeerConnectionReason reason);
+#endif
   // Registers a watcher to observe changes in the RendererPreferences.
   void RegisterRendererPreferenceWatcherForWorker(
       mojom::RendererPreferenceWatcherPtr watcher);
@@ -460,6 +465,7 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
   void OnMoveOrResizeStarted();
 #if defined(USE_NEVA_APPRUNTIME)
   void OnReplaceBaseURL(const GURL& newurl);
+  void OnDropAllPeerConnections(DropPeerConnectionReason reason);
 #endif
   void OnExitFullscreen();
   void OnSetHistoryOffsetAndLength(int history_offset, int history_length);

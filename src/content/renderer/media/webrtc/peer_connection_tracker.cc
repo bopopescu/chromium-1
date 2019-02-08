@@ -583,6 +583,22 @@ void PeerConnectionTracker::OnStopEventLog(int peer_connection_id) {
   }
 }
 
+void PeerConnectionTracker::DropAllConnections() {
+  DCHECK_CALLED_ON_VALID_THREAD(main_thread_);
+  for (auto& it : peer_connection_id_map_) {
+    it.first->CloseClientPeerConnection();
+  }
+}
+
+bool PeerConnectionTracker::HasOpenConnections() const {
+  DCHECK_CALLED_ON_VALID_THREAD(main_thread_);
+  for (auto& it : peer_connection_id_map_) {
+    if (it.first->IsOpened())
+      return true;
+  }
+  return false;
+}
+
 void PeerConnectionTracker::RegisterPeerConnection(
     RTCPeerConnectionHandler* pc_handler,
     const webrtc::PeerConnectionInterface::RTCConfiguration& config,

@@ -235,7 +235,9 @@ class WEBOS_EXPORT WebViewBase
   void DidLoadingEnd() override;
   void DidFirstMeaningfulPaint() override;
   void DidNonFirstMeaningfulPaint() override;
-
+  void DidDropAllPeerConnections(app_runtime::DropPeerConnectionReason) final;
+  // WebViewDelegate compatibility
+  virtual void DidDropAllPeerConnections(webos::DropPeerConnectionReason) = 0;
   // WebAppInjectionTxtMsgHandlerDelegate
   void OnBrowserControlCommand(
       const std::string& command,

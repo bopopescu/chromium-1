@@ -54,6 +54,7 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/common/content_features.h"
 #include "content/public/common/content_switches.h"
+#include "content/public/common/drop_peer_connection_reason.h"
 #include "content/public/common/page_importance_signals.h"
 #include "content/public/common/page_state.h"
 #include "content/public/common/page_zoom.h"
@@ -81,6 +82,7 @@
 #include "content/renderer/media/stream/media_stream_device_observer.h"
 #include "content/renderer/media/video_capture_impl_manager.h"
 #include "content/renderer/media/webrtc/peer_connection_dependency_factory.h"
+#include "content/renderer/media/webrtc/peer_connection_tracker.h"
 #include "content/renderer/media/webrtc/rtc_peer_connection_handler.h"
 #include "content/renderer/render_frame_impl.h"
 #include "content/renderer/render_frame_proxy.h"
@@ -1363,6 +1365,8 @@ bool RenderViewImpl::OnMessageReceived(const IPC::Message& message) {
     // platform specific ones at the end.
 #if defined(USE_NEVA_APPRUNTIME)
     IPC_MESSAGE_HANDLER(ViewMsg_ReplaceBaseURL, OnReplaceBaseURL)
+    IPC_MESSAGE_HANDLER(ViewMsg_DropAllPeerConnections,
+                        OnDropAllPeerConnections)
 #endif
 
     // Have the super handle all other messages.
@@ -1564,6 +1568,17 @@ WebWidget* RenderViewImpl::CreatePopup(blink::WebLocalFrame* creator) {
   popup_widget->ApplyEmulatedScreenMetricsForPopupWidget(view_render_widget);
 
   return popup_web_widget;
+}
+
+void RenderViewImpl::DropAllPeerConnections(DropPeerConnectionReason reason) {
+  if (RenderThreadImpl::current()
+          ->peer_connection_tracker()
+          ->HasOpenConnections()) {
+    RenderThreadImpl::current()
+        ->peer_connection_tracker()
+        ->DropAllConnections();
+    Send(new ViewHostMsg_DidDropAllPeerConnections(GetRoutingID(), reason));
+  }
 }
 
 base::StringPiece RenderViewImpl::GetSessionStorageNamespaceId() {
@@ -2307,6 +2322,10 @@ void RenderViewImpl::OnReplaceBaseURL(const GURL& newUrl) {
     return;
 
   webview()->ReplaceBaseURL(WebURL(newUrl));
+}
+
+void RenderViewImpl::OnDropAllPeerConnections(DropPeerConnectionReason reason) {
+  DropAllPeerConnections(reason);
 }
 #endif
 
