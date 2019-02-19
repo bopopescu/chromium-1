@@ -78,6 +78,9 @@ declare_args() {
 
   # Use gst media backend
   use_gst_media = false
+
+  # Use short DST delta
+  v8_use_short_dst_delta = false
 }
 
 declare_args() {
