@@ -33,6 +33,8 @@ class URLRequestJobFactory;
 
 namespace app_runtime {
 
+struct ProxySettings;
+
 class URLRequestContextFactory {
  public:
   explicit URLRequestContextFactory(net::NetworkDelegate* delegate);
@@ -58,11 +60,7 @@ class URLRequestContextFactory {
   net::URLRequestContextGetter* GetMainGetter();
   net::URLRequestContextGetter* GetMediaGetter();
 
-  void SetProxyServer(const std::string& ip,
-                      const std::string& port,
-                      const std::string& name,
-                      const std::string& password,
-                      const std::string& proxy_bypass_list);
+  void SetProxyServer(const ProxySettings& proxy_settings);
 
  private:
   class URLRequestContextGetter;

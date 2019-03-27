@@ -34,6 +34,7 @@
 #include "neva/app_runtime/browser/net/app_runtime_network_change_notifier.h"
 #include "neva/app_runtime/public/app_runtime_constants.h"
 #include "neva/app_runtime/public/window_group_configuration.h"
+#include "neva/app_runtime/public/proxy_settings.h"
 #include "neva/wam_demo/wam_demo_webapp.h"
 #include "ui/display/screen.h"
 #include "ui/views/widget/desktop_aura/desktop_screen.h"
@@ -744,13 +745,19 @@ void WamDemoService::DataUpdated(const std::string& url,
     } else if (cmd == command::kSuspendMedia) {
       webpage->SuspendWebPageMedia();
     } else if (cmd == command::kSetProxyServer) {
-      std::string host;
-      std::string port;
-      if (UnpackString(value, argument::kProxyServer, host) &&
-          UnpackString(value, argument::kProxyPort, port)) {
+      app_runtime::ProxySettings proxy_settings;
+      proxy_settings.enabled = "true";
+      proxy_settings.mode = "";
+      proxy_settings.ip = "";
+      proxy_settings.port = "";
+      proxy_settings.username = "";
+      proxy_settings.password = "";
+      proxy_settings.bypass_list = "";
+      if (UnpackString(value, argument::kProxyServer, proxy_settings.ip) &&
+          UnpackString(value, argument::kProxyPort, proxy_settings.port)) {
         LOG(INFO) << __func__ << "(): Change proxy server to = "
-            << host << ":" << port;
-        webpage->GetProfile()->SetProxyServer(host, port, "", "");
+            << proxy_settings.ip << ":" << proxy_settings.port;
+        webpage->GetProfile()->SetProxyServer(proxy_settings);
         webpage->LoadUrl(app_it->url_);
       }
       else

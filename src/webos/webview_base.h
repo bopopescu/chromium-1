@@ -114,10 +114,6 @@ class WEBOS_EXPORT WebViewBase
   void SetViewportSize(int width, int height);
   void NotifyMemoryPressure(MemoryPressureLevel level);
   void SetVisible(bool visible);
-  void SetProxyServer(const std::string& proxyIp,
-                      const std::string& proxyPort,
-                      const std::string& proxyUsername,
-                      const std::string& proxyPassword);
   void SetProxyServer(const ProxySettings& proxy_settings);
   void SetPrerenderState();
   void SetVisibilityState(WebPageVisibilityState visibilityState);
