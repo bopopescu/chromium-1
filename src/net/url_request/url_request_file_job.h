@@ -105,6 +105,10 @@ class NET_EXPORT URLRequestFileJob : public URLRequestJob {
     bool is_directory;
     // Absolute path of the file (i.e. symbolic link is resolved).
     base::FilePath absolute_path;
+#if defined(USE_FILESCHEME_CODECACHE)
+    // The last modified time of a file
+    base::Time last_modified;
+#endif
   };
 
   // Fetches file info on a background thread.

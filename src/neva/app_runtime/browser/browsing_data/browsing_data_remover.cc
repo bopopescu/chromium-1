@@ -45,6 +45,7 @@ BrowsingDataRemover::BrowsingDataRemover(
     : browser_context_(browser_context),
       waiting_for_clear_channel_ids_(false),
       waiting_for_clear_cache_(false),
+      waiting_for_clear_code_cache_(false),
       waiting_for_clear_storage_partition_data_(false),
       weak_ptr_factory_(this) {}
 
@@ -167,8 +168,10 @@ void BrowsingDataRemover::Remove(const TimeRange& time_range, int remove_mask) {
   }
 
   if (remove_mask & REMOVE_CODE_CACHE) {
-    // http://gpro.lgsvl.com/173303
-    NOTIMPLEMENTED();
+    waiting_for_clear_code_cache_ = true;
+    content::BrowserContext::GetDefaultStoragePartition(browser_context_)
+        ->ClearCodeCaches(base::Bind(&BrowsingDataRemover::OnClearedCodeCache,
+                                     weak_ptr_factory_.GetWeakPtr()));
   }
 
   if (storage_partition_remove_mask) {
@@ -215,8 +218,15 @@ void BrowsingDataRemover::OnClearedStoragePartitionData() {
   NotifyAndDeleteIfDone();
 }
 
+void BrowsingDataRemover::OnClearedCodeCache() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  waiting_for_clear_code_cache_ = false;
+  NotifyAndDeleteIfDone();
+}
+
 bool BrowsingDataRemover::AllDone() {
   return !waiting_for_clear_channel_ids_ && !waiting_for_clear_cache_ &&
+         !waiting_for_clear_code_cache_ &&
          !waiting_for_clear_storage_partition_data_;
 }
 

@@ -44,7 +44,7 @@ rm -rf ${TMPDIR}/.org.chromium.*
 ######################################################################
 
 # Enable blink features
-ENABLE_BLINK_FEATURES="AudioFocusExtension,MediaSourceIsSupportedExtension,MediaTimelineOffset,UMSExtension,NegativePlaybackRate,CustomEventExtension"
+ENABLE_BLINK_FEATURES="AudioFocusExtension,MediaSourceIsSupportedExtension,MediaTimelineOffset,UMSExtension,NegativePlaybackRate,CustomEventExtension,LocalResourceCodeCache"
 
 CHROME_COMPOSITING_FLAGS=" \
   --enable-accelerated-compositing\

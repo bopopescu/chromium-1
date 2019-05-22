@@ -228,6 +228,9 @@ IPC_STRUCT_TRAITS_BEGIN(network::ResourceResponseInfo)
   IPC_STRUCT_TRAITS_MEMBER(did_mime_sniff)
   IPC_STRUCT_TRAITS_MEMBER(is_signed_exchange_inner_response)
   IPC_STRUCT_TRAITS_MEMBER(is_legacy_tls_version)
+#if defined(USE_FILESCHEME_CODECACHE)
+  IPC_STRUCT_TRAITS_MEMBER(file_last_modified_time)
+#endif
 IPC_STRUCT_TRAITS_END()
 
 IPC_ENUM_TRAITS_MAX_VALUE(network::mojom::FetchResponseType,

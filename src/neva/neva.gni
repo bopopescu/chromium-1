@@ -81,6 +81,9 @@ declare_args() {
 
   # Use short DST delta
   v8_use_short_dst_delta = false
+
+  # use code cache for local script resource
+  use_filescheme_codecache = true
 }
 
 declare_args() {

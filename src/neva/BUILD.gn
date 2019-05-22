@@ -126,4 +126,8 @@ config("config") {
   if (use_neva_suspend_media_capture) {
     defines += [ "USE_NEVA_SUSPEND_MEDIA_CAPTURE=1" ]
   }
+
+  if (use_filescheme_codecache) {
+    defines += [ "USE_FILESCHEME_CODECACHE=1" ]
+  }
 }

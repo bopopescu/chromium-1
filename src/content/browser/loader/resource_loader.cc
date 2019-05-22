@@ -47,6 +47,10 @@
 #include "services/network/throttling/scoped_throttling_token.h"
 #include "url/url_constants.h"
 
+#if defined(USE_FILESCHEME_CODECACHE)
+#include "third_party/blink/public/common/features.h"
+#endif
+
 using base::TimeDelta;
 using base::TimeTicks;
 
@@ -142,6 +146,16 @@ void PopulateResourceResponse(
     DCHECK_EQ(request->ssl_info().peer_signature_algorithm, 0);
     DCHECK_EQ(request->ssl_info().connection_status, 0);
   }
+
+#if defined(USE_FILESCHEME_CODECACHE)
+  // To validate codecache for local script resource
+  if (request->url().SchemeIsFile() &&
+      base::FeatureList::IsEnabled(blink::features::kLocalResourceCodeCache) &&
+      info->GetResourceType() == RESOURCE_TYPE_SCRIPT) {
+    response->head.file_last_modified_time =
+        response_info.file_last_modified_time;
+  }
+#endif
 }
 
 }  // namespace

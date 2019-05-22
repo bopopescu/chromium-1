@@ -196,6 +196,10 @@ struct COMPONENT_EXPORT(NETWORK_CPP_BASE) ResourceResponseInfo {
   // will be removed in the future.
   bool is_legacy_tls_version = false;
 
+#if defined(USE_FILESCHEME_CODECACHE)
+  base::Time file_last_modified_time;
+#endif
+
   // NOTE: When adding or changing fields here, also update
   // ResourceResponse::DeepCopy in resource_response.cc.
 };

@@ -13,7 +13,18 @@
 
 namespace content {
 
+#if defined(USE_FILESCHEME_CODECACHE)
+namespace codecache {
+bool IsFileSchemeSupportedForCodeCache(const GURL& url) {
+  return base::FeatureList::IsEnabled(
+             blink::features::kLocalResourceCodeCache) &&
+         url.SchemeIsFile();
+}
+}  // namespace codecache
+#endif
+
 namespace {
+
 // We always expect to receive valid URLs that can be used as keys to the code
 // cache. The relevant checks (for ex: resource_url is valid, origin_lock is
 // not opque etc.,) must be done prior to requesting the code cache.
@@ -23,15 +34,31 @@ namespace {
 // enabled.
 void CheckValidKeys(const GURL& resource_url, const GURL& origin_lock) {
   // If the resource url is invalid don't cache the code.
+#if defined(USE_FILESCHEME_CODECACHE)
+  DCHECK(resource_url.is_valid() &&
+         (resource_url.SchemeIsHTTPOrHTTPS() ||
+          content::codecache::IsFileSchemeSupportedForCodeCache(resource_url)));
+#else
   DCHECK(resource_url.is_valid() && resource_url.SchemeIsHTTPOrHTTPS());
+#endif
 
-  // |origin_lock| should be either empty or should have Http/Https/chrome
-  // schemes and it should not be a URL with opaque origin. Empty origin_locks
-  // are allowed when the renderer is not locked to an origin.
+// |origin_lock| should be either empty or should have Http/Https/chrome
+// schemes and it should not be a URL with opaque origin. Empty origin_locks
+// are allowed when the renderer is not locked to an origin.
+#if defined(USE_FILESCHEME_CODECACHE)
+  // |origin_lock| Should have file scheme when LocalResourceCodeCache feature
+  // is enabled
+  DCHECK(origin_lock.is_empty() ||
+         ((origin_lock.SchemeIsHTTPOrHTTPS() ||
+           origin_lock.SchemeIs(content::kChromeUIScheme) ||
+           content::codecache::IsFileSchemeSupportedForCodeCache(origin_lock)) &&
+          !url::Origin::Create(origin_lock).opaque()));
+#else
   DCHECK(origin_lock.is_empty() ||
          ((origin_lock.SchemeIsHTTPOrHTTPS() ||
            origin_lock.SchemeIs(content::kChromeUIScheme)) &&
           !url::Origin::Create(origin_lock).opaque()));
+#endif
 }
 
 // Generates the cache key for the given |resource_url| and the |origin_lock|.

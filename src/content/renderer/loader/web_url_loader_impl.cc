@@ -1230,6 +1230,9 @@ void WebURLLoaderImpl::PopulateURLResponse(
   response->SetRequestId(request_id);
   response->SetIsSignedExchangeInnerResponse(
       info.is_signed_exchange_inner_response);
+#if defined(USE_FILESCHEME_CODECACHE)
+  response->SetFileLastModifiedTime(info.file_last_modified_time);
+#endif
 
   SetSecurityStyleAndDetails(url, info, response, report_security_info);
 

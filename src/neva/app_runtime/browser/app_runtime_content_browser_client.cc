@@ -305,6 +305,12 @@ void AppRuntimeContentBrowserClient::GetQuotaSettings(
       partition->GetPath(), context->IsOffTheRecord(), std::move(callback));
 }
 
+content::GeneratedCodeCacheSettings
+AppRuntimeContentBrowserClient::GetGeneratedCodeCacheSettings(
+    content::BrowserContext* context) {
+  return content::GeneratedCodeCacheSettings(true, 0, context->GetPath());
+}
+
 void AppRuntimeContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
     std::vector<std::string>* additional_schemes) {
   ContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(

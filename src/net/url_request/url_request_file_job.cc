@@ -181,6 +181,10 @@ void URLRequestFileJob::SetExtraRequestHeaders(
 }
 
 void URLRequestFileJob::GetResponseInfo(HttpResponseInfo* info) {
+#if defined(USE_FILESCHEME_CODECACHE)
+  info->file_last_modified_time = meta_info_.last_modified;
+#endif
+
   if (!serve_mime_type_as_content_type_ || !meta_info_.mime_type_result)
     return;
   auto headers =
@@ -233,6 +237,9 @@ void URLRequestFileJob::FetchMetaInfo(const base::FilePath& file_path,
   meta_info->mime_type_result = GetMimeTypeFromFile(file_path,
                                                     &meta_info->mime_type);
   meta_info->absolute_path = base::MakeAbsoluteFilePath(file_path);
+#if defined(USE_FILESCHEME_CODECACHE)
+  meta_info->last_modified = file_info.last_modified;
+#endif
 }
 
 void URLRequestFileJob::DidFetchMetaInfo(const FileMetaInfo* meta_info) {
