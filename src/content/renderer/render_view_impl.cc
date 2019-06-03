@@ -2068,7 +2068,7 @@ void RenderViewImpl::OnPageWasShown() {
   SuspendAudioCaptureDevices(false);
 #endif
 #if defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
-  SuspendAudioCaptureDevices(false);
+  SuspendVideoCaptureDevices(false);
 #endif
 
   page_is_hidden_ = false;
