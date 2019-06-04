@@ -321,9 +321,8 @@ void WebMediaPlayerMSE::OnNaturalVideoSizeChanged(
     const gfx::Size& natural_video_size) {
   LOG(INFO) << __func__ << " width: " << natural_video_size.width()
             << " , height: " << natural_video_size.height();
-  // Note that we don't update video hole boundary when only natural size is
-  // changed.
   natural_video_size_ = natural_video_size;
+  UpdateVideoHoleBoundary(true);
 }
 
 void WebMediaPlayerMSE::OnError(PipelineStatus metadata) {
@@ -411,15 +410,7 @@ void WebMediaPlayerMSE::UpdateVideoHoleBoundary(bool forced) {
       }
       // If forced update is used or video was offscreen, it needs to update
       // even though video position is not changed.
-      // Also even though video position is not changed if
-      // last_computed_rect_changed_since_updated_ is true, then we need to
-      // update video position since source_rect_in_video_space_ might be
-      // changed. Possibly source_rect_in_screen_space_ might be changed
-      // without last_computed_rect_changed_since_updated_ is true when
-      // natural_video_size_ is changed (i.e DASH) in this case we ignore it
-      // because framework will handle it.
-      if (!forced && !is_video_offscreen_ &&
-          !last_computed_rect_changed_since_updated_)
+      if (!forced && !is_video_offscreen_)
         return;
     }
 
@@ -433,7 +424,6 @@ void WebMediaPlayerMSE::UpdateVideoHoleBoundary(bool forced) {
                 << "out=[" << visible_rect_in_screen_space_.ToString() << "]"
                 << ", in=[" << source_rect_in_video_space_.ToString() << "]"
                 << ", is_fullscreen=" << is_fullscreen_ << ")";
-      last_computed_rect_changed_since_updated_ = false;
       media_platform_api_->SetDisplayWindow(visible_rect_in_screen_space_,
                                             source_rect_in_video_space_,
                                             is_fullscreen_);
@@ -472,14 +462,9 @@ bool WebMediaPlayerMSE::UpdateBoundaryRect() {
   gfx::RectF rect(gfx::SizeF(video_layer_->bounds()));
   video_layer_->ScreenSpaceTransform().TransformRect(&rect);
 
-  // Check if video layer position is changed.
-  gfx::Rect video_rect(rect.x(), rect.y(), rect.width(), rect.height());
-  if (!last_computed_rect_changed_since_updated_ &&
-      video_rect != last_computed_rect_in_view_space_)
-    last_computed_rect_changed_since_updated_ = true;
-
   // Store the changed geometry information when it is actually changed.
-  last_computed_rect_in_view_space_ = video_rect;
+  last_computed_rect_in_view_space_ =
+      gfx::Rect(rect.x(), rect.y(), rect.width(), rect.height());
 
   return true;
 }

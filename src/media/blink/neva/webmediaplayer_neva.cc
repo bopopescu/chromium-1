@@ -197,9 +197,6 @@ WebMediaPlayerNeva::WebMediaPlayerNeva(
       is_playing_(false),
       has_size_info_(false),
       video_frame_provider_client_(NULL),
-#if defined(VIDEO_HOLE)
-      last_computed_rect_changed_since_updated_(false),
-#endif
       media_log_(params->take_media_log()),
       interpolator_(&default_tick_clock_),
       playback_completed_(false),
@@ -1048,7 +1045,6 @@ void WebMediaPlayerNeva::SetDisplayWindow() {
   player_api_->SetDisplayWindow(visible_rect_in_screen_space_,
                                 source_rect_in_video_space_, is_fullscreen_,
                                 true);
-  last_computed_rect_changed_since_updated_ = false;
 }
 
 // With updating the video hole position in every frame, Sometimes scrolling a
@@ -1075,15 +1071,7 @@ void WebMediaPlayerNeva::UpdateVideoHoleBoundary(bool forced) {
       }
       // If forced update is used or video was offscreen, it needs to update
       // even though video position is not changed.
-      // Also even though video position is not changed if
-      // last_computed_rect_changed_since_updated_ is true, then we need to
-      // update video position since source_rect_in_video_space_ might be
-      // changed. Possibly source_rect_in_screen_space_ might be changed
-      // without last_computed_rect_changed_since_updated_ is true when
-      // natural_size is changed (i.e DASH) in this case we ignore it because
-      // framework will handle it
-      if (!forced && !is_video_offscreen_ &&
-          !last_computed_rect_changed_since_updated_)
+      if (!forced && !is_video_offscreen_)
         return;
     }
 
@@ -1132,14 +1120,9 @@ bool WebMediaPlayerNeva::UpdateBoundaryRectangle() {
   gfx::Transform transform = video_layer_->ScreenSpaceTransform();
   transform.TransformRect(&rect);
 
-  // Check if video layer position is changed.
-  gfx::Rect video_rect(rect.x(), rect.y(), rect.width(), rect.height());
-  if (!last_computed_rect_changed_since_updated_ &&
-      video_rect != last_computed_rect_in_view_space_)
-    last_computed_rect_changed_since_updated_ = true;
-
   // Store the changed geometry information when it is actually changed.
-  last_computed_rect_in_view_space_ = video_rect;
+  last_computed_rect_in_view_space_ =
+      gfx::Rect(rect.x(), rect.y(), rect.width(), rect.height());
 
   return true;
 }
