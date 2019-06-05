@@ -136,6 +136,22 @@ class WebViewGuest : public guest_view::GuestView<WebViewGuest> {
   // Stop loading the guest.
   void Stop();
 
+#if defined(USE_NEVA_APPRUNTIME)
+  // Resume the guest process.
+  void Resume();
+
+  // Suspend the guest process.
+  void Suspend();
+
+  // WebContentsObserver implementation.
+  void RenderViewCreated(content::RenderViewHost* render_view_host) override;
+  bool OnMessageReceived(const IPC::Message& message) override;
+#endif
+  ///@name USE_NEVA_MEDIA
+  ///@{
+  bool is_suspended() const { return is_suspended_; }
+  ///@}
+
   // Kill the guest process.
   void Terminate();
 
@@ -386,6 +402,12 @@ class WebViewGuest : public guest_view::GuestView<WebViewGuest> {
 
   // Whether the GuestView set an explicit zoom level.
   bool did_set_explicit_zoom_;
+
+  ///@name USE_NEVA_MEDIA
+  ///@{
+  // Whether the GuestView is suspended.
+  bool is_suspended_;
+  ///@}
 
   // Store spatial navigation status.
   bool is_spatial_navigation_enabled_;

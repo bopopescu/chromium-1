@@ -195,6 +195,10 @@
 #include "content/public/browser/android/java_interfaces.h"
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "content/public/browser/web_contents.h"
+#endif
+
 #if defined(OS_MACOSX)
 #include "content/browser/frame_host/popup_menu_helper_mac.h"
 #endif
@@ -1410,6 +1414,10 @@ bool RenderFrameHostImpl::OnMessageReceived(const IPC::Message &msg) {
     IPC_MESSAGE_HANDLER(FrameHostMsg_RequestOverlayRoutingToken,
                         OnRequestOverlayRoutingToken)
     IPC_MESSAGE_HANDLER(FrameHostMsg_ShowCreatedWindow, OnShowCreatedWindow)
+#if defined(USE_NEVA_APPRUNTIME)
+    IPC_MESSAGE_HANDLER(FrameHostMsg_DecidePolicyForResponse,
+                        OnDecidePolicyForResponse)
+#endif
   IPC_END_MESSAGE_MAP()
 
   // No further actions here, since we may have been deleted.
@@ -4016,6 +4024,14 @@ bool RenderFrameHostImpl::CanCommitOrigin(
 
   // file: URLs can be allowed to access any other origin, based on settings.
   if (origin.scheme() == url::kFileScheme) {
+#if defined(USE_NEVA_APPRUNTIME)
+    if (delegate_->GetAsWebContents()) {
+      content::RendererPreferences* renderer_prefs =
+          delegate_->GetAsWebContents()->GetMutableRendererPrefs();
+      if (!renderer_prefs->file_security_origin.empty())
+        return true;
+    }
+#endif
     WebPreferences prefs = render_view_host_->GetWebkitPreferences();
     if (prefs.allow_universal_access_from_file_urls)
       return true;
@@ -5857,6 +5873,41 @@ mojom::FrameNavigationControl* RenderFrameHostImpl::GetNavigationControl() {
     GetRemoteAssociatedInterfaces()->GetInterface(&navigation_control_);
   return navigation_control_.get();
 }
+
+#if defined(USE_NEVA_MEDIA)
+mojom::MediaSuppressor* RenderFrameHostImpl::GetMediaSuppressor() {
+  if (!media_suppressor_)
+    GetRemoteAssociatedInterfaces()->GetInterface(&media_suppressor_);
+  return media_suppressor_.get();
+}
+
+void RenderFrameHostImpl::PermitMediaActivation(int player_id) {
+  if (GetMediaSuppressor())
+    GetMediaSuppressor()->PermitMediaActivation(player_id);
+}
+
+void RenderFrameHostImpl::SetSuppressed(bool is_suppressed) {
+  if (GetMediaSuppressor())
+    GetMediaSuppressor()->SetSuppressed(is_suppressed);
+}
+
+void RenderFrameHostImpl::SuspendMedia(int player_id) {
+  if (GetMediaSuppressor())
+    GetMediaSuppressor()->SuspendMedia(player_id);
+}
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+void RenderFrameHostImpl::OnDecidePolicyForResponse(
+    bool isMainFrame,
+    int statusCode,
+    const GURL& url,
+    const base::string16& statusText,
+    bool* hasPolicy) {
+  *hasPolicy = delegate_->DecidePolicyForResponse(isMainFrame, statusCode, url,
+                                                  statusText);
+}
+#endif
 
 bool RenderFrameHostImpl::ValidateDidCommitParams(
     FrameHostMsg_DidCommitProvisionalLoad_Params* validated_params) {

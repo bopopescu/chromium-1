@@ -60,6 +60,13 @@
 #include "content/public/browser/child_process_data.h"
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "base/neva/base_switches.h"
+#include "extensions/browser/extension_util.h"
+#include "neva/pal_service/pal_service_factory.h"
+#include "neva/pal_service/public/mojom/constants.mojom.h"
+#endif
+
 using base::CommandLine;
 using content::BrowserContext;
 using content::BrowserThread;
@@ -167,6 +174,16 @@ void ShellContentBrowserClient::SiteInstanceGotProcess(
   if (!extension)
     return;
 
+#if defined(USE_NEVA_APPRUNTIME)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kV8SnapshotBlobPath)) {
+    v8_snapshot_path_ =
+        std::make_pair(site_instance->GetProcess()->GetID(),
+                       base::CommandLine::ForCurrentProcess()
+                           ->GetSwitchValuePath(::switches::kV8SnapshotBlobPath)
+                           .value());
+  }
+#endif
   ProcessMap::Get(browser_main_parts_->browser_context())
       ->Insert(extension->id(),
                site_instance->GetProcess()->GetID(),
@@ -211,6 +228,13 @@ void ShellContentBrowserClient::AppendExtraCommandLineSwitches(
       command_line->GetSwitchValueASCII(::switches::kProcessType);
   if (process_type == ::switches::kRendererProcess)
     AppendRendererSwitches(command_line);
+#if defined(USE_NEVA_APPRUNTIME)
+  // Append v8 snapshot path if given
+  if (v8_snapshot_path_.first == child_process_id) {
+    command_line->AppendSwitchPath(::switches::kV8SnapshotBlobPath,
+                                   base::FilePath(v8_snapshot_path_.second));
+  }
+#endif
 }
 
 content::SpeechRecognitionManagerDelegate*
@@ -364,5 +388,64 @@ const Extension* ShellContentBrowserClient::GetExtension(
   return registry->enabled_extensions().GetExtensionOrAppByURL(
       site_instance->GetSiteURL());
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void ShellContentBrowserClient::GetStoragePartitionConfigForSite(
+    content::BrowserContext* browser_context,
+    const GURL& site,
+    bool can_be_default,
+    std::string* partition_domain,
+    std::string* partition_name,
+    bool* in_memory) {
+  // Default to the browser-wide storage partition and override based on |site|
+  // below.
+  partition_domain->clear();
+  partition_name->clear();
+  *in_memory = false;
+
+  bool success = extensions::WebViewGuest::GetGuestPartitionConfigForSite(
+      site, partition_domain, partition_name, in_memory);
+
+  if (!success && site.SchemeIs(extensions::kExtensionScheme)) {
+    // If |can_be_default| is false, the caller is stating that the |site|
+    // should be parsed as if it had isolated storage. In particular it is
+    // important to NOT check ExtensionService for the is_storage_isolated()
+    // attribute because this code path is run during Extension uninstall
+    // to do cleanup after the Extension has already been unloaded from the
+    // ExtensionService.
+    bool is_isolated = !can_be_default;
+    if (can_be_default) {
+      if (extensions::util::SiteHasIsolatedStorage(site, browser_context))
+        is_isolated = true;
+    }
+
+    if (is_isolated) {
+      CHECK(site.has_host());
+      // For extensions with isolated storage, the the host of the |site| is
+      // the |partition_domain|. The |in_memory| and |partition_name| are only
+      // used in guest schemes so they are cleared here.
+      *partition_domain = site.host();
+      *in_memory = false;
+      partition_name->clear();
+    }
+    success = true;
+  }
+
+  // Assert that if |can_be_default| is false, the code above must have found a
+  // non-default partition.  If this fails, the caller has a serious logic
+  // error about which StoragePartition they expect to be in and it is not
+  // safe to continue.
+  CHECK(can_be_default || !partition_domain->empty());
+}
+
+void ShellContentBrowserClient::HandleServiceRequest(
+    const std::string& service_name,
+    service_manager::mojom::ServiceRequest request) {
+  if (service_name == pal::mojom::kServiceName) {
+    service_manager::Service::RunAsyncUntilTermination(
+        pal::CreatePalService(std::move(request)));
+  }
+}
+#endif
 
 }  // namespace extensions

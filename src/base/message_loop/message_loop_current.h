@@ -233,6 +233,13 @@ class BASE_EXPORT MessageLoopCurrentForUI : public MessageLoopCurrent {
 
 #if defined(USE_OZONE) && !defined(OS_FUCHSIA) && !defined(OS_WIN)
   // Please see MessagePumpLibevent for definition.
+#if defined(USE_GLIB)
+  bool WatchFileDescriptor(int fd,
+                           bool persistent,
+                           MessagePumpForIO::Mode mode,
+                           MessagePumpForIO::FdWatchController* controller,
+                           MessagePumpForIO::FdWatcher* delegate);
+#else
   static_assert(std::is_same<MessagePumpForUI, MessagePumpLibevent>::value,
                 "MessageLoopCurrentForUI::WatchFileDescriptor is not supported "
                 "when MessagePumpForUI is not a MessagePumpLibevent.");
@@ -241,6 +248,7 @@ class BASE_EXPORT MessageLoopCurrentForUI : public MessageLoopCurrent {
                            MessagePumpForUI::Mode mode,
                            MessagePumpForUI::FdWatchController* controller,
                            MessagePumpForUI::FdWatcher* delegate);
+#endif
 #endif
 
 #if defined(OS_IOS) || defined(OS_ANDROID)

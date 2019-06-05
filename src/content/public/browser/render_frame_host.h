@@ -309,6 +309,12 @@ class CONTENT_EXPORT RenderFrameHost : public IPC::Listener,
   // RenderFrameHost.
   virtual void ViewSource() = 0;
 
+#if defined(USE_NEVA_MEDIA)
+  virtual void PermitMediaActivation(int player_id) = 0;
+  virtual void SetSuppressed(bool is_suppressed) = 0;
+  virtual void SuspendMedia(int player_id) = 0;
+#endif
+
   // Starts pausing subresource loading on this frame and returns
   // PauseSubresourceLoadingHandle that controls the pausing behavior.  As long
   // as this handle is live, pausing will continue until an internal

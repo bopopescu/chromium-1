@@ -172,6 +172,10 @@ class URL_EXPORT Origin {
                                           std::string host,
                                           uint16_t port);
 
+#if defined(USE_NEVA_APPRUNTIME)
+  static void SetFileOriginChanged(bool changed);
+#endif
+
   ~Origin();
 
   // For opaque origins, these return ("", "", 0).
@@ -352,6 +356,10 @@ class URL_EXPORT Origin {
   // Get the nonce associated with this origin, if it is opaque. This should be
   // used only when trying to send an Origin across an IPC pipe.
   base::Optional<base::UnguessableToken> GetNonceForSerialization() const;
+
+#if defined(USE_NEVA_APPRUNTIME)
+  static bool file_origin_changed_;
+#endif
 
   // The tuple is used for both tuple origins (e.g. https://example.com:80), as
   // well as for opaque origins, where it tracks the tuple origin from which

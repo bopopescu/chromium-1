@@ -24,7 +24,7 @@ MediaSink::MediaSink() = default;
 MediaSink::~MediaSink() = default;
 
 MediaSink& MediaSink::operator=(const MediaSink& other) = default;
-MediaSink& MediaSink::operator=(MediaSink&& other) noexcept = default;
+MediaSink& MediaSink::operator=(MediaSink&& other) = default;
 
 bool MediaSink::Equals(const MediaSink& other) const {
   return sink_id_ == other.sink_id_;

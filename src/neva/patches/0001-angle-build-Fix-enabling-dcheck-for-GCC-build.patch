@@ -1,0 +1,43 @@
+From e7125151df39c6720fc039f345af81170530ff48 Mon Sep 17 00:00:00 2001
+From: Ivan Murashov <ivan.murashov@lge.com>
+Date: Tue, 21 May 2019 10:24:12 +0300
+Subject: [PATCH] [angle][build] Fix enabling dcheck for GCC build
+
+:Release Notes:
+Fixed angle build to enable dcheck for GCC build
+
+:Detailed Notes:
+Enabling dcheck with dcheck_is_configurable=true breaks build on GCC.
+It happens because angle uses define COMPILER_GCC that is not available in
+angle build. To fix the issue COMPILER_GCC replaced with __GNUC__.
+
+Based on the https://gpro.lgsvl.com/223720/ original patchset.
+
+:Test Scenario:
+1. Start Chrome GCC build with dcheck_is_configurable=true
+2. Verify that build successfully completed
+
+:QA Notes:
+
+:Issues Addressed:
+[NEVA-3744] [open][upstreamable][build] Fix enabling dchecks in build
+---
+ src/common/debug.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/common/debug.h b/src/common/debug.h
+index 972a748..830d0ad 100644
+--- a/src/common/debug.h
++++ b/src/common/debug.h
+@@ -240,7 +240,7 @@ std::ostream &FmtHex(std::ostream &os, T value)
+ #    define EVENT(message, ...) (void(0))
+ #endif
+ 
+-#if defined(COMPILER_GCC) || defined(__clang__)
++#if defined(__GNUC__) || defined(__clang__)
+ #    define ANGLE_CRASH() __builtin_trap()
+ #else
+ #    define ANGLE_CRASH() ((void)(*(volatile char *)0 = 0)), __assume(0)
+-- 
+2.7.4
+

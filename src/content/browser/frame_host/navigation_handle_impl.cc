@@ -1481,6 +1481,9 @@ void NavigationHandleImpl::RestartCommitTimeout() {
 
   RenderProcessHost* renderer_host =
       GetRenderFrameHost()->GetRenderWidgetHost()->GetProcess();
+#if defined(USE_NEVA_APPRUNTIME)
+  if (!render_process_blocked_state_changed_subscription_)
+#endif
   render_process_blocked_state_changed_subscription_ =
       renderer_host->RegisterBlockStateChangedCallback(base::BindRepeating(
           &NavigationHandleImpl::RenderProcessBlockedStateChanged,

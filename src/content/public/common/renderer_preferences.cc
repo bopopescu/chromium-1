@@ -43,7 +43,7 @@ RendererPreferences::RendererPreferences()
       vertical_scroll_bar_width_in_dips(0),
       horizontal_scroll_bar_height_in_dips(0),
       arrow_bitmap_height_vertical_scroll_bar_in_dips(0),
-      arrow_bitmap_width_horizontal_scroll_bar_in_dips(0)
+      arrow_bitmap_width_horizontal_scroll_bar_in_dips(0),
 #endif
 {
 }

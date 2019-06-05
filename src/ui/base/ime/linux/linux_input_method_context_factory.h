@@ -33,6 +33,12 @@ class UI_BASE_IME_LINUX_EXPORT LinuxInputMethodContextFactory {
   virtual std::unique_ptr<LinuxInputMethodContext> CreateInputMethodContext(
       LinuxInputMethodContextDelegate* delegate,
       bool is_simple) const = 0;
+
+  // Added for Neva native input method context.
+  virtual std::unique_ptr<LinuxInputMethodContext> CreateInputMethodContext(
+      LinuxInputMethodContextDelegate* delegate,
+      unsigned handle,
+      bool is_simple) const;
 };
 
 }  // namespace ui

@@ -383,6 +383,14 @@ class AppWindow : public content::WebContentsDelegate,
     app_window_contents_ = std::move(contents);
   }
 
+  // used by neva project
+  void SetApplicationId(std::string application_id) {
+    application_id_ = application_id;
+  }
+
+  // used by neva project
+  std::string GetApplicationId() const { return application_id_; }
+
  protected:
   ~AppWindow() override;
 
@@ -453,6 +461,7 @@ class AppWindow : public content::WebContentsDelegate,
   bool OnMessageReceived(const IPC::Message& message,
                          content::RenderFrameHost* render_frame_host) override;
   void RenderViewCreated(content::RenderViewHost* render_view_host) override;
+  void DidFirstVisuallyNonEmptyPaint() override;
 
   // ExtensionFunctionDispatcher::Delegate implementation.
   WindowController* GetExtensionWindowController() const override;
@@ -587,6 +596,9 @@ class AppWindow : public content::WebContentsDelegate,
   // PlzNavigate: this is called when the first navigation is ready to commit or
   // when the window is closed.
   FirstCommitOrWindowClosedCallback on_first_commit_or_window_closed_callback_;
+
+  // application id that is sent to backend
+  std::string application_id_;
 
   base::WeakPtrFactory<AppWindow> image_loader_ptr_factory_;
 

@@ -12,6 +12,7 @@ import("//components/ui_devtools/devtools.gni")
 import("//gpu/vulkan/features.gni")
 import("//media/media_options.gni")
 import("//net/features.gni")
+import("//neva/neva.gni")
 import("//ppapi/buildflags/buildflags.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//third_party/blink/public/public_features.gni")
@@ -122,6 +123,7 @@ jumbo_source_set("browser") {
     "//net",
     "//net:extras",
     "//net/server:http_server",
+    "//neva/pal:ipc_interfaces_host",
     "//ppapi/buildflags",
     "//printing/buildflags",
     "//services/audio:lib",
@@ -1879,6 +1881,11 @@ jumbo_source_set("browser") {
     "worker_host/worker_script_loader_factory.h",
   ]
 
+  # Neva media
+  if (use_neva_media) {
+    deps += [ "//content/browser/media/neva" ]
+  }
+
   if (toolkit_views) {
     deps += [ "//ui/events" ]
   }
@@ -1909,7 +1916,7 @@ jumbo_source_set("browser") {
     ]
   }
 
-  if (is_chromeos || is_android || is_chromecast) {
+  if (is_webos || is_chromeos || is_android || is_chromecast) {
     defines += [ "ENABLE_PROTECTED_MEDIA_IDENTIFIER_PERMISSION" ]
   }
 
@@ -2485,6 +2492,12 @@ jumbo_source_set("browser") {
         # get the same values but with different formatting (0xD vs 0x000D).
         # https://crbug.com/783666
         "compositor/gpu_output_surface_mac.cc",
+      ]
+    }
+    if (use_neva_appruntime) {
+      sources += [
+        "renderer_host/delegated_frame_host_neva.cc",
+        "renderer_host/delegated_frame_host_neva.h",
       ]
     }
     if (enable_vulkan) {

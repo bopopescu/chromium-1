@@ -73,6 +73,16 @@ class WebMediaPlayerDelegate {
     // controls and go fullscreen.
     virtual void OnBecamePersistentVideo(bool value) = 0;
 
+///@name USE_NEVA_MEDIA
+///@{
+    // Called when compositor committed new frame.
+    virtual void OnDidCommitCompositorFrame() {}
+///@}
+#if defined(USE_NEVA_MEDIA)
+    virtual void OnMediaActivationPermitted() {}
+    virtual void OnSuspend() {}
+#endif
+
     // Called when Picture-in-Picture mode is terminated from the
     // Picture-in-Picture window.
     virtual void OnPictureInPictureModeEnded() = 0;
@@ -189,6 +199,13 @@ class WebMediaPlayerDelegate {
   // Returns |true| if player should be suspended automatically when tab is
   // in background.
   virtual bool IsBackgroundMediaSuspendEnabled() = 0;
+
+#if defined(USE_NEVA_MEDIA)
+  virtual void DidMediaCreated(int player_id, bool will_use_media_resource) = 0;
+  virtual void DidMediaActivated(int player_id) = 0;
+  virtual void DidMediaActivationNeeded(int player_id) = 0;
+  virtual void DidMediaSuspended(int player_id) = 0;
+#endif
 
  protected:
   WebMediaPlayerDelegate() = default;

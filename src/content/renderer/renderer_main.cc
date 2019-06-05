@@ -60,6 +60,10 @@
 #include "content/renderer/pepper/pepper_plugin_registry.h"
 #endif
 
+#if defined(USE_MEMORY_TRACE)
+#include "base/trace_event/neva/memory_trace/memory_trace_manager.h"
+#endif
+
 #if BUILDFLAG(MOJO_RANDOM_DELAYS_ENABLED)
 #include "mojo/public/cpp/bindings/lib/test_random_mojo_delays.h"
 #endif
@@ -87,6 +91,11 @@ std::unique_ptr<base::MessagePump> CreateMainThreadMessagePump() {
   // needs to be backed by a Foundation-level loop to process NSTimers. See
   // http://crbug.com/306348#c24 for details.
   return std::make_unique<base::MessagePumpNSRunLoop>();
+#elif defined(OS_WEBOS) && defined(USE_INJECTIONS)
+  // The main message loop of the renderer services for WEBOS should be UI (luna
+  // bus require glib message pump).
+  return base::MessageLoop::CreateMessagePumpForType(
+      base::MessageLoop::TYPE_UI);
 #else
   return base::MessageLoop::CreateMessagePumpForType(
       base::MessageLoop::TYPE_DEFAULT);
@@ -215,6 +224,13 @@ int RendererMain(const MainFunctionParams& parameters) {
 
 #if BUILDFLAG(MOJO_RANDOM_DELAYS_ENABLED)
     mojo::BeginRandomMojoDelays();
+#endif
+
+#if defined(USE_MEMORY_TRACE)
+    // Initialize MemoryTraceManager if --trace-memory-renderer is on.
+    base::trace_event::neva::MemoryTraceManagerDelegate
+        memory_trace_manager_delegate;
+    memory_trace_manager_delegate.Initialize(false /* is_browser_process */);
 #endif
 
     base::HighResolutionTimerManager hi_res_timer_manager;

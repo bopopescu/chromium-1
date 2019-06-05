@@ -242,6 +242,15 @@ interface Renderer {
   // Tells the renderer process to enter or leave background mode.
   SetProcessBackgrounded(bool background);
 
+  ///@name USE_NEVA_APPRUNTIME
+  ///@{
+  // Tells the renderer process to suspend.
+  ProcessSuspend();
+
+  // Tells the renderer process to resume.
+  ProcessResume();
+  ///@}
+
   // Tells the scheduler about "keep-alive" state which can be due to:
   // service workers, shared workers, or fetch keep-alive.
   // If set to true, then the scheduler should not freeze the renderer.

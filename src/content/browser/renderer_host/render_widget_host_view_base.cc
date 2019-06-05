@@ -49,6 +49,9 @@ namespace content {
 RenderWidgetHostViewBase::RenderWidgetHostViewBase(RenderWidgetHost* host)
     : use_viz_hit_test_(features::IsVizHitTestingEnabled()),
       host_(RenderWidgetHostImpl::From(host)),
+#if defined(USE_NEVA_APPRUNTIME)
+      hardware_resolution_(0, 0),
+#endif
       weak_factory_(this) {
   host_->render_frame_metadata_provider()->AddObserver(this);
 }
@@ -568,6 +571,10 @@ void RenderWidgetHostViewBase::FocusedNodeTouched(
 
 void RenderWidgetHostViewBase::GetScreenInfo(ScreenInfo* screen_info) const {
   DisplayUtil::GetNativeViewScreenInfo(screen_info, GetNativeView());
+#if defined(USE_NEVA_APPRUNTIME)
+  if (!hardware_resolution_.IsEmpty())
+    screen_info->hardware_resolution = hardware_resolution_;
+#endif
 }
 
 float RenderWidgetHostViewBase::GetDeviceScaleFactor() const {
@@ -965,6 +972,12 @@ bool RenderWidgetHostViewBase::TransformPointToTargetCoordSpace(
       gfx::ConvertPointToDIP(device_scale_factor, *transformed_point);
   return true;
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void RenderWidgetHostViewBase::SetHardwareResolution(int width, int height) {
+  hardware_resolution_ = gfx::Size(width, height);
+}
+#endif
 
 bool RenderWidgetHostViewBase::GetTransformToViewCoordSpace(
     RenderWidgetHostViewBase* target_view,

@@ -16,6 +16,9 @@
 namespace content {
 
 class ShellJavaScriptDialog;
+namespace neva {
+class ShellJavaScriptDialog;
+} // namespace neva
 
 class ShellJavaScriptDialogManager : public JavaScriptDialogManager {
  public:
@@ -57,6 +60,7 @@ class ShellJavaScriptDialogManager : public JavaScriptDialogManager {
   std::unique_ptr<ShellJavaScriptDialog> dialog_;
 #else
   // TODO: implement ShellJavaScriptDialog for other platforms, drop this #if
+  std::unique_ptr<neva::ShellJavaScriptDialog> dialog_;
 #endif
 
   base::Closure dialog_request_callback_;

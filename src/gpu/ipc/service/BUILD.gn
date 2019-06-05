@@ -6,6 +6,7 @@ import("//testing/test.gni")
 import("//build/config/jumbo.gni")
 import("//build/config/ui.gni")
 import("//gpu/vulkan/features.gni")
+import("//neva/neva.gni")
 if (is_mac) {
   import("//build/config/mac/mac_sdk.gni")
 }
@@ -74,6 +75,11 @@ jumbo_component("service") {
     "//gpu/ipc/common",
     "//gpu/vulkan:buildflags",
   ]
+
+  if (use_neva_media) {
+    deps += [ "//gpu/ipc/service/neva" ]
+  }
+
   libs = []
   ldflags = []
   if (is_win) {

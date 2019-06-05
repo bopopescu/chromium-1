@@ -14,6 +14,10 @@
 #include "media/base/pipeline.h"
 #include "media/base/renderer.h"
 
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/media_platform_api.h"
+#endif
+
 namespace media {
 class Demuxer;
 
@@ -138,6 +142,11 @@ class MEDIA_EXPORT PipelineController {
       const std::vector<MediaTrack::Id>& enabled_track_ids);
   void OnSelectedVideoTrackChanged(
       base::Optional<MediaTrack::Id> selected_track_id);
+
+#if defined(USE_NEVA_MEDIA)
+  void SetMediaPlatformAPI(
+      const scoped_refptr<MediaPlatformAPI>& media_platform_api);
+#endif
 
   // Used to fire the OnTrackChangeComplete function which is captured in a
   // OnceCallback, and doesn't play nicely with gmock.

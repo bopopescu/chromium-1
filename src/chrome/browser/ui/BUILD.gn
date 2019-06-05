@@ -15,6 +15,7 @@ import("//components/nacl/features.gni")
 import("//components/offline_pages/buildflags/features.gni")
 import("//components/signin/features.gni")
 import("//extensions/buildflags/buildflags.gni")
+import("//neva/neva.gni")
 import("//ppapi/buildflags/buildflags.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//rlz/buildflags/buildflags.gni")
@@ -2266,6 +2267,19 @@ jumbo_split_static_library("ui") {
         "views/frame/browser_desktop_window_tree_host_platform.h",
         "views/frame/native_browser_frame_factory_ozone.cc",
       ]
+      # Added for ozone wayland external port
+      if (ozone_platform_wayland_external) {
+        sources -= [
+          "views/frame/browser_desktop_window_tree_host_platform.cc",
+        ]
+        sources += [
+          "views/frame/browser_desktop_window_tree_host_ozone_wayland_external.cc",
+          "views/frame/browser_desktop_window_tree_host_ozone_wayland_external.h",
+        ]
+        deps += [
+          "//ozone/ui/webui",
+        ]
+      }
     } else {
       if (use_aura) {
         # This is the only component that can interact with gtk.
@@ -2938,7 +2952,10 @@ jumbo_split_static_library("ui") {
       #
       # TODO(tonikitoo): It seems sensible to make it possible to opt-in
       # the use of these files in case Gtk is available with its Wayland.
-      if (!use_ozone && is_desktop_linux) {
+      #
+      # Removed !use_ozone for ozone wayland external port.
+      # ozone wayland external port should use chrome_browser_main_extra_parts_views_linux.
+      if (is_desktop_linux) {
         sources += [
           "views/chrome_browser_main_extra_parts_views_linux.cc",
           "views/chrome_browser_main_extra_parts_views_linux.h",

@@ -420,6 +420,11 @@ class EmbeddedWorkerTestHelper::MockRendererInterface : public mojom::Renderer {
   void SetProcessBackgrounded(bool backgrounded) override { NOTREACHED(); }
   void SetSchedulerKeepActive(bool keep_active) override { NOTREACHED(); }
   void ProcessPurgeAndSuspend() override { NOTREACHED(); }
+  ///@name USE_NEVA_APPRUNTIME
+  ///@{
+  void ProcessResume() override { NOTREACHED(); }
+  void ProcessSuspend() override { NOTREACHED(); }
+  ///@}
   void SetIsLockedToSite() override { NOTREACHED(); }
   void EnableV8LowMemoryMode() override { NOTREACHED(); }
 

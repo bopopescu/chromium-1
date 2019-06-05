@@ -159,6 +159,11 @@ class COMPOSITOR_EXPORT ContextFactoryPrivate {
                                        const viz::BeginFrameArgs& args) = 0;
 
   virtual void SetOutputIsSecure(Compositor* compositor, bool secure) = 0;
+
+#if defined(USE_NEVA_APPRUNTIME)
+  virtual void ForceImmediateDrawAndSwapIfPossible(
+      ui::Compositor* compositor){};
+#endif
 };
 
 // This class abstracts the creation of the 3D context for the compositor. It is
@@ -436,6 +441,11 @@ class COMPOSITOR_EXPORT Compositor : public cc::LayerTreeHostClient,
   // If true, all paint commands are recorded at pixel size instead of DIP.
   bool is_pixel_canvas() const { return is_pixel_canvas_; }
 
+#if defined(USE_NEVA_APPRUNTIME)
+  void SuspendDrawing();
+  void ResumeDrawing();
+#endif
+
   ScrollInputHandler* scroll_input_handler() const {
     return scroll_input_handler_.get();
   }
@@ -489,6 +499,10 @@ class COMPOSITOR_EXPORT Compositor : public cc::LayerTreeHostClient,
   // The device scale factor of the monitor that this compositor is compositing
   // layers on.
   float device_scale_factor_ = 0.f;
+
+#if defined(USE_NEVA_APPRUNTIME)
+  bool disable_drawing_ = false;
+#endif
 
   LayerAnimatorCollection layer_animator_collection_;
   scoped_refptr<cc::AnimationTimeline> animation_timeline_;

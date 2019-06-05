@@ -70,6 +70,14 @@ static std::string StorageTypeToString(
     case VideoFrame::STORAGE_DMABUFS:
       return "DMABUFS";
 #endif
+#if defined(USE_NEVA_MEDIA)
+#if defined(VIDEO_HOLE)
+    case VideoFrame::STORAGE_HOLE:
+      return "HOLE";
+#endif
+    case VideoFrame::STORAGE_BLACK:
+      return "BLACK";
+#endif
     case VideoFrame::STORAGE_MOJO_SHARED_BUFFER:
       return "MOJO_SHARED_BUFFER";
   }
@@ -665,6 +673,7 @@ scoped_refptr<VideoFrame> VideoFrame::CreateBlackFrame(const gfx::Size& size) {
   const uint8_t kBlackY = 0x00;
   const uint8_t kBlackUV = 0x80;
   const base::TimeDelta kZero;
+
   return CreateColorFrame(size, kBlackY, kBlackUV, kBlackUV, kZero);
 }
 
@@ -680,6 +689,24 @@ scoped_refptr<VideoFrame> VideoFrame::CreateTransparentFrame(
   FillYUVA(frame.get(), kBlackY, kBlackUV, kBlackUV, kTransparentA);
   return frame;
 }
+
+#if defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+// static
+scoped_refptr<VideoFrame> VideoFrame::CreateHoleFrame(const gfx::Size& size) {
+  const VideoPixelFormat format = PIXEL_FORMAT_UNKNOWN;
+  const StorageType storage = STORAGE_HOLE;
+  const gfx::Rect visible_rect = gfx::Rect(size);
+  if (!IsValidConfig(format, storage, size, visible_rect, size)) {
+    LOG(DFATAL) << __FUNCTION__ << " Invalid config."
+                << ConfigToString(format, storage, size, visible_rect, size);
+    return nullptr;
+  }
+  auto layout = VideoFrameLayout::Create(format, gfx::Size());
+  scoped_refptr<VideoFrame> frame(new VideoFrame(
+      *layout, storage, gfx::Rect(size), size, base::TimeDelta()));
+  return frame;
+}
+#endif
 
 // static
 size_t VideoFrame::NumPlanes(VideoPixelFormat format) {

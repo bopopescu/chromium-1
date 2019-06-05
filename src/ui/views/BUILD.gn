@@ -7,6 +7,7 @@ import("//build/config/features.gni")
 import("//build/config/jumbo.gni")
 import("//build/config/ui.gni")
 import("//components/vector_icons/vector_icons.gni")
+import("//neva/neva.gni")
 import("//testing/test.gni")
 import("//ui/base/ui_features.gni")
 import("//ui/ozone/ozone.gni")
@@ -587,6 +588,9 @@ jumbo_component("views") {
 
   if (use_ozone) {
     deps += [ "//ui/ozone" ]
+    if (ozone_platform_wayland_external) {
+      deps += [ "//ozone/ui/desktop_aura:views_ozone_wayland" ]
+    }
   }
 
   if (use_x11) {
@@ -732,18 +736,23 @@ jumbo_component("views") {
         sources += [
           "widget/desktop_aura/desktop_drag_drop_client_ozone.cc",
           "widget/desktop_aura/desktop_drag_drop_client_ozone.h",
+          "widget/desktop_aura/desktop_factory_ozone.cc",
+          "widget/desktop_aura/desktop_factory_ozone.h",
           "widget/desktop_aura/desktop_screen_ozone.cc",
           "widget/desktop_aura/desktop_screen_ozone.h",
+          "widget/desktop_aura/desktop_window_tree_host_ozone.cc",
         ]
       }
       if (is_linux) {
         sources += [
           "style/platform_style_linux.cc",
+          "widget/desktop_aura/desktop_screen_headless.cc",
+          "widget/desktop_aura/desktop_screen_headless.h",
           "widget/desktop_aura/window_event_filter.cc",
           "widget/desktop_aura/window_event_filter.h",
         ]
       }
-      if ((is_linux && !use_x11) || is_fuchsia) {
+      if (((is_linux && !use_x11) || is_fuchsia) && !ozone_platform_wayland_external) {
         public += [ "widget/desktop_aura/desktop_window_tree_host_platform.h" ]
         sources +=
             [ "widget/desktop_aura/desktop_window_tree_host_platform.cc" ]

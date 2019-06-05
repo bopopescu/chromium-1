@@ -399,6 +399,10 @@ class CONTENT_EXPORT RenderWidget
     return *input_handler_;
   }
 
+#if defined(USE_NEVA_APPRUNTIME)
+  bool has_ime_event_guard() const { return ime_event_guard_ != nullptr; }
+#endif
+
   void SetHandlingInputEvent(bool handling_input_event);
 
   // Delivers |message| together with compositor state change updates.

@@ -21,6 +21,10 @@
 #include "extensions/shell/browser/shell_special_storage_policy.h"
 #include "extensions/shell/browser/shell_url_request_context_getter.h"
 
+#if defined(USE_NSS_CERTS) && defined(USE_NEVA_APPRUNTIME)
+#include "net/cert_net/nss_ocsp.h"
+#endif
+
 namespace extensions {
 
 namespace {
@@ -44,6 +48,9 @@ ShellBrowserContext::ShellBrowserContext(
 
 ShellBrowserContext::~ShellBrowserContext() {
   content::BrowserContext::NotifyWillBeDestroyed(this);
+#if defined(USE_NSS_CERTS) && defined(USE_NEVA_APPRUNTIME)
+  net::SetURLRequestContextForNSSHttpIO(nullptr);
+#endif
 }
 
 content::BrowserPluginGuestManager* ShellBrowserContext::GetGuestManager() {
@@ -53,6 +60,38 @@ content::BrowserPluginGuestManager* ShellBrowserContext::GetGuestManager() {
 storage::SpecialStoragePolicy* ShellBrowserContext::GetSpecialStoragePolicy() {
   return storage_policy_.get();
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+net::URLRequestContextGetter*
+ShellBrowserContext::CreateRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory,
+    content::ProtocolHandlerMap* protocol_handlers,
+    content::URLRequestInterceptorScopedVector request_interceptors) {
+  scoped_refptr<net::URLRequestContextGetter>& context_getter =
+      isolated_url_request_getters_[partition_path];
+  if (!context_getter) {
+    InfoMap* extension_info_map =
+        browser_main_parts_->extension_system()->info_map();
+    context_getter = new ShellURLRequestContextGetter(
+        this, IgnoreCertificateErrors(), GetPath(),
+        base::CreateSingleThreadTaskRunnerWithTraits(
+            {content::BrowserThread::IO}),
+        protocol_handlers, std::move(request_interceptors),
+        nullptr /* net_log */, extension_info_map);
+  }
+  return context_getter.get();
+}
+
+net::URLRequestContextGetter*
+ShellBrowserContext::CreateMediaRequestContextForStoragePartition(
+    const base::FilePath& partition_path,
+    bool in_memory) {
+  auto iter = isolated_url_request_getters_.find(partition_path);
+  return iter != isolated_url_request_getters_.end() ? iter->second.get()
+                                                     : nullptr;
+}
+#endif
 
 net::URLRequestContextGetter* ShellBrowserContext::CreateRequestContext(
       content::ProtocolHandlerMap* protocol_handlers,
@@ -80,9 +119,14 @@ net::URLRequestContextGetter* ShellBrowserContext::CreateRequestContext(
 void ShellBrowserContext::InitURLRequestContextOnIOThread() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
+#if defined(USE_NSS_CERTS) && defined(USE_NEVA_APPRUNTIME)
+  net::SetURLRequestContextForNSSHttpIO(
+      url_request_context_getter()->GetURLRequestContext());
+#else
   // GetURLRequestContext() will create a URLRequestContext if it isn't
   // initialized.
   url_request_context_getter()->GetURLRequestContext();
+#endif
 }
 
 }  // namespace extensions

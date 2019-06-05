@@ -9,6 +9,7 @@
 #include "build/build_config.h"
 #include "ui/base/ime/mock_input_method.h"
 #include "ui/base/ui_base_features.h"
+#include "ui/base/ui_base_neva_switches.h"
 #include "ui/gfx/switches.h"
 
 #if defined(OS_CHROMEOS)
@@ -20,7 +21,8 @@
 #include "ui/base/ime/input_method_mac.h"
 #elif defined(OS_FUCHSIA)
 #include "ui/base/ime/input_method_fuchsia.h"
-#elif defined(USE_AURA) && (defined(USE_X11) || defined(USE_OZONE))
+#elif defined(USE_AURA)
+#include "ui/base/ime/neva/input_method_auralinux_neva.h"
 #include "ui/base/ime/input_method_auralinux.h"
 #else
 #include "ui/base/ime/input_method_minimal.h"
@@ -66,8 +68,11 @@ std::unique_ptr<InputMethod> CreateInputMethod(
   return std::make_unique<InputMethodMac>(delegate);
 #elif defined(OS_FUCHSIA)
   return std::make_unique<InputMethodFuchsia>(delegate);
-#elif defined(USE_AURA) && (defined(USE_X11) || defined(USE_OZONE))
-  return std::make_unique<InputMethodAuraLinux>(delegate);
+#elif defined(USE_AURA)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNevaIme))
+    return std::make_unique<InputMethodAuraLinuxNeva>(delegate, widget);
+  else
+    return std::make_unique<InputMethodAuraLinux>(delegate);
 #else
   return std::make_unique<InputMethodMinimal>(delegate);
 #endif

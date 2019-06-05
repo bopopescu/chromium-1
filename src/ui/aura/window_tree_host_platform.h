@@ -13,6 +13,7 @@
 #include "ui/aura/client/window_types.h"
 #include "ui/aura/window.h"
 #include "ui/aura/window_tree_host.h"
+#include "ui/base/ime/neva/input_method_neva_observer.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/platform_window/platform_window.h"
 #include "ui/platform_window/platform_window_delegate.h"
@@ -28,7 +29,8 @@ namespace aura {
 // The unified WindowTreeHost implementation for platforms
 // that implement PlatformWindow.
 class AURA_EXPORT WindowTreeHostPlatform : public WindowTreeHost,
-                                           public ui::PlatformWindowDelegate {
+                                           public ui::PlatformWindowDelegate,
+                                           public ui::InputMethodNevaObserver {
  public:
   // See Compositor() for details on |trace_environment_name|.
   explicit WindowTreeHostPlatform(ui::PlatformWindowInitProperties properties,
@@ -48,6 +50,9 @@ class AURA_EXPORT WindowTreeHostPlatform : public WindowTreeHost,
   gfx::Point GetLocationOnScreenInPixels() const override;
   void SetCapture() override;
   void ReleaseCapture() override;
+  // Set app-id to PlatformWindow (for Neva project)
+  void SetWindowProperty(const std::string& name,
+                         const std::string& value) override;
   void SetCursorNative(gfx::NativeCursor cursor) override;
   void MoveCursorToScreenLocationInPixels(
       const gfx::Point& location_in_pixels) override;
@@ -79,6 +84,22 @@ class AURA_EXPORT WindowTreeHostPlatform : public WindowTreeHost,
   void OnAcceleratedWidgetAvailable(gfx::AcceleratedWidget widget) override;
   void OnAcceleratedWidgetDestroyed() override;
   void OnActivationChanged(bool active) override;
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+  void OnWindowHostStateChanged(ui::WidgetState new_state) override;
+  void OnWindowHostClose() override;
+#endif
+
+  // Overridden from ui::InputMethodNevaObserver:
+  void OnShowIme() override;
+  void OnHideIme() override;
+  void OnTextInputTypeChanged(ui::TextInputType text_input_type,
+                              int text_input_flags) override;
+///@name USE_NEVA_APPRUNTIME
+///@{
+  void SetSurroundingText(const std::string& text,
+                          size_t cursor_position,
+                          size_t anchor_position) override;
+///@}
 
   // Overridden from aura::WindowTreeHost:
   bool CaptureSystemKeyEventsImpl(

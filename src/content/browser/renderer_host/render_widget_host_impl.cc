@@ -3004,6 +3004,10 @@ void RenderWidgetHostImpl::SubmitCompositorFrame(
       new_content_rendering_timeout_->Stop();
     }
   }
+#if defined(USE_NEVA_APPRUNTIME)
+  if (delegate_)
+    delegate_->DidReceiveCompositorFrame();
+#endif
 }
 
 void RenderWidgetHostImpl::DidProcessFrame(uint32_t frame_token) {

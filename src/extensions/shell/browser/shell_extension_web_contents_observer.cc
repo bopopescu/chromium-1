@@ -4,6 +4,15 @@
 
 #include "extensions/shell/browser/shell_extension_web_contents_observer.h"
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "base/command_line.h"
+#include "base/json/string_escape.h"
+#include "base/strings/utf_string_conversions.h"
+#include "content/common/frame_messages.h"
+#include "content/public/browser/navigation_handle.h"
+#include "content/public/browser/render_frame_host.h"
+#endif
+
 namespace extensions {
 
 ShellExtensionWebContentsObserver::ShellExtensionWebContentsObserver(
@@ -13,6 +22,34 @@ ShellExtensionWebContentsObserver::ShellExtensionWebContentsObserver(
 
 ShellExtensionWebContentsObserver::~ShellExtensionWebContentsObserver() {
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void ShellExtensionWebContentsObserver::DidFinishNavigation(
+    content::NavigationHandle* navigation_handle) {
+  ExtensionWebContentsObserver::DidFinishNavigation(navigation_handle);
+
+  if (!navigation_handle->HasCommitted())
+    return;
+
+  content::RenderFrameHost* render_frame_host =
+      navigation_handle->GetRenderFrameHost();
+  bool is_extension = GetExtensionFromFrame(render_frame_host, true);
+  const char* launchArgsSwitch = "launch-args";
+  if (is_extension &&
+      base::CommandLine::ForCurrentProcess()->HasSwitch(launchArgsSwitch)) {
+    std::string js_line =
+        "chrome.app.launchArgs=" +
+        base::GetQuotedJSONString(
+            base::CommandLine::ForCurrentProcess()->GetSwitchValueNative(
+                launchArgsSwitch)) +
+        ";";
+
+    render_frame_host->Send(new FrameMsg_JavaScriptExecuteRequest(
+        render_frame_host->GetRoutingID(), base::UTF8ToUTF16(js_line), 0,
+        false));
+  }
+}
+#endif
 
 void ShellExtensionWebContentsObserver::CreateForWebContents(
     content::WebContents* web_contents) {

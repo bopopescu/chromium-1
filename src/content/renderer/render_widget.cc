@@ -139,6 +139,10 @@
 #include "content/renderer/text_input_client_observer.h"
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "base/neva/base_switches.h"
+#endif
+
 using blink::WebImeTextSpan;
 using blink::WebCursorInfo;
 using blink::WebDeviceEmulationParams;
@@ -972,6 +976,10 @@ void RenderWidget::RequestNewLayerTreeFrameSink(
     LayerTreeFrameSinkCallback callback) {
   // For widgets that are never visible, we don't start the compositor, so we
   // never get a request for a cc::LayerTreeFrameSink.
+#if defined(OS_WEBOS) && defined(USE_NEVA_EXTENSIONS)
+  if (is_frozen_)
+    return;
+#endif
   DCHECK(!compositor_never_visible_);
   // Frozen RenderWidgets should not be doing any compositing.
   DCHECK(!is_frozen_);
@@ -982,6 +990,13 @@ void RenderWidget::RequestNewLayerTreeFrameSink(
     return;
   }
 
+  // TODO(crbug.com/896836): CHECK to try track down why we make a frame sink
+  // for a RenderWidget without a main frame. If there's no frame widget then
+  // there is no main frame. This only applies for widgets for frames.
+#if defined(OS_WEBOS) && defined(USE_NEVA_EXTENSIONS)
+  if (is_frozen_)
+    return;
+#endif
   // If we have a warmup in progress, wait for that and store the callback
   // to be run when the warmup completes.
   if (warmup_frame_sink_request_pending_) {
@@ -1049,6 +1064,10 @@ void RenderWidget::DidCommitAndDrawCompositorFrame() {
 void RenderWidget::DidCommitCompositorFrame() {
   if (owner_delegate_)
     owner_delegate_->DidCommitCompositorFrameForWidget();
+#if defined(USE_NEVA_MEDIA)
+  for (auto& observer : render_frames_)
+    observer.DidCommitCompositorFrame();
+#endif
 }
 
 void RenderWidget::DidCompletePageScaleAnimation() {
@@ -2721,6 +2740,11 @@ cc::LayerTreeSettings RenderWidget::GenerateLayerTreeSettings(
       compositor_deps->IsElasticOverscrollEnabled();
   settings.resource_settings.use_gpu_memory_buffer_resources =
       compositor_deps->IsGpuMemoryBufferCompositorResourcesEnabled();
+#if defined(USE_NEVA_APPRUNTIME)
+  settings.use_aggressive_release_policy =
+      base::CommandLine::ForCurrentProcess()->HasSwitch(
+          cc::switches::kEnableAggressiveReleasePolicy);
+#endif
   settings.use_painted_device_scale_factor =
       compositor_deps->IsUseZoomForDSFEnabled();
 
@@ -2866,6 +2890,17 @@ cc::LayerTreeSettings RenderWidget::GenerateLayerTreeSettings(
   }
 #endif  // defined(OS_ANDROID)
 
+#if defined(USE_NEVA_APPRUNTIME)
+  if (cmd.HasSwitch(switches::kDecodedImageWorkingSetBudgetMB)) {
+    int budget_bytes_mb = 0;
+    if (switch_value_as_int(cmd, switches::kDecodedImageWorkingSetBudgetMB,
+                            1, std::numeric_limits<int>::max(),
+                            &budget_bytes_mb))
+      settings.decoded_image_working_set_budget_bytes =
+          budget_bytes_mb * 1024 * 1024;
+  }
+#endif
+
   if (using_low_memory_policy) {
     // RGBA_4444 textures are only enabled:
     //  - If the user hasn't explicitly disabled them
@@ -2888,6 +2923,10 @@ cc::LayerTreeSettings RenderWidget::GenerateLayerTreeSettings(
       }
     }
   }
+
+#if defined(USE_VIDEO_TEXTURE)
+  settings.use_stream_video_draw_quad = true;
+#endif
 
   if (cmd.HasSwitch(switches::kEnableLowResTiling))
     settings.create_low_res_tiling = true;

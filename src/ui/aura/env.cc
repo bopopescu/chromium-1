@@ -34,6 +34,10 @@
 #include "ui/ozone/public/ozone_platform.h"
 #endif
 
+#if defined(OS_WEBOS)
+#include "ui/aura/window_tree_host.h"
+#endif
+
 namespace aura {
 
 namespace {
@@ -149,6 +153,13 @@ Env* Env::GetInstance() {
 bool Env::HasInstance() {
   return !!g_primary_instance;
 }
+
+#if defined(OS_WEBOS)
+// static
+Window* Env::GetRootWindow() {
+  return GetInstance()->RootWindow();
+}
+#endif
 
 std::unique_ptr<WindowPort> Env::CreateWindowPort(Window* window) {
   if (mode_ == Mode::LOCAL)
@@ -374,6 +385,10 @@ void Env::NotifyWindowInitialized(Window* window) {
 }
 
 void Env::NotifyHostInitialized(WindowTreeHost* host) {
+#if defined(OS_WEBOS)
+  if (host)
+    root_window_ = host->window();
+#endif
   for (EnvObserver& observer : observers_)
     observer.OnHostInitialized(host);
 }

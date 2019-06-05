@@ -110,6 +110,11 @@ class AURA_EXPORT Env : public ui::EventTarget,
   static Env* GetInstance();
   static bool HasInstance();
 
+#if defined(OS_WEBOS)
+  static Window* GetRootWindow();
+  Window* RootWindow() const { return root_window_; }
+#endif
+
   Mode mode() const { return mode_; }
 
   // Called internally to create the appropriate WindowPort implementation.
@@ -289,6 +294,9 @@ class AURA_EXPORT Env : public ui::EventTarget,
   // This may be set to true in tests to force using |last_mouse_location_|
   // rather than querying WindowTreeClient.
   bool always_use_last_mouse_location_ = false;
+#if defined(OS_WEBOS)
+  Window* root_window_;
+#endif
   // Whether we set ourselves as the OSExchangeDataProviderFactory.
   bool is_os_exchange_data_provider_factory_ = false;
   // Whether we set ourselves as the SystemInputInjectorFactory.

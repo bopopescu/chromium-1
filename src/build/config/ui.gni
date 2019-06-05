@@ -18,6 +18,7 @@
 # of //build/config/BUILDCONFIG.gn.
 
 import("//build/config/chromecast_build.gni")
+import("//neva/neva.gni")
 
 declare_args() {
   # Indicates if Ozone is enabled. Ozone is a low-level library layer for Linux
@@ -47,7 +48,7 @@ declare_args() {
 use_x11 = is_linux && !use_ozone
 
 # Turn off glib if Ozone is enabled.
-if (use_ozone) {
+if (use_ozone && !is_webos) {
   use_glib = false
 }
 

@@ -175,6 +175,12 @@ class MockWebMediaPlayerClient : public blink::WebMediaPlayerClient {
   MOCK_METHOD0(RequestPlay, void());
   MOCK_METHOD0(RequestPause, void());
 
+#if defined(USE_NEVA_MEDIA)
+  MOCK_METHOD2(SendCustomMessage,
+               void(const blink::WebMediaPlayer::MediaEventType,
+                    const blink::WebString&));
+#endif
+
   void set_was_always_muted(bool value) { was_always_muted_ = value; }
 
   bool was_always_muted_ = false;
@@ -234,6 +240,13 @@ class MockWebMediaPlayerDelegate : public WebMediaPlayerDelegate {
                void(int, const viz::SurfaceId&, const gfx::Size&, bool));
   MOCK_METHOD2(RegisterPictureInPictureWindowResizeCallback,
                void(int, blink::WebMediaPlayer::PipWindowResizedCallback));
+
+#if defined(USE_NEVA_MEDIA)
+  MOCK_METHOD2(DidMediaCreated, void(int, bool));
+  MOCK_METHOD1(DidMediaActivated, void(int));
+  MOCK_METHOD1(DidMediaActivationNeeded, void(int));
+  MOCK_METHOD1(DidMediaSuspended, void(int));
+#endif
 
   void ClearStaleFlag(int player_id) override {
     DCHECK_EQ(player_id_, player_id);
@@ -493,7 +506,9 @@ class WebMediaPlayerImplTest : public testing::Test {
     wmpi_->OnError(status);
   }
 
-  void OnMetadata(PipelineMetadata metadata) { wmpi_->OnMetadata(metadata); }
+  void OnMetadata(const PipelineMetadata& metadata) {
+    wmpi_->OnMetadata(metadata);
+  }
 
   void OnVideoNaturalSizeChange(const gfx::Size& size) {
     wmpi_->OnVideoNaturalSizeChange(size);

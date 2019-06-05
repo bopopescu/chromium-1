@@ -14,6 +14,9 @@
 #include "base/logging.h"
 #include "base/macros.h"
 #include "media/base/media_switches.h"
+#if defined(USE_NEVA_MEDIA)
+#include "media/cdm/api_old/content_decryption_module_8.h"
+#endif
 #include "media/cdm/api/content_decryption_module.h"
 #include "media/cdm/cdm_helpers.h"
 #include "media/cdm/supported_cdm_versions.h"
@@ -28,6 +31,36 @@ bool IsEncryptionSchemeSupportedByLegacyCdms(
   return scheme == cdm::EncryptionScheme::kUnencrypted ||
          scheme == cdm::EncryptionScheme::kCenc;
 }
+
+#if defined(USE_NEVA_MEDIA)
+cdm::AudioDecoderConfig ToAudioDecoderConfig(
+    const cdm::AudioDecoderConfig_2& config) {
+  return {config.codec,
+          config.channel_count,
+          config.bits_per_channel,
+          config.samples_per_second,
+          config.extra_data,
+          config.extra_data_size};
+}
+
+cdm::VideoDecoderConfig ToVideoDecoderConfig(
+    const cdm::VideoDecoderConfig_2& config) {
+  return {config.codec,      config.profile,    config.format,
+          config.coded_size, config.extra_data, config.extra_data_size};
+}
+
+cdm::InputBuffer ToInputBuffer(const cdm::InputBuffer_2& buffer,
+                               const cdm::StreamType decoder_type) {
+  return {
+    buffer.data, buffer.data_size,
+        buffer.encryption_scheme,
+        buffer.key_id, buffer.key_id_size, buffer.iv, buffer.iv_size,
+        buffer.subsamples, buffer.num_subsamples,
+        buffer.timestamp, buffer.pattern,
+        decoder_type == cdm::StreamType::kStreamTypeVideo ? 1 : 0
+  };
+}
+#endif
 
 cdm::AudioDecoderConfig_1 ToAudioDecoderConfig_1(
     const cdm::AudioDecoderConfig_2& config) {
@@ -149,7 +182,12 @@ class CdmWrapper {
                              uint32_t session_id_size) = 0;
   virtual void TimerExpired(void* context) = 0;
   virtual cdm::Status Decrypt(const cdm::InputBuffer_2& encrypted_buffer,
+#if defined(USE_NEVA_MEDIA)
+                              cdm::DecryptedBlock* decrypted_buffer,
+                              const cdm::StreamType decoder_type) = 0;
+#else
                               cdm::DecryptedBlock* decrypted_buffer) = 0;
+#endif
   virtual cdm::Status InitializeAudioDecoder(
       const cdm::AudioDecoderConfig_2& audio_decoder_config) = 0;
   virtual cdm::Status InitializeVideoDecoder(
@@ -270,7 +308,12 @@ class CdmWrapperImpl : public CdmWrapper {
   void TimerExpired(void* context) override { cdm_->TimerExpired(context); }
 
   cdm::Status Decrypt(const cdm::InputBuffer_2& encrypted_buffer,
+#if defined(USE_NEVA_MEDIA)
+                      cdm::DecryptedBlock* decrypted_buffer,
+                      const cdm::StreamType decoder_type) override {
+#else
                       cdm::DecryptedBlock* decrypted_buffer) override {
+#endif
     return cdm_->Decrypt(encrypted_buffer, decrypted_buffer);
   }
 
@@ -330,6 +373,91 @@ class CdmWrapperImpl : public CdmWrapper {
   DISALLOW_COPY_AND_ASSIGN(CdmWrapperImpl);
 };
 
+#if defined(USE_NEVA_MEDIA)
+template <>
+bool CdmWrapperImpl<8>::Initialize(bool allow_distinctive_identifier,
+                                   bool allow_persistent_state,
+                                   bool /* use_hw_secure_codecs*/) {
+  cdm_->Initialize(allow_distinctive_identifier, allow_persistent_state);
+  return false;
+}
+
+template <>
+bool CdmWrapperImpl<8>::GetStatusForPolicy(uint32_t promise_id,
+                                           cdm::HdcpVersion min_hdcp_version) {
+  return false;
+}
+
+template <>
+cdm::Status CdmWrapperImpl<8>::InitializeAudioDecoder(
+    const cdm::AudioDecoderConfig_2& audio_decoder_config) {
+  if (!IsEncryptionSchemeSupportedByLegacyCdms(
+          audio_decoder_config.encryption_scheme))
+    return cdm::kInitializationError;
+
+  return cdm_->InitializeAudioDecoder(
+      ToAudioDecoderConfig(audio_decoder_config));
+}
+
+template <>
+cdm::Status CdmWrapperImpl<8>::InitializeVideoDecoder(
+    const cdm::VideoDecoderConfig_3& video_decoder_config) {
+  if (!IsEncryptionSchemeSupportedByLegacyCdms(
+          video_decoder_config.encryption_scheme))
+    return cdm::kInitializationError;
+
+  return cdm_->InitializeVideoDecoder(
+      ToVideoDecoderConfig(ToVideoDecoderConfig_2(video_decoder_config)));
+}
+
+template <>
+cdm::Status CdmWrapperImpl<8>::Decrypt(
+    const cdm::InputBuffer_2& encrypted_buffer,
+    cdm::DecryptedBlock* decrypted_buffer,
+    const cdm::StreamType decoder_type) {
+  if (!IsEncryptionSchemeSupportedByLegacyCdms(
+          encrypted_buffer.encryption_scheme))
+    return cdm::kDecryptError;
+
+  return cdm_->Decrypt(ToInputBuffer(encrypted_buffer, decoder_type),
+                       decrypted_buffer);
+}
+
+template <>
+cdm::Status CdmWrapperImpl<8>::DecryptAndDecodeFrame(
+    const cdm::InputBuffer_2& encrypted_buffer,
+    media::VideoFrameImpl* video_frame) {
+  if (!IsEncryptionSchemeSupportedByLegacyCdms(
+          encrypted_buffer.encryption_scheme))
+    return cdm::kDecryptError;
+
+  return cdm_->DecryptAndDecodeFrame(
+      ToInputBuffer(encrypted_buffer, cdm::StreamType::kStreamTypeVideo),
+      video_frame);
+}
+
+template <>
+cdm::Status CdmWrapperImpl<8>::DecryptAndDecodeSamples(
+    const cdm::InputBuffer_2& encrypted_buffer,
+    cdm::AudioFrames* audio_frames) {
+  if (!IsEncryptionSchemeSupportedByLegacyCdms(
+          encrypted_buffer.encryption_scheme))
+    return cdm::kDecryptError;
+
+  return cdm_->DecryptAndDecodeSamples(
+      ToInputBuffer(encrypted_buffer, cdm::StreamType::kStreamTypeAudio),
+      audio_frames);
+}
+
+template <>
+void CdmWrapperImpl<8>::OnStorageId(uint32_t version,
+                                    const uint8_t* storage_id,
+                                    uint32_t storage_id_size) {
+  // Nothing to do
+}
+
+#endif // defined(USE_NEVA_MEDIA)
+
 // Specialization for cdm::ContentDecryptionModule_9 methods.
 // TODO(crbug.com/799219): Remove when CDM_9 no longer supported.
 
@@ -366,7 +494,12 @@ cdm::Status CdmWrapperImpl<9>::InitializeVideoDecoder(
 template <>
 cdm::Status CdmWrapperImpl<9>::Decrypt(
     const cdm::InputBuffer_2& encrypted_buffer,
+#if defined(USE_NEVA_MEDIA)
+    cdm::DecryptedBlock* decrypted_buffer,
+    const cdm::StreamType decoder_type) {
+#else
     cdm::DecryptedBlock* decrypted_buffer) {
+#endif
   if (!IsEncryptionSchemeSupportedByLegacyCdms(
           encrypted_buffer.encryption_scheme))
     return cdm::kDecryptError;
@@ -413,7 +546,11 @@ CdmWrapper* CdmWrapper::Create(CreateCdmFunc create_cdm_func,
                                uint32_t key_system_size,
                                GetCdmHostFunc get_cdm_host_func,
                                void* user_data) {
+#if defined(USE_NEVA_MEDIA)
+  static_assert(CheckSupportedCdmInterfaceVersions(8, 11),
+#else
   static_assert(CheckSupportedCdmInterfaceVersions(9, 11),
+#endif
                 "Mismatch between CdmWrapper::Create() and "
                 "IsSupportedCdmInterfaceVersion()");
 
@@ -444,6 +581,13 @@ CdmWrapper* CdmWrapper::Create(CreateCdmFunc create_cdm_func,
                                   get_cdm_host_func, user_data);
   }
 
+#if defined(USE_NEVA_MEDIA)
+  if (!cdm_wrapper && IsSupportedAndEnabledCdmInterfaceVersion(8)) {
+    cdm_wrapper =
+        CdmWrapperImpl<8>::Create(create_cdm_func, key_system, key_system_size,
+                                  get_cdm_host_func, user_data);
+  }
+#endif
   return cdm_wrapper;
 }
 

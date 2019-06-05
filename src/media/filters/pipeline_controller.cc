@@ -399,4 +399,10 @@ void PipelineController::OnTrackChangeComplete(State previous_state) {
   Dispatch();
 }
 
+#if defined(USE_NEVA_MEDIA)
+void PipelineController::SetMediaPlatformAPI(
+    const scoped_refptr<MediaPlatformAPI>& media_platform_api) {
+  pipeline_->SetMediaPlatformAPI(media_platform_api);
+}
+#endif
 }  // namespace media

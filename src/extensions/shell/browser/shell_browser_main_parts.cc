@@ -79,6 +79,15 @@
 #include "ui/events/devices/x11/touch_factory_x11.h"  // nogncheck
 #endif
 
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+#include "ozone/ui/webui/ozone_webui.h"
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+#include "components/web_cache/browser/web_cache_manager.h"
+#include "neva/app_runtime/browser/app_runtime_shared_memory_manager.h"
+#endif
+
 using base::CommandLine;
 using content::BrowserContext;
 
@@ -139,17 +148,32 @@ void ShellBrowserMainParts::PostMainMessageLoopStart() {
   // app_shell doesn't need GTK, so the fake input method context can work.
   // See crbug.com/381852 and revision fb69f142.
   // TODO(michaelpg): Verify this works for target environments.
+#if !(defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL))
   ui::InitializeInputMethodForTesting();
+#endif
 
   bluez::BluezDBusThreadManager::Initialize();
   bluez::BluezDBusManager::Initialize();
 #else
   ui::InitializeInputMethodForTesting();
 #endif
+#if defined(USE_NEVA_APPRUNTIME)
+  app_runtime_mem_manager_.reset(
+      new app_runtime::AppRuntimeSharedMemoryManager);
+#endif
 }
 
 int ShellBrowserMainParts::PreEarlyInitialization() {
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+  views::LinuxUI::SetInstance(BuildWebUI());
+#endif
   return service_manager::RESULT_CODE_NORMAL_EXIT;
+}
+
+void ShellBrowserMainParts::ToolkitInitialized() {
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+  views::LinuxUI::instance()->Initialize();
+#endif
 }
 
 int ShellBrowserMainParts::PreCreateThreads() {
@@ -251,6 +275,10 @@ void ShellBrowserMainParts::PreMainMessageLoopRun() {
   } else {
     browser_main_delegate_->Start(browser_context_.get());
   }
+
+#if defined(USE_NEVA_APPRUNTIME)
+  web_cache::WebCacheManager::GetInstance();
+#endif
 }
 
 bool ShellBrowserMainParts::MainMessageLoopRun(int* result_code) {

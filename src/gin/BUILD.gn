@@ -4,6 +4,7 @@
 
 import("//build/buildflag_header.gni")
 import("//build/config/allocator.gni")
+import("//neva/neva.gni")
 import("//testing/test.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 import("//v8/gni/v8.gni")
@@ -80,6 +81,7 @@ component("gin") {
 
   public_deps = [
     "//base",
+    "//base/neva",
     "//v8",
   ]
   deps = [
@@ -91,6 +93,10 @@ component("gin") {
   }
 
   configs += [ "//v8:external_startup_data" ]
+
+  if (use_memory_trace) {
+    deps += [ "//gin/neva" ]
+  }
 }
 
 executable("gin_shell") {

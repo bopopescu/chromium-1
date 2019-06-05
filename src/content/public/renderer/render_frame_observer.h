@@ -124,6 +124,12 @@ class CONTENT_EXPORT RenderFrameObserver : public IPC::Listener,
   // Notifications when |PerformanceTiming| data becomes available
   virtual void DidChangePerformanceTiming() {}
 
+#if defined(USE_NEVA_APPRUNTIME)
+  // Called when First Meaningful Paint is not detected until resource loaded.
+  virtual void DidNonFirstMeaningPaintAfterLoad() {}
+  virtual void DidResetStateToMarkNextPaintForContainer() {}
+#endif
+
   // Notification when the renderer uses a particular code path during a page
   // load. This is used for metrics collection.
   virtual void DidObserveLoadingBehavior(
@@ -181,6 +187,17 @@ class CONTENT_EXPORT RenderFrameObserver : public IPC::Listener,
   virtual void OnInterfaceRequestForFrame(
       const std::string& interface_name,
       mojo::ScopedMessagePipeHandle* interface_pipe) {}
+
+#if defined(USE_NEVA_MEDIA)
+  // Called when a compositor frame has committed.
+  virtual void DidCommitCompositorFrame() {}
+  virtual void OnMediaActivationPermitted(int player_id) {}
+  virtual void OnSuspendMedia(int player_id) {}
+
+  // Called when this RenderFrame is suspended or resumed.
+  // This interface is used for supporting legacy implementation.
+  virtual void OnSuppressedMediaPlay(bool suppressed) {}
+#endif
 
   // Similar to above but for handling Channel-associated interface requests.
   // Returns |true| if the request is handled by the implementation (taking

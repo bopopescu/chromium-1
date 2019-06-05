@@ -458,6 +458,9 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
   void OnPluginActionAt(const gfx::Point& location,
                         const blink::WebPluginAction& action);
   void OnMoveOrResizeStarted();
+#if defined(USE_NEVA_APPRUNTIME)
+  void OnReplaceBaseURL(const GURL& newurl);
+#endif
   void OnExitFullscreen();
   void OnSetHistoryOffsetAndLength(int history_offset, int history_length);
   void OnSetInitialFocus(bool reverse);
@@ -485,7 +488,12 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
   // with up-to-date layout.
   void UpdatePreferredSize();
 
-#if defined(OS_ANDROID)
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  // Make the audio capture devices (e.g. webcam) stop/resume
+  // This is called in response to a RenderView PageHidden/Shown().
+  void SuspendAudioCaptureDevices(bool suspend);
+#endif
+#if defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
   // Make the video capture devices (e.g. webcam) stop/resume delivering video
   // frames to their clients, depending on flag |suspend|. This is called in
   // response to a RenderView PageHidden/Shown().

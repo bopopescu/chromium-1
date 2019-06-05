@@ -563,7 +563,12 @@ WebPreferences RenderViewHostImpl::ComputeWebkitPrefs() {
 
   prefs.strict_powerful_feature_restrictions = command_line.HasSwitch(
       switches::kEnableStrictPowerfulFeatureRestrictions);
-
+#if defined(USE_NEVA_MEDIA)
+  if (command_line.HasSwitch(switches::kMaxTimeupdateEventFrequency))
+    prefs.max_timeupdate_event_frequency = atoi(
+        command_line.GetSwitchValueASCII(switches::kMaxTimeupdateEventFrequency)
+            .c_str());
+#endif
   const std::string blockable_mixed_content_group =
       base::FieldTrialList::FindFullName("BlockableMixedContent");
   prefs.strictly_block_blockable_mixed_content =
@@ -976,6 +981,12 @@ void RenderViewHostImpl::ClosePageTimeout() {
 
   ClosePageIgnoringUnloadEvents();
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void RenderViewHostImpl::ReplaceBaseURL(const GURL& newUrl) {
+  Send(new ViewMsg_ReplaceBaseURL(GetRoutingID(), newUrl));
+}
+#endif
 
 std::vector<viz::SurfaceId> RenderViewHostImpl::CollectSurfaceIdsForEviction() {
   if (!is_active())

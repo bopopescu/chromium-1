@@ -318,7 +318,11 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   // be disabled to save resources.
   enum { kMaxKeyframeDistanceToDisableBackgroundVideoMs = 5500 };
 
+#if defined(USE_NEVA_MEDIA)
+ protected:
+#else
  private:
+#endif
   friend class WebMediaPlayerImplTest;
   friend class WebMediaPlayerImplBackgroundBehaviorTest;
 
@@ -344,7 +348,7 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   // Pipeline::Client overrides.
   void OnError(PipelineStatus status) override;
   void OnEnded() override;
-  void OnMetadata(PipelineMetadata metadata) override;
+  void OnMetadata(const PipelineMetadata& metadata) override;
   void OnBufferingStateChange(BufferingState state) override;
   void OnDurationChange() override;
   void OnAddTextTrack(const TextTrackConfig& config,
@@ -405,7 +409,15 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   // Returns the current video frame from |compositor_|, and asks the compositor
   // to update its frame if it is stale.
   // Can return a nullptr.
+#if defined(USE_NEVA_MEDIA)
+  virtual scoped_refptr<VideoFrame> GetCurrentFrameFromCompositor() const;
+  virtual void OnSetCdm(blink::WebContentDecryptionModule* cdm) {}
+#else
+  // Returns the current video frame from |compositor_|, and asks the compositor
+  // to update its frame if it is stale.
+  // Can return a nullptr.
   scoped_refptr<VideoFrame> GetCurrentFrameFromCompositor() const;
+#endif
 
   // Called when the demuxer encounters encrypted streams.
   void OnEncryptedMediaInitData(EmeInitDataType init_data_type,

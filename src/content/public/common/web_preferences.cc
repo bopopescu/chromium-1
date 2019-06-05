@@ -236,6 +236,12 @@ WebPreferences::WebPreferences()
       presentation_receiver(false),
       media_controls_enabled(true),
       do_not_update_selection_on_mutating_selection_range(false),
+#if defined(USE_NEVA_APPRUNTIME)
+      allow_local_resource_load(false),
+#endif
+#if defined(USE_NEVA_MEDIA)
+      max_timeupdate_event_frequency(250),
+#endif
       autoplay_policy(AutoplayPolicy::kDocumentUserActivationRequired),
       low_priority_iframes_threshold(net::EFFECTIVE_CONNECTION_TYPE_UNKNOWN),
       picture_in_picture_enabled(true),

@@ -50,6 +50,11 @@ enum class VideoFrameResourceType {
   RGBA_PREMULTIPLIED,
   RGBA,
   STREAM_TEXTURE,
+#if defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+  // TODO(danakj): Implement this with a solid color layer instead of a video
+  // frame and video layer.
+  HOLE,
+#endif  // defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
 };
 
 class MEDIA_EXPORT VideoFrameExternalResources {

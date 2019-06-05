@@ -995,7 +995,11 @@ void RenderThreadImpl::Init() {
     compositing_mode_reporter_->AddCompositingModeWatcher(
         std::move(watcher_ptr));
   }
-}
+
+#if defined(USE_NEVA_MEDIA)
+  neva::RenderThreadImpl<RenderThreadImpl>::Init();
+#endif
+}  // namespace content
 
 RenderThreadImpl::~RenderThreadImpl() {
   g_main_task_runner.Get() = nullptr;
@@ -1676,6 +1680,25 @@ void RenderThreadImpl::SetProcessBackgrounded(bool backgrounded) {
     process_foregrounded_count_++;
   }
 }
+
+///@name USE_NEVA_APPRUNTIME
+///@{
+void RenderThreadImpl::ProcessSuspend() {
+#if defined(USE_NEVA_APPRUNTIME)
+  WebView::WillEnterModalLoop();
+  ++suspension_count_;
+#endif
+}
+
+void RenderThreadImpl::ProcessResume() {
+#if defined(USE_NEVA_APPRUNTIME)
+  if (suspension_count_ > 0) {
+    WebView::DidExitModalLoop();
+    --suspension_count_;
+  }
+#endif
+}
+///@}
 
 void RenderThreadImpl::ProcessPurgeAndSuspend() {
   if (!RendererIsHidden())

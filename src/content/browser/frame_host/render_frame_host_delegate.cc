@@ -137,6 +137,16 @@ bool RenderFrameHostDelegate::IsBeingDestroyed() {
   return false;
 }
 
+#if defined(USE_NEVA_APPRUNTIME)
+bool RenderFrameHostDelegate::DecidePolicyForResponse(
+    bool isMainFrame,
+    int statusCode,
+    const GURL& url,
+    const base::string16& statusText) {
+  return false;
+}
+#endif
+
 Visibility RenderFrameHostDelegate::GetVisibility() {
   return Visibility::HIDDEN;
 }

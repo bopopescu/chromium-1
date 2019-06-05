@@ -9,6 +9,11 @@
 #include "content/renderer/media/webrtc_logging.h"
 #include "content/renderer/render_frame_impl.h"
 
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+#include "content/renderer/media/audio/neva/audio_capturer_source_manager.h"
+#include "content/renderer/render_thread_impl.h"
+#endif
+
 namespace content {
 
 // TODO(crbug.com/638081): Like in ProcessedLocalAudioSource::GetBufferSize(),
@@ -86,6 +91,10 @@ bool LocalMediaStreamAudioSource::EnsureSourceIsStarted() {
   source_ = AudioDeviceFactory::NewAudioCapturerSource(
       consumer_render_frame_id_,
       media::AudioSourceParameters(device().session_id));
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  RenderThreadImpl::current()->audio_capturer_source_manager()->AddSource(
+      source_.get());
+#endif
   source_->Initialize(GetAudioParameters(), this);
   source_->Start();
   return true;
@@ -98,6 +107,10 @@ void LocalMediaStreamAudioSource::EnsureSourceIsStopped() {
     return;
 
   source_->Stop();
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  RenderThreadImpl::current()->audio_capturer_source_manager()->RemoveSource(
+      source_.get());
+#endif
   source_ = nullptr;
 
   VLOG(1) << "Stopped local audio input device (session_id="

@@ -77,7 +77,11 @@ class CONTENT_EXPORT LayerTreeView
                   std::unique_ptr<cc::UkmRecorderFactory> ukm_recorder_factory);
 
   void SetNeverVisible();
+#if defined(USE_NEVA_APPRUNTIME)
+  void SetVisible(bool visible) override;
+#else
   void SetVisible(bool visible);
+#endif
   const base::WeakPtr<cc::InputHandler>& GetInputHandler();
   void SetNeedsDisplayOnAllLayers();
   void SetRasterizeOnlyVisibleContent();

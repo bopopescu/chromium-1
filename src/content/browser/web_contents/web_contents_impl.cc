@@ -1921,6 +1921,14 @@ void WebContentsImpl::Observe(int type,
       }
       break;
     }
+#if defined(USE_NEVA_APPRUNTIME)
+    case NOTIFICATION_RENDERER_PROCESS_CREATED: {
+      RenderProcessHost* process_host = Source<RenderProcessHost>(source).ptr();
+      if (process_host)
+        RenderProcessCreated(process_host);
+      break;
+    }
+#endif
     default:
       NOTREACHED();
   }
@@ -2009,6 +2017,12 @@ void WebContentsImpl::Init(const WebContents::CreateParams& params) {
   registrar_.Add(this,
                  NOTIFICATION_RENDER_WIDGET_HOST_DESTROYED,
                  NotificationService::AllBrowserContextsAndSources());
+
+#if defined(USE_NEVA_APPRUNTIME)
+  registrar_.Add(this,
+                 NOTIFICATION_RENDERER_PROCESS_CREATED,
+                 NotificationService::AllBrowserContextsAndSources());
+#endif
 
   screen_orientation_provider_.reset(new ScreenOrientationProvider(this));
 
@@ -5912,6 +5926,12 @@ void WebContentsImpl::SetFocusedFrame(FrameTreeNode* node,
     // doesn't support properly traversing BrowserPlugins.
     SetAsFocusedWebContentsIfNecessary();
   }
+
+#if defined(USE_NEVA_APPRUNTIME)
+  // Added for neva app-runtime frame focused notification
+  if (delegate_)
+    delegate_->DidFrameFocused();
+#endif
 }
 
 void WebContentsImpl::DidCallFocus() {
@@ -6804,5 +6824,58 @@ void WebContentsImpl::MediaMutedStatusChanged(
 void WebContentsImpl::SetVisibilityForChildViews(bool visible) {
   GetMainFrame()->SetVisibilityForChildViews(visible);
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+bool WebContentsImpl::IsInspectablePage() const {
+  return inspectable_page_;
+}
+
+void WebContentsImpl::SetInspectablePage(bool inspectable) {
+  inspectable_page_ = inspectable;
+}
+
+void WebContentsImpl::RenderProcessCreated(
+    RenderProcessHost* render_process_host) {
+  for (auto& observer : observers_)
+    observer.RenderProcessCreated(render_process_host->GetProcess().Handle());
+}
+
+void WebContentsImpl::InjectCSS(const std::string& css) {
+  GetMainFrame()->Send(new FrameMsg_CSSInjectRequest(
+      GetMainFrame()->GetRoutingID(), css));
+}
+
+void WebContentsImpl::ReplaceBaseURL(const GURL& newURL) {
+  GetRenderViewHost()->ReplaceBaseURL(newURL);
+}
+
+bool WebContentsImpl::DecidePolicyForResponse(
+    bool isMainFrame,
+    int statusCode,
+    const GURL& url,
+    const base::string16& statusText) {
+  if (delegate_)
+    return delegate_->DecidePolicyForResponse(isMainFrame, statusCode, url,
+                                              statusText);
+
+  return false;
+}
+
+void WebContentsImpl::OverrideWebkitPrefs(WebPreferences* prefs) {
+  if (delegate_)
+    delegate_->OverrideWebkitPrefs(prefs);
+}
+
+void WebContentsImpl::ExecuteJavaScriptInAllFrames(
+    const base::string16& javascript) {
+  SendToAllFrames(new FrameMsg_JavaScriptExecuteRequest(
+                      0, javascript, 0, false));
+}
+
+void WebContentsImpl::DidReceiveCompositorFrame() {
+  for (auto& observer : observers_)
+    observer.DidReceiveCompositorFrame();
+}
+#endif
 
 }  // namespace content

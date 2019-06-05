@@ -193,6 +193,37 @@
 #include "content/renderer/pepper/pepper_plugin_registry.h"
 #endif
 
+///@name USE_NEVA_APPRUNTIME
+///@{
+#include "content/public/common/content_neva_switches.h"
+#include "neva/remote_pal_ipc/remote_pal_observer.h"
+#if defined(USE_INJECTIONS)
+#include "neva/injection/common/renderer/injection_observer.h"
+
+//  If some WEBAPI is enabled include it's headers
+#if defined(ENABLE_BROWSER_CONTROL_WEBAPI)
+#include "injection/browser_control/browser_control_injection.h"
+#endif
+
+#if defined(ENABLE_SAMPLE_WEBAPI)
+#include "injection/sample/sample_injection.h"
+#endif
+
+#endif
+///@}
+
+#if defined(USE_NEVA_APPRUNTIME)
+#include "third_party/blink/public/platform/web_security_origin.h"
+#endif
+
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/media_platform_api.h"
+#endif
+
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+#include "content/renderer/media/audio/neva/audio_capturer_source_manager.h"
+#endif
+
 using blink::WebAXObject;
 using blink::WebApplicationCacheHost;
 using blink::WebApplicationCacheHostClient;
@@ -553,6 +584,34 @@ void RenderViewImpl::Initialize(
   UpdateWebViewWithDeviceScaleFactor();
   OnSetRendererPrefs(params->renderer_preferences);
   OnSynchronizeVisualProperties(params->visual_properties);
+
+  ///@name USE_NEVA_APPRUNTIME
+  ///@{
+#if defined(USE_INJECTIONS)
+  // This instance will be freed in InjectionObserver::OnDestruct()
+  std::vector<std::string> preloaded_injections;
+
+#if defined(ENABLE_BROWSER_CONTROL_WEBAPI)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableBrowserControlInjection)) {
+    preloaded_injections.push_back(
+        injections::BrowserControlInjectionExtension::kInjectionName);
+  }
+#endif  // ENABLE_BROWSER_CONTROL_WEBAPI
+#if defined(ENABLE_SAMPLE_WEBAPI)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableSampleInjection)) {
+    preloaded_injections.push_back(
+        injections::SampleInjectionExtension::kInjectionName);
+  }
+#endif  // ENABLE_SAMPLE_WEBAPI
+
+  new InjectionObserver(this, preloaded_injections);
+#endif  // defined(USE_INJECTIONS)
+
+  // This instance will be freed in RemotePalObserver::OnDestruct()
+  new RemotePalObserver(this);
+  ///@}
 
   GetContentClient()->renderer()->RenderViewCreated(this);
   page_zoom_level_ = 0;
@@ -917,6 +976,10 @@ void RenderView::ApplyWebPreferences(const WebPreferences& prefs,
   settings->SetPresentationReceiver(prefs.presentation_receiver);
 
   settings->SetMediaControlsEnabled(prefs.media_controls_enabled);
+#if defined(USE_NEVA_MEDIA)
+  settings->SetMaxTimeupdateEventFrequency(
+      prefs.max_timeupdate_event_frequency);
+#endif
 
   settings->SetLowPriorityIframesThreshold(
       static_cast<blink::WebEffectiveConnectionType>(
@@ -1290,6 +1353,9 @@ bool RenderViewImpl::OnMessageReceived(const IPC::Message& message) {
 
     // Adding a new message? Add platform independent ones first, then put the
     // platform specific ones at the end.
+#if defined(USE_NEVA_APPRUNTIME)
+    IPC_MESSAGE_HANDLER(ViewMsg_ReplaceBaseURL, OnReplaceBaseURL)
+#endif
 
     // Have the super handle all other messages.
     IPC_MESSAGE_UNHANDLED(handled = RenderWidget::OnMessageReceived(message))
@@ -1907,6 +1973,18 @@ void RenderViewImpl::OnSetRendererPrefs(
   UpdateThemePrefs();
   blink::SetCaretBlinkInterval(renderer_prefs.caret_blink_interval);
 
+#if defined(USE_NEVA_MEDIA)
+  std::string media_codec_capability = renderer_preferences_.media_codec_capability;
+  if(!media_codec_capability.empty())
+    media::MediaPlatformAPI::SetMediaCodecCapability(media_codec_capability);
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+  if (!renderer_prefs.file_security_origin.empty())
+    url::Origin::SetFileOriginChanged(true);
+  blink::SetMutableLocalOrigin(renderer_prefs.file_security_origin);
+#endif
+
 #if BUILDFLAG(USE_DEFAULT_RENDER_THEME)
   if (renderer_prefs.use_custom_colors) {
     blink::SetFocusRingColor(renderer_prefs.focus_ring_color);
@@ -1955,7 +2033,10 @@ void RenderViewImpl::OnMoveOrResizeStarted() {
 }
 
 void RenderViewImpl::OnPageWasHidden() {
-#if defined(OS_ANDROID)
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  SuspendAudioCaptureDevices(true);
+#endif
+#if defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
   SuspendVideoCaptureDevices(true);
 #endif
 
@@ -1975,8 +2056,11 @@ void RenderViewImpl::OnPageWasHidden() {
 }
 
 void RenderViewImpl::OnPageWasShown() {
-#if defined(OS_ANDROID)
-  SuspendVideoCaptureDevices(false);
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  SuspendAudioCaptureDevices(false);
+#endif
+#if defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  SuspendAudioCaptureDevices(false);
 #endif
 
   page_is_hidden_ = false;
@@ -2149,8 +2233,26 @@ void RenderViewImpl::DismissDateTimeDialog() {
   DCHECK(date_time_picker_client_);
   date_time_picker_client_.reset();
 }
+#endif  // defined(OS_ANDROID)
 
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+void RenderViewImpl::SuspendAudioCaptureDevices(bool suspend) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kDisableSuspendAudioCapture))
+    return;
+
+  RenderThreadImpl::current()->audio_capturer_source_manager()->SuspendDevices(
+      suspend);
+}
+#endif
+
+#if defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
 void RenderViewImpl::SuspendVideoCaptureDevices(bool suspend) {
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kDisableSuspendVideoCapture))
+    return;
+#endif
   if (!main_render_frame_)
     return;
 
@@ -2164,7 +2266,7 @@ void RenderViewImpl::SuspendVideoCaptureDevices(bool suspend) {
   RenderThreadImpl::current()->video_capture_impl_manager()->SuspendDevices(
       video_devices, suspend);
 }
-#endif  // defined(OS_ANDROID)
+#endif  // defined(OS_ANDROID) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
 
 unsigned RenderViewImpl::GetLocalSessionHistoryLengthForTesting() const {
   return history_list_length_;
@@ -2190,6 +2292,15 @@ void RenderViewImpl::SetFocusAndActivateForTesting(bool enable) {
     SetActiveForWidget(false);
   }
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void RenderViewImpl::OnReplaceBaseURL(const GURL& newUrl) {
+  if (!webview())
+    return;
+
+  webview()->ReplaceBaseURL(WebURL(newUrl));
+}
+#endif
 
 void RenderViewImpl::OnAnimateDoubleTapZoomInMainFrame(
     const blink::WebPoint& point,

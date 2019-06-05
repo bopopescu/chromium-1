@@ -325,6 +325,11 @@ class CONTENT_EXPORT RenderWidgetHostViewAura
   void SetSelectionControllerClientForTest(
       std::unique_ptr<TouchSelectionControllerClientAura> client);
 
+#if defined(USE_NEVA_APPRUNTIME)
+  void SetEnableHtmlSystemKeyboardAttr(bool enable);
+  bool SystemKeyboardDisabled() const override;
+#endif
+
   // RenderWidgetHostViewEventHandler::Delegate:
   gfx::Rect ConvertRectToScreen(const gfx::Rect& rect) const override;
   void ForwardKeyboardEventWithLatencyInfo(const NativeWebKeyboardEvent& event,
@@ -649,6 +654,9 @@ class CONTENT_EXPORT RenderWidgetHostViewAura
 #endif
 
   bool has_snapped_to_boundary_;
+#if defined(USE_NEVA_APPRUNTIME)
+  bool enable_html_systemkeyboard_attr_ = false;
+#endif
 
   // The last selection bounds reported to the view.
   gfx::SelectionBound selection_start_;

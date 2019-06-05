@@ -310,6 +310,15 @@ class CONTENT_EXPORT RenderFrameHostDelegate {
   virtual std::unique_ptr<WebUIImpl> CreateWebUIForRenderFrameHost(
       const GURL& url);
 
+#if defined(USE_NEVA_APPRUNTIME)
+  // Check the it has policy for response, if it has a policy, Blink won't do
+  // nothing
+  virtual bool DecidePolicyForResponse(bool isMainFrame,
+                                       int statusCode,
+                                       const GURL& url,
+                                       const base::string16& statusText);
+#endif
+
   // Called by |frame| to notify that it has received an update on focused
   // element. |bounds_in_root_view| is the rectangle containing the element that
   // is focused and is with respect to root frame's RenderWidgetHost's

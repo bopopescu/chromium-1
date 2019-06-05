@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 import("//media/media_options.gni")
+import("//neva/neva.gni")
 import("//testing/test.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
 
@@ -105,6 +106,12 @@ component("blink") {
       ]
       deps += [ "//gpu/command_buffer/client:gles2_interface" ]
     }
+  }
+
+  if (use_neva_media) {
+    deps += [
+      "//media/blink/neva",
+    ]
   }
 }
 

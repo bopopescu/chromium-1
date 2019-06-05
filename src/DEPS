@@ -106,6 +106,7 @@ vars = {
   'skia_git': 'https://skia.googlesource.com',
   'swiftshader_git': 'https://swiftshader.googlesource.com',
   'webrtc_git': 'https://webrtc.googlesource.com',
+  'neva_git': 'ssh://repo.lge.com',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling sfntly
   # and whatever else without interference from each other.
@@ -2299,6 +2300,51 @@ hooks = [
                 '-d', 'src/tools/luci-go/linux64',
     ],
   },
+  #@name USE_NEVA_APPRUNTIME
+  #@{
+  # GYP prepare for PAL Neva Generation
+  {
+    'name': 'Neva_PAL_GYP_generation',
+    'pattern': '.',
+    'action': ['python', 'src/neva/pal/pal_gen.py',
+               '-o', '.PREBUILD', '-g'],
+  },
+  # Apply angle fix to enable dcheck for GCC build
+  {
+    'name': 'Apply_angle_fix_to_enable_dcheck_for_gcc_build',
+    'pattern': '.',
+    'action': ['git', '-C', 'src/third_party/angle', 'am',
+               '../../neva/patches/0001-angle-build-Fix-enabling-dcheck-for-GCC-build.patch']
+  },
+  # Apply icu time zone fix
+  {
+    'name': 'Apply_icu_timezone_fix',
+    'pattern': '.',
+    'action': ['git', '-C', 'src/third_party/icu', 'am',
+               '../../neva/patches/0001-webos-Change-the-default-timezone-link.patch']
+  },
+  # Apply use non-icu database fix
+  {
+    'name': 'Apply_use_non_icu_database_fix',
+    'pattern': '.',
+    'action': ['git', '-C', 'src/v8', 'am',
+               '../neva/patches/0001-webos-Allow-to-use-v8-non-ICU-timezone-database.patch']
+  },
+  # Apply more accurate trace of heap growing factor
+  {
+    'name': 'Apply_more_accurate_trace_of_heap_growing_factor',
+    'pattern': '.',
+    'action': ['git', '-C', 'src/v8', 'am',
+               '../neva/patches/0002-v8-Trace-heap-growing-factor-more-accurately.patch']
+  },
+  # Apply skia gcc fix for f16<->f32
+  {
+    'name': 'Apply_skia_gcc_fix_f16_f32',
+    'pattern': '.',
+    'action': ['git', '-C', 'src/third_party/skia', 'am',
+               '../../neva/patches/0001-build-aarch64-GCC-issues-with-f16-f32-in-skia.patch']
+  },
+  #@}
   {
     'name': 'apache_win32',
     'pattern': '\\.sha1',

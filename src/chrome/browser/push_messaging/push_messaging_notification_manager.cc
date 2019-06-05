@@ -221,6 +221,10 @@ bool PushMessagingNotificationManager::IsTabVisible(
     case blink::mojom::PageVisibilityState::kHidden:
     case blink::mojom::PageVisibilityState::kPrerender:
       return false;
+    ///@name USE_NEVA_APPRUNTIME
+    ///@{
+    case blink::mojom::PageVisibilityState::kLaunching:
+    ///@}
     case blink::mojom::PageVisibilityState::kVisible:
       break;
   }

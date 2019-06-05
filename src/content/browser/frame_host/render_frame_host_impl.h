@@ -91,6 +91,10 @@
 #include "services/device/public/mojom/nfc.mojom.h"
 #endif
 
+#if defined(USE_NEVA_MEDIA)
+#include "content/common/media/neva/media_suppressor.mojom.h"
+#endif
+
 class GURL;
 struct AccessibilityHostMsg_EventBundleParams;
 struct AccessibilityHostMsg_FindInPageResultParams;
@@ -768,6 +772,12 @@ class CONTENT_EXPORT RenderFrameHostImpl
     return active_sandbox_flags_;
   }
 
+#if defined(USE_NEVA_MEDIA)
+  void PermitMediaActivation(int player_id) override;
+  void SetSuppressed(bool is_suppressed) override;
+  void SuspendMedia(int player_id) override;
+#endif
+
   // Notifies the render frame about a user activation from the browser side.
   void NotifyUserActivation();
 
@@ -1272,6 +1282,19 @@ class CONTENT_EXPORT RenderFrameHostImpl
   // wish to intercept outgoing navigation control messages.
   virtual mojom::FrameNavigationControl* GetNavigationControl();
 
+#if defined(USE_NEVA_MEDIA)
+  // Lazily initializes and returns the mojom::MediaSuppressor
+  // interface for this frame.
+  mojom::MediaSuppressor* GetMediaSuppressor();
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+  void OnDecidePolicyForResponse(bool isMainFrame,
+                                 int statusCode,
+                                 const GURL& url,
+                                 const base::string16& statusText,
+                                 bool* hasPolicy);
+#endif
   // Utility function used to validate potentially harmful parameters sent by
   // the renderer during the commit notification.
   // A return value of true means that the commit should proceed.
@@ -1745,6 +1768,10 @@ class CONTENT_EXPORT RenderFrameHostImpl
 
   viz::mojom::InputTargetClient* input_target_client_ = nullptr;
   mojom::FrameInputHandlerPtr frame_input_handler_;
+
+#if defined(USE_NEVA_MEDIA)
+  mojom::MediaSuppressorAssociatedPtr media_suppressor_;
+#endif
 
   std::unique_ptr<KeepAliveHandleFactory> keep_alive_handle_factory_;
   base::TimeDelta keep_alive_timeout_;

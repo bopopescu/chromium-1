@@ -311,7 +311,11 @@ namespace content {
 
 namespace {
 
+#if defined(OS_WEBOS)
+const int kExtraCharsBeforeAndAfterSelection = 500;
+#else
 const int kExtraCharsBeforeAndAfterSelection = 100;
+#endif
 
 // Maximum number of burst download requests allowed.
 const int kBurstDownloadLimit = 10;
@@ -1676,6 +1680,9 @@ RenderFrameImpl::RenderFrameImpl(CreateParams params)
                                 base::Unretained(this))),
       input_target_client_impl_(this),
       devtools_frame_token_(params.devtools_frame_token),
+#if defined(USE_NEVA_MEDIA)
+      media_suppressor_impl_(this),
+#endif
       weak_factory_(this) {
   // The InterfaceProvider to access Mojo services exposed by the RFHI must be
   // provided at construction time. See: https://crbug.com/729021/.
@@ -2086,6 +2093,9 @@ bool RenderFrameImpl::OnMessageReceived(const IPC::Message& msg) {
 #endif
     IPC_MESSAGE_HANDLER(FrameMsg_CopyImageAt, OnCopyImageAt)
     IPC_MESSAGE_HANDLER(FrameMsg_SaveImageAt, OnSaveImageAt)
+#if defined(USE_NEVA_APPRUNTIME)
+    IPC_MESSAGE_HANDLER(FrameMsg_CSSInjectRequest, OnCSSInjectRequest)
+#endif
     IPC_MESSAGE_HANDLER(FrameMsg_AddMessageToConsole, OnAddMessageToConsole)
     IPC_MESSAGE_HANDLER(FrameMsg_JavaScriptExecuteRequest,
                         OnJavaScriptExecuteRequest)
@@ -4696,6 +4706,26 @@ void RenderFrameImpl::AbortClientNavigation() {
 }
 
 void RenderFrameImpl::DidChangeSelection(bool is_empty_selection) {
+#if defined(USE_NEVA_APPRUNTIME)
+  if (is_empty_selection &&
+      !GetRenderWidget()->input_handler().handling_input_event() &&
+      !GetRenderWidget()->has_ime_event_guard()) {
+    WebRange selection =
+        frame_->GetInputMethodController()->GetSelectionOffsets();
+    if (selection.IsNull())
+      return;
+
+    gfx::Range range =
+        gfx::Range(selection.StartOffset(), selection.EndOffset());
+    base::string16 text =
+        frame_
+        ->RangeAsText(WebRange(0, kExtraCharsBeforeAndAfterSelection + 1))
+        .Utf16();
+
+    SetSelectedText(text, 0, range);
+  }
+#endif
+
   if (!GetRenderWidget()->input_handler().handling_input_event() &&
       !handling_select_range_)
     return;
@@ -4889,7 +4919,6 @@ void RenderFrameImpl::WillSendRequest(blink::WebURLRequest& request) {
     response_override =
         old_extra_data->TakeNavigationResponseOverrideOwnership();
   }
-
   // Set an empty HTTP origin header for non GET methods if none is currently
   // present.
   request.SetHTTPOriginIfNeeded(WebSecurityOrigin::CreateUnique());
@@ -5207,6 +5236,44 @@ void RenderFrameImpl::DidChangePerformanceTiming() {
   for (auto& observer : observers_)
     observer.DidChangePerformanceTiming();
 }
+
+#if defined(USE_NEVA_MEDIA)
+void RenderFrameImpl::DidCommitCompositorFrame() {
+  for (auto& observer : observers_)
+    observer.DidCommitCompositorFrame();
+}
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+bool RenderFrameImpl::DecidePolicyForResponse(
+    const blink::WebURLResponse& response) {
+  // Send sync message to get policy of this response
+  bool hasPolicy;
+  Send(new FrameHostMsg_DecidePolicyForResponse(
+      routing_id_, IsMainFrame(), response.HttpStatusCode(), response.Url(),
+      response.HttpStatusText().Utf16(), &hasPolicy));
+  return hasPolicy;
+}
+
+void RenderFrameImpl::OnCSSInjectRequest(const std::string& css) {
+  WebVector<WebString> white;
+  frame_->View()->InjectStyleSheet(
+      WebString::FromUTF8(css.c_str()), white, WebView::kInjectStyleInAllFrames);
+}
+
+void RenderFrameImpl::ResetStateToMarkNextPaintForContainer() {
+  for (auto& observer : observers_)
+    observer.DidResetStateToMarkNextPaintForContainer();
+
+  if (IsMainFrame() && GetWebFrame())
+    GetWebFrame()->ResetStateToMarkNextPaintForContainer();
+}
+
+void RenderFrameImpl::DidNonFirstMeaningPaintAfterLoad() {
+  for (auto& observer : observers_)
+    observer.DidNonFirstMeaningPaintAfterLoad();
+}
+#endif
 
 void RenderFrameImpl::DidObserveLoadingBehavior(
     blink::WebLoadingBehaviorFlag behavior) {
@@ -5650,8 +5717,16 @@ RenderFrameImpl::MakeDidCommitProvisionalLoadParams(
     if (params->origin.scheme() != url::kFileScheme ||
         !render_view_->GetWebkitPreferences()
              .allow_universal_access_from_file_urls) {
+#if defined(USE_NEVA_APPRUNTIME)
+      if (!(params->origin.scheme() == url::kFileScheme &&
+            !render_view_->renderer_preferences_.file_security_origin
+                 .empty())) {
+#endif
       CHECK(params->origin.IsSameOriginWith(url::Origin::Create(params->url)))
           << " url:" << params->url << " origin:" << params->origin;
+#if defined(USE_NEVA_APPRUNTIME)
+      }
+#endif
     }
   }
   params->request_id = response.RequestId();
@@ -6112,10 +6187,26 @@ void RenderFrameImpl::BeginNavigation(
         (frame_->IsViewSourceModeEnabled() &&
          info->navigation_type != blink::kWebNavigationTypeReload);
     if (!should_fork && url.SchemeIs(url::kFileScheme)) {
-      // Fork non-file to file opens.  Note that this may fork unnecessarily if
-      // another tab (hosting a file or not) targeted this one before its
-      // initial navigation, but that shouldn't cause a problem.
-      should_fork = !old_url.SchemeIs(url::kFileScheme);
+#if defined(USE_NEVA_APPRUNTIME)
+      // Fork non-file to file opens. Check if the opener URL is the initial
+      // navigation in a newly opened window.
+      GURL source_url(old_url);
+      if (is_initial_navigation && source_url.is_empty() && frame_->Opener())
+        source_url = frame_->Opener()->ToWebLocalFrame()->GetDocument().Url();
+      DCHECK(!source_url.is_empty());
+
+      // If |source_url| tries to access a local file from remote url, we should
+      // check if WebSecurity is disabled and LocalResourceLoad is allowed.
+      // If the condition is met, the local resource access can be permitted.
+      WebPreferences webkit_preferences = render_view()->webkit_preferences();
+      if (!source_url.SchemeIs(url::kFileScheme) &&
+          webkit_preferences.web_security_enabled &&
+          !webkit_preferences.allow_local_resource_load)
+#endif
+        // Fork non-file to file opens.  Note that this may fork unnecessarily
+        // if another tab (hosting a file or not) targeted this one before its
+        // initial navigation, but that shouldn't cause a problem.
+        should_fork = !old_url.SchemeIs(url::kFileScheme);
     }
 
     if (!should_fork) {
@@ -7007,6 +7098,12 @@ void RenderFrameImpl::RegisterMojoInterfaces() {
   GetAssociatedInterfaceRegistry()->AddInterface(
       base::Bind(&RenderFrameImpl::BindFrameNavigationControl,
                  weak_factory_.GetWeakPtr()));
+
+#if defined(USE_NEVA_MEDIA)
+  GetAssociatedInterfaceRegistry()->AddInterface(
+      base::Bind(&neva::MediaSuppressorImpl::Bind,
+         base::Unretained(&media_suppressor_impl_)));
+#endif
 
   if (IsPerNavigationMojoInterfaceEnabled()) {
     GetAssociatedInterfaceRegistry()->AddInterface(base::BindRepeating(

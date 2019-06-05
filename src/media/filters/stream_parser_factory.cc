@@ -33,6 +33,13 @@
 #if BUILDFLAG(ENABLE_MSE_MPEG2TS_STREAM_PARSER)
 #include "media/formats/mp2t/mp2t_stream_parser.h"
 #endif
+#include "media/formats/mp4/es_descriptor.h"
+#include "media/formats/mp4/mp4_stream_parser.h"
+#endif
+
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/media_platform_api.h"
+#include "media/base/neva/media_type_restriction.h"
 #endif
 
 namespace media {
@@ -79,6 +86,9 @@ struct SupportedTypeInfo {
   const char* type;
   const ParserFactoryFunction factory_function;
   const CodecInfo* const* codecs;
+#if defined(USE_NEVA_MEDIA)
+  const base::Optional<MediaTypeRestriction> restriction;
+#endif
 };
 
 static const CodecInfo kVP8CodecInfo = {"vp8", CodecInfo::VIDEO, nullptr,
@@ -372,8 +382,12 @@ static StreamParser* BuildMP2TParser(const std::vector<std::string>& codecs,
 #endif  // BUILDFLAG(USE_PROPRIETARY_CODECS)
 
 static const SupportedTypeInfo kSupportedTypeInfo[] = {
+#if defined(ENABLE_WEBM_VIDEO_CODECS)
     {"video/webm", &BuildWebMParser, kVideoWebMCodecs},
+#endif
+#if defined(ENABLE_WEBM_AUDIO_CODECS)
     {"audio/webm", &BuildWebMParser, kAudioWebMCodecs},
+#endif
     {"audio/mpeg", &BuildMP3Parser, kAudioMP3Codecs},
     // NOTE: Including proprietary MP4 codecs is gated by build flags above.
     {"video/mp4", &BuildMP4Parser, kVideoMP4Codecs},
@@ -444,11 +458,24 @@ static bool CheckTypeAndCodecs(
     MediaLog* media_log,
     ParserFactoryFunction* factory_function,
     std::vector<CodecInfo::HistogramTag>* audio_codecs,
+#if defined(USE_NEVA_MEDIA)
+    std::vector<CodecInfo::HistogramTag>* video_codecs,
+    const base::Optional<MediaTypeRestriction>& restriction) {
+#else
     std::vector<CodecInfo::HistogramTag>* video_codecs) {
+#endif
   // Search for the SupportedTypeInfo for |type|.
   for (size_t i = 0; i < arraysize(kSupportedTypeInfo); ++i) {
     const SupportedTypeInfo& type_info = kSupportedTypeInfo[i];
     if (type == type_info.type) {
+#if defined(USE_NEVA_MEDIA)
+      base::Optional<MediaTypeRestriction> platform_restriction =
+          MediaPlatformAPI::GetPlatformRestrictionForType(type);
+      if (platform_restriction.has_value() && restriction.has_value() &&
+          !platform_restriction->IsSatisfied(restriction.value()))
+        return false;
+#endif
+
       if (codecs.empty()) {
         const CodecInfo* codec_info = type_info.codecs[0];
         if (codec_info && !codec_info->pattern &&
@@ -505,8 +532,24 @@ bool StreamParserFactory::IsTypeSupported(
   // TODO(wolenetz): Questionable MediaLog usage, http://crbug.com/712310
   MediaLog media_log;
   return CheckTypeAndCodecs(type, codecs, &media_log, nullptr, nullptr,
+#if defined(USE_NEVA_MEDIA)
+                            nullptr, base::nullopt);
+#else
                             nullptr);
+#endif
 }
+
+#if defined(USE_NEVA_MEDIA)
+bool StreamParserFactory::IsTypeSupported(
+    const std::string& type,
+    const std::vector<std::string>& codecs,
+    const base::Optional<MediaTypeRestriction>& restriction) {
+  // TODO(wolenetz): Questionable MediaLog usage, http://crbug.com/712310
+  MediaLog media_log;
+  return CheckTypeAndCodecs(type, codecs, &media_log, nullptr, nullptr, nullptr,
+                            restriction);
+}
+#endif
 
 std::unique_ptr<StreamParser> StreamParserFactory::Create(
     const std::string& type,
@@ -518,7 +561,11 @@ std::unique_ptr<StreamParser> StreamParserFactory::Create(
   std::vector<CodecInfo::HistogramTag> video_codecs;
 
   if (CheckTypeAndCodecs(type, codecs, media_log, &factory_function,
+#if defined(USE_NEVA_MEDIA)
+                         &audio_codecs, &video_codecs, base::nullopt)) {
+#else
                          &audio_codecs, &video_codecs)) {
+#endif
     // Log the number of codecs specified, as well as the details on each one.
     UMA_HISTOGRAM_COUNTS_100("Media.MSE.NumberOfTracks", codecs.size());
     for (size_t i = 0; i < audio_codecs.size(); ++i) {

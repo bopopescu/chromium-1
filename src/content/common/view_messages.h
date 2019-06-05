@@ -217,6 +217,12 @@ IPC_MESSAGE_ROUTED1(ViewMsg_PpapiBrokerPermissionResult,
                     bool /* result */)
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+// Sent by WAM to replace url for all frames of the page usually of
+// container application
+IPC_MESSAGE_ROUTED1(ViewMsg_ReplaceBaseURL, GURL)
+#endif
+
 // Sent to the main-frame's view to request performing a page scale animation
 // based on the point/rect provided.
 IPC_MESSAGE_ROUTED2(ViewMsg_AnimateDoubleTapZoom,

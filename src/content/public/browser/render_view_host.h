@@ -115,6 +115,10 @@ class CONTENT_EXPORT RenderViewHost : public IPC::Sender {
   // be called. This triggers recomputing preferences.
   virtual void OnWebkitPreferencesChanged() = 0;
 
+#if defined(USE_NEVA_APPRUNTIME)
+  virtual void ReplaceBaseURL(const GURL& newUrl) = 0;
+#endif
+
   // Passes a list of Webkit preferences to the renderer.
   virtual void UpdateWebkitPreferences(const WebPreferences& prefs) = 0;
 

@@ -1,0 +1,16 @@
+{
+  "name": "neva_pal",
+  "display_name": "Neva PAL Service",
+  "interface_provider_specs": {
+    "service_manager:connector": {
+      "provides": {
+        "neva:memorymanager" : [
+          "pal.mojom.MemoryManager" ],
+        "neva:sample" : [
+          "pal.mojom.Sample" ],
+        "neva:systemservicebridge" : [
+          "pal.mojom.SystemServiceBridgeProvider" ]
+      }
+    }
+  }
+}

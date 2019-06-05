@@ -31,7 +31,11 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/gfx/geometry/dip_util.h"
 
+#if defined(USE_NEVA_APPRUNTIME)
+namespace neva {
+#else
 namespace content {
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // DelegatedFrameHost

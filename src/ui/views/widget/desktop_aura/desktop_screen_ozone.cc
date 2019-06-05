@@ -13,6 +13,14 @@
 #include "ui/ozone/public/ozone_platform.h"
 #include "ui/views/widget/desktop_aura/desktop_screen.h"
 
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+#include "base/command_line.h"
+#include "ui/gfx/switches.h"
+#include "ui/views/widget/desktop_aura/desktop_screen_headless.h"
+#include "ui/views/widget/desktop_aura/desktop_screen.h"
+#include "ui/views/widget/desktop_aura/desktop_factory_ozone.h"
+#endif
+
 namespace views {
 
 DesktopScreenOzone::DesktopScreenOzone()
@@ -55,6 +63,15 @@ void DesktopScreenOzone::OnDisplaySnapshotsInvalidated() {}
 
 //////////////////////////////////////////////////////////////////////////////
 
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+display::Screen* CreateDesktopScreen() {
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (command_line->HasSwitch(switches::kHeadless))
+    return new views::DesktopScreenHeadless;
+
+  return DesktopFactoryOzone::GetInstance()->CreateDesktopScreen();
+}
+#else
 display::Screen* CreateDesktopScreen() {
   auto platform_screen = ui::OzonePlatform::GetInstance()->CreateScreen();
   if (!platform_screen) {
@@ -67,5 +84,6 @@ display::Screen* CreateDesktopScreen() {
   }
   return new aura::ScreenOzone(std::move(platform_screen));
 }
+#endif
 
 }  // namespace views

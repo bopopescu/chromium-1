@@ -47,6 +47,10 @@
 #include "ui/gl/gl_enums.h"
 #include "ui/gl/trace_util.h"
 
+#if defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+#include "components/viz/common/quads/solid_color_draw_quad.h"
+#endif  // defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+
 namespace media {
 namespace {
 
@@ -545,6 +549,26 @@ void VideoResourceUpdater::AppendQuads(viz::RenderPass* render_pass,
       }
       break;
     }
+#if defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+    // This block and other blocks wrapped around #if defined(VIDEO_HOLE) is not
+    // maintained by the general compositor team. Please contact the following
+    // people instead:
+    //
+    // wonsik@chromium.org
+    // lcwu@chromium.org
+    case VideoFrameResourceType::HOLE: {
+      DCHECK_EQ(frame_resources_.size(), 0u);
+      viz::SolidColorDrawQuad* solid_color_draw_quad =
+          render_pass->CreateAndAppendDrawQuad<viz::SolidColorDrawQuad>();
+
+      // Create a solid color quad with transparent black and force no
+      // blending / no anti-aliasing.
+      solid_color_draw_quad->SetAll(shared_quad_state, quad_rect,
+                                    visible_quad_rect, false,
+                                    SK_ColorTRANSPARENT, true);
+      break;
+    }
+#endif  // defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
     case VideoFrameResourceType::NONE:
       NOTIMPLEMENTED();
       break;
@@ -554,6 +578,13 @@ void VideoResourceUpdater::AppendQuads(viz::RenderPass* render_pass,
 VideoFrameExternalResources
 VideoResourceUpdater::CreateExternalResourcesFromVideoFrame(
     scoped_refptr<VideoFrame> video_frame) {
+#if defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
+  if (video_frame->storage_type() == media::VideoFrame::STORAGE_HOLE) {
+    VideoFrameExternalResources external_resources;
+    external_resources.type = VideoFrameResourceType::HOLE;
+    return external_resources;
+  }
+#endif  // defined(VIDEO_HOLE) && defined(USE_NEVA_MEDIA)
   if (video_frame->format() == PIXEL_FORMAT_UNKNOWN)
     return VideoFrameExternalResources();
   DCHECK(video_frame->HasTextures() || video_frame->IsMappable());

@@ -20,6 +20,11 @@
 #include <sys/utsname.h>
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "base/command_line.h"
+#include "content/public/common/content_neva_switches.h"
+#endif
+
 namespace content {
 
 namespace {
@@ -35,6 +40,8 @@ std::string GetUserAgentPlatform() {
       "";
 #elif defined(OS_MACOSX)
       "Macintosh; ";
+#elif defined(OS_WEBOS)
+      "Web0S; ";
 #elif defined(USE_X11) || defined(USE_OZONE)
       "X11; ";  // strange, but that's what Firefox uses
 #elif defined(OS_ANDROID)
@@ -100,6 +107,16 @@ std::string BuildOSCpuInfo(bool include_android_build_number) {
     cputype.assign(unixinfo.machine);
   }
 #endif
+#if (defined(USE_NEVA_APPRUNTIME) && defined(OS_WEBOS))
+  std::string app_runtime_sysname = unixinfo.sysname;
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (command_line->HasSwitch(switches::kUserAgentSuffix)) {
+    std::string suffix =
+        command_line->GetSwitchValueASCII(switches::kUserAgentSuffix);
+    if (!suffix.empty())
+      app_runtime_sysname += "/" + suffix;
+  }
+#endif  // defined(USE_NEVA_APPRUNTIME) && defined(OS_WEBOS)
 
   base::StringAppendF(
       &os_cpu,
@@ -124,6 +141,9 @@ std::string BuildOSCpuInfo(bool include_android_build_number) {
       "Android %s%s",
       android_version_str.c_str(),
       android_info_str.c_str()
+#elif (defined(USE_NEVA_APPRUNTIME) && defined(OS_WEBOS))
+      "%s",
+      app_runtime_sysname.c_str()
 #elif defined(OS_POSIX) || defined(OS_FUCHSIA)
                       "%s %s",
                       unixinfo.sysname,  // e.g. Linux

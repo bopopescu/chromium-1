@@ -4,13 +4,21 @@
 
 #include "media/base/mime_util.h"
 
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/neva_mime_util_internal.h"
+#else
 #include "media/base/mime_util_internal.h"
+#endif
 
 namespace media {
 
 // This variable is Leaky because it is accessed from WorkerPool threads.
 static internal::MimeUtil* GetMimeUtil() {
+#if defined(USE_NEVA_MEDIA)
+  static internal::MimeUtil* mime_util = new internal::NevaMimeUtil();
+#else
   static internal::MimeUtil* mime_util = new internal::MimeUtil();
+#endif
   return mime_util;
 }
 

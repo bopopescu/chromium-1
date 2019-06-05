@@ -53,6 +53,11 @@ class MEDIA_BLINK_EXPORT WebContentDecryptionModuleImpl
 
   std::unique_ptr<CdmContextRef> GetCdmContextRef();
 
+#if defined(USE_NEVA_MEDIA)
+  // Returns the key system name.
+  const std::string& GetKeySystem() const;
+#endif
+
  private:
   friend CdmSessionAdapter;
 

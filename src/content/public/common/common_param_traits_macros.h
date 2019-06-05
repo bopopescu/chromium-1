@@ -235,6 +235,12 @@ IPC_STRUCT_TRAITS_BEGIN(content::WebPreferences)
   IPC_STRUCT_TRAITS_MEMBER(presentation_receiver)
   IPC_STRUCT_TRAITS_MEMBER(media_controls_enabled)
   IPC_STRUCT_TRAITS_MEMBER(do_not_update_selection_on_mutating_selection_range)
+#if defined(USE_NEVA_APPRUNTIME)
+  IPC_STRUCT_TRAITS_MEMBER(allow_local_resource_load)
+#endif
+#if defined(USE_NEVA_MEDIA)
+  IPC_STRUCT_TRAITS_MEMBER(max_timeupdate_event_frequency)
+#endif
   IPC_STRUCT_TRAITS_MEMBER(autoplay_policy)
   IPC_STRUCT_TRAITS_MEMBER(low_priority_iframes_threshold)
   IPC_STRUCT_TRAITS_MEMBER(picture_in_picture_enabled)
@@ -342,6 +348,16 @@ IPC_STRUCT_TRAITS_BEGIN(content::RendererPreferences)
   IPC_STRUCT_TRAITS_MEMBER(arrow_bitmap_height_vertical_scroll_bar_in_dips)
   IPC_STRUCT_TRAITS_MEMBER(arrow_bitmap_width_horizontal_scroll_bar_in_dips)
 #endif
+///@name USE_NEVA_APPRUNTIME
+///@{
+  IPC_STRUCT_TRAITS_MEMBER(application_id)
+  IPC_STRUCT_TRAITS_MEMBER(media_codec_capability)
+  IPC_STRUCT_TRAITS_MEMBER(board_type)
+  IPC_STRUCT_TRAITS_MEMBER(allow_fake_bold_text)
+  IPC_STRUCT_TRAITS_MEMBER(file_security_origin)
+  IPC_STRUCT_TRAITS_MEMBER(use_unlimited_media_policy)
+  IPC_STRUCT_TRAITS_MEMBER(is_enact_browser)
+///@}
 IPC_STRUCT_TRAITS_END()
 
 #endif  // CONTENT_PUBLIC_COMMON_COMMON_PARAM_TRAITS_MACROS_H_

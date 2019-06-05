@@ -9,6 +9,7 @@ import("//build/config/win/console_app.gni")
 import("//build/config/win/manifest.gni")
 import("//media/media_options.gni")
 import("//mojo/public/tools/bindings/mojom.gni")
+import("//neva/neva.gni")
 import("//ppapi/buildflags/buildflags.gni")
 import("//services/service_manager/public/service_manifest.gni")
 import("//tools/grit/grit_rule.gni")
@@ -159,6 +160,8 @@ jumbo_static_library("content_shell_lib") {
     "browser/shell_javascript_dialog_mac.mm",
     "browser/shell_javascript_dialog_manager.cc",
     "browser/shell_javascript_dialog_manager.h",
+    "browser/shell_javascript_dialog_neva.cc",
+    "browser/shell_javascript_dialog_neva.h",
     "browser/shell_javascript_dialog_win.cc",
     "browser/shell_login_dialog.cc",
     "browser/shell_login_dialog.h",
@@ -194,6 +197,8 @@ jumbo_static_library("content_shell_lib") {
     "common/shell_content_client.h",
     "common/shell_messages.cc",
     "common/shell_messages.h",
+    "common/shell_neva_switches.cc",
+    "common/shell_neva_switches.h",
     "common/shell_origin_trial_policy.cc",
     "common/shell_origin_trial_policy.h",
     "common/shell_switches.cc",
@@ -452,6 +457,10 @@ jumbo_static_library("content_shell_lib") {
 
   if (use_ozone) {
     deps += [ "//ui/ozone" ]
+  }
+
+  if (use_neva_appruntime) {
+    deps += [ "//neva/app_runtime:app_runtime_inspector_resources_grit" ]
   }
 
   if (!enable_plugins) {

@@ -5,6 +5,11 @@
 #ifndef IPC_IPC_MESSAGE_START_H_
 #define IPC_IPC_MESSAGE_START_H_
 
+///@name USE_NEVA_APPRUNTIME
+///@{
+#include "pal/ipc/pal_macros.h"
+///@}
+
 // Used by IPC_BEGIN_MESSAGES so that each message class starts from a unique
 // base.  Messages have unique IDs across channels in order for the IPC logging
 // code to figure out the message class from its ID.
@@ -68,6 +73,15 @@ enum IPCMessageStart {
   SurfaceViewManagerMsgStart,
   ExtensionWorkerMsgStart,
   SubresourceFilterMsgStart,
+  ///@name USE_NEVA_APPRUNTIME
+  ///@{
+  // Added for Pal injection.
+  BrowserControlMsgStart,
+  // Added for neva injections.
+  InjectionMsgStart,
+  // Added for neva PAL.
+  PalMsgStart,
+  ///@}
   ChromeAppsMsgStart,
   LastIPCMsgStart  // Must come last.
 };

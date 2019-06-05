@@ -25,11 +25,20 @@
 #include "ui/native_theme/native_theme_dark_aura.h"
 #include "ui/views/linux_ui/linux_ui.h"
 #include "ui/views/widget/desktop_aura/desktop_screen.h"
+// Added defined(USE_X11) for compiling chrome browser with ozone-wayland port
+#if defined(USE_X11)
 #include "ui/views/widget/desktop_aura/x11_desktop_handler.h"
+#endif
 #include "ui/views/widget/native_widget_aura.h"
+// Added for ozone-wayland port
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+#include "ozone/ui/webui/ozone_webui.h"
+#endif
 
 namespace {
-
+// Added !defined(USE_OZONE) for compiling chrome browser with ozone-wayland
+// port
+#if !defined(USE_OZONE)
 ui::NativeTheme* GetNativeThemeForWindow(aura::Window* window) {
   if (!window)
     return nullptr;
@@ -54,6 +63,7 @@ ui::NativeTheme* GetNativeThemeForWindow(aura::Window* window) {
 
   return ui::NativeTheme::GetInstanceForNativeUi();
 }
+#endif
 
 }  // namespace
 
@@ -62,14 +72,25 @@ ChromeBrowserMainExtraPartsViewsLinux::ChromeBrowserMainExtraPartsViewsLinux() {
 
 ChromeBrowserMainExtraPartsViewsLinux::
     ~ChromeBrowserMainExtraPartsViewsLinux() {
+// Fix for ozone-wayland build without X11
+#if defined(USE_X11)
   if (views::X11DesktopHandler::get_dont_create())
     views::X11DesktopHandler::get_dont_create()->RemoveObserver(this);
+#endif
 }
 
 void ChromeBrowserMainExtraPartsViewsLinux::PreEarlyInitialization() {
+// Added !defined(USE_OZONE) for compiling chrome browser with ozone-wayland
+// port
+#if !defined(USE_OZONE)
   views::LinuxUI* gtk_ui = BuildGtkUi();
   gtk_ui->SetNativeThemeOverride(base::Bind(&GetNativeThemeForWindow));
   views::LinuxUI::SetInstance(gtk_ui);
+#endif
+// Added for ozone-wayland port
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+  views::LinuxUI::SetInstance(BuildWebUI());
+#endif
 }
 
 void ChromeBrowserMainExtraPartsViewsLinux::ToolkitInitialized() {
@@ -82,7 +103,10 @@ void ChromeBrowserMainExtraPartsViewsLinux::PreCreateThreads() {
   // because its display::Screen instance depends on it.
   views::LinuxUI::instance()->UpdateDeviceScaleFactor();
   ChromeBrowserMainExtraPartsViews::PreCreateThreads();
+// Added defined(USE_X11) for compiling chrome browser with ozone-wayland port
+#if defined(USE_X11)
   views::X11DesktopHandler::get()->AddObserver(this);
+#endif
 }
 
 void ChromeBrowserMainExtraPartsViewsLinux::OnWorkspaceChanged(

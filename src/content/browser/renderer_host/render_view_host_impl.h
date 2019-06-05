@@ -107,6 +107,9 @@ class CONTENT_EXPORT RenderViewHostImpl : public RenderViewHost,
   WebPreferences GetWebkitPreferences() override;
   void UpdateWebkitPreferences(const WebPreferences& prefs) override;
   void OnWebkitPreferencesChanged() override;
+#if defined(USE_NEVA_APPRUNTIME)
+  void ReplaceBaseURL(const GURL& newUrl) override;
+#endif
 
   // RenderProcessHostObserver implementation
   void RenderProcessExited(RenderProcessHost* host,

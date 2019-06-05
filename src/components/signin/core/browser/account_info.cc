@@ -32,7 +32,7 @@ AccountInfo::AccountInfo(AccountInfo&& other) noexcept = default;
 
 AccountInfo& AccountInfo::operator=(const AccountInfo& other) = default;
 
-AccountInfo& AccountInfo::operator=(AccountInfo&& other) noexcept = default;
+AccountInfo& AccountInfo::operator=(AccountInfo&& other) = default;
 
 bool AccountInfo::IsEmpty() const {
   return account_id.empty() && email.empty() && gaia.empty() &&

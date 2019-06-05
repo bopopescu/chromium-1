@@ -1,7 +1,9 @@
 // Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
+#if defined(USE_NEVA_APPRUNTIME)
+#include "content/browser/renderer_host/delegated_frame_host_neva.h"
+#endif
 #ifndef CONTENT_BROWSER_RENDERER_HOST_DELEGATED_FRAME_HOST_H_
 #define CONTENT_BROWSER_RENDERER_HOST_DELEGATED_FRAME_HOST_H_
 
@@ -32,7 +34,16 @@ namespace viz {
 class CompositorFrameSinkSupport;
 }
 
+#if defined(USE_NEVA_APPRUNTIME)
 namespace content {
+class DelegatedFrameHost;
+}
+
+namespace neva {
+using namespace content;
+#else
+namespace content {
+#endif
 
 class DelegatedFrameHost;
 
@@ -177,6 +188,9 @@ class CONTENT_EXPORT DelegatedFrameHost
 
  private:
   friend class DelegatedFrameHostClient;
+#if defined(USE_NEVA_APPRUNTIME)
+  friend class content::DelegatedFrameHost;
+#endif
   FRIEND_TEST_ALL_PREFIXES(RenderWidgetHostViewAuraTest,
                            SkippedDelegatedFrames);
   FRIEND_TEST_ALL_PREFIXES(RenderWidgetHostViewAuraTest,

@@ -14,6 +14,12 @@
 #include "ui/base/ime/text_input_client.h"
 #include "ui/events/event.h"
 
+///@name USE_NEVA_APPRUNTIME
+///@{
+#include "base/command_line.h"
+#include "ui/base/ui_base_neva_switches.h"
+///@}
+
 namespace {
 
 const int kIgnoreCommitsDurationInMilliseconds = 100;
@@ -23,18 +29,28 @@ const int kIgnoreCommitsDurationInMilliseconds = 100;
 namespace ui {
 
 InputMethodAuraLinux::InputMethodAuraLinux(
-    internal::InputMethodDelegate* delegate)
+    internal::InputMethodDelegate* delegate,
+    unsigned handle)
     : InputMethodBase(delegate),
       text_input_type_(TEXT_INPUT_TYPE_NONE),
       is_sync_mode_(false),
       composition_changed_(false),
       weak_ptr_factory_(this) {
-  context_ =
+  if (!!handle) {
+    context_ =
+      LinuxInputMethodContextFactory::instance()->CreateInputMethodContext(
+          this, handle, false);
+    context_simple_ =
+      LinuxInputMethodContextFactory::instance()->CreateInputMethodContext(
+          this, handle, true);
+  } else {
+    context_ =
       LinuxInputMethodContextFactory::instance()->CreateInputMethodContext(
           this, false);
-  context_simple_ =
+    context_simple_ =
       LinuxInputMethodContextFactory::instance()->CreateInputMethodContext(
           this, true);
+  }
 }
 
 InputMethodAuraLinux::~InputMethodAuraLinux() {

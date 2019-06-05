@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "base/command_line.h"
 #include "base/macros.h"
 #include "base/run_loop.h"
 #include "base/trace_event/trace_event.h"
@@ -14,7 +15,9 @@
 #include "ui/aura/env.h"
 #include "ui/aura/window.h"
 #include "ui/aura/window_event_dispatcher.h"
+#include "ui/base/ime/input_method.h"
 #include "ui/base/layout.h"
+#include "ui/base/ui_base_neva_switches.h"
 #include "ui/compositor/compositor.h"
 #include "ui/events/event.h"
 #include "ui/events/keyboard_hook.h"
@@ -33,6 +36,10 @@
 #if defined(OS_WIN)
 #include "ui/base/cursor/cursor_loader_win.h"
 #include "ui/platform_window/win/win_window.h"
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+#include "ui/views/widget/desktop_aura/neva/native_event_delegate.h"
 #endif
 
 #if defined(USE_X11)
@@ -74,6 +81,14 @@ void WindowTreeHostPlatform::CreateAndSetPlatformWindow(
 #if defined(USE_OZONE)
   platform_window_ = ui::OzonePlatform::GetInstance()->CreatePlatformWindow(
       this, std::move(properties));
+///@name USE_NEVA_APPRUNTIME
+///@{
+  bool ime_enabled = base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNevaIme);
+  if (ime_enabled)
+    GetInputMethod()->AddObserver(this);
+  SetImeEnabled(ime_enabled);
+///@}
 #elif defined(OS_WIN)
   platform_window_.reset(new ui::WinWindow(this, properties.bounds));
 #elif defined(OS_ANDROID)
@@ -91,6 +106,9 @@ void WindowTreeHostPlatform::SetPlatformWindow(
 }
 
 WindowTreeHostPlatform::~WindowTreeHostPlatform() {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNevaIme))
+    GetInputMethod()->RemoveObserver(this);
   DestroyCompositor();
   DestroyDispatcher();
 
@@ -139,6 +157,13 @@ void WindowTreeHostPlatform::ReleaseCapture() {
   platform_window_->ReleaseCapture();
 }
 
+void WindowTreeHostPlatform::SetWindowProperty(const std::string& name,
+                                               const std::string& value) {
+#if defined(USE_OZONE)
+  platform_window_->SetWindowProperty(name, value);
+#endif
+}
+
 bool WindowTreeHostPlatform::CaptureSystemKeyEventsImpl(
     base::Optional<base::flat_set<ui::DomCode>> dom_codes) {
   // Only one KeyboardHook should be active at a time, otherwise there will be
@@ -182,6 +207,26 @@ void WindowTreeHostPlatform::SetCursorNative(gfx::NativeCursor cursor) {
 #if defined(OS_WIN)
   ui::CursorLoaderWin cursor_loader;
   cursor_loader.SetPlatformCursor(&cursor);
+#endif
+
+// Pointer cursor is considered as default system cursor.
+// So, for pointer cursor, method SetCustomCursor with kNotUse argument
+// is called instead of SetCursor to substitute default pointer cursor
+// (black arrow) to default wayland cursor (pink plectrum).
+#if defined(OS_WEBOS)
+  ui::CursorType native_type = cursor.native_type();
+  if (native_type == ui::CursorType::kPointer) {
+    platform_window_->SetCustomCursor(app_runtime::CustomCursorType::kNotUse,
+                                      "", 0, 0, false);
+    return;
+  } else if (native_type == ui::CursorType::kNone) {
+    // Hiding of the cursor after some time is handled by LSM, but some sites
+    // for video playback are also have such functionality in JavaScript.
+    // And in case when cursor was hidden firstly by LSM and then by
+    // JavaScript, it no longer could be restored.
+    // To fix such situations hiding cursor by JavaScript is ignored.
+    return;
+  }
 #endif
 
   platform_window_->SetCursor(cursor.platform());
@@ -254,6 +299,20 @@ void WindowTreeHostPlatform::OnClosed() {}
 void WindowTreeHostPlatform::OnWindowStateChanged(
     ui::PlatformWindowState new_state) {}
 
+#if defined(USE_OZONE) && defined(OZONE_PLATFORM_WAYLAND_EXTERNAL)
+void WindowTreeHostPlatform::OnWindowHostStateChanged(
+    ui::WidgetState new_state) {
+  WindowTreeHost::OnWindowHostStateChanged(new_state);
+}
+
+void WindowTreeHostPlatform::OnWindowHostClose() {
+#if defined(USE_NEVA_APPRUNTIME)
+  if (native_event_delegate_)
+    native_event_delegate_->WindowHostClose();
+#endif
+}
+#endif
+
 void WindowTreeHostPlatform::OnLostCapture() {
   OnHostLostWindowCapture();
 }
@@ -274,5 +333,37 @@ void WindowTreeHostPlatform::OnAcceleratedWidgetDestroyed() {
 
 void WindowTreeHostPlatform::OnActivationChanged(bool active) {
 }
+
+void WindowTreeHostPlatform::OnShowIme() {
+#if defined(USE_OZONE)
+  platform_window_->ShowInputPanel();
+#endif
+}
+
+void WindowTreeHostPlatform::OnHideIme() {
+#if defined(USE_OZONE)
+  platform_window_->HideInputPanel();
+#endif
+}
+
+void WindowTreeHostPlatform::OnTextInputTypeChanged(
+    ui::TextInputType text_input_type,
+    int text_input_flags) {
+#if defined(USE_OZONE)
+  if (text_input_type != ui::TEXT_INPUT_TYPE_NONE)
+    platform_window_->SetInputContentType(text_input_type, text_input_flags);
+#endif
+}
+
+///@name USE_NEVA_APPRUNTIME
+///@{
+void WindowTreeHostPlatform::SetSurroundingText(const std::string& text,
+                                                size_t cursor_position,
+                                                size_t anchor_position) {
+#if defined(USE_OZONE)
+  platform_window_->SetSurroundingText(text, cursor_position, anchor_position);
+#endif
+}
+///@}
 
 }  // namespace aura

@@ -544,6 +544,9 @@ bool MimeUtil::IsCodecSupportedOnAndroid(
     // ----------------------------------------------------------------------
     // The following codecs are never supported.
     // ----------------------------------------------------------------------
+#if defined(USE_NEVA_MEDIA)
+    case VALID_CODEC:
+#endif
     case INVALID_CODEC:
     case THEORA:
       return false;
@@ -964,6 +967,9 @@ bool MimeUtil::IsCodecProprietary(Codec codec) const {
     case DOLBY_VISION:
       return true;
 
+#if defined(USE_NEVA_MEDIA)
+    case VALID_CODEC:
+#endif
     case MP3:
     case PCM:
     case VORBIS:

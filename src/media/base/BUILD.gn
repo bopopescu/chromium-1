@@ -9,6 +9,7 @@ import("//build/config/jumbo.gni")
 import("//build/config/ui.gni")
 import("//build/config/linux/pkg_config.gni")
 import("//media/media_options.gni")
+import("//neva/neva.gni")
 import("//testing/libfuzzer/fuzzer_test.gni")
 
 if (is_android) {
@@ -309,6 +310,9 @@ jumbo_source_set("base") {
     "//ui/events:events_base",
     "//url:url",
   ]
+  if (use_neva_media) {
+    deps += [ "//media/base/neva" ]
+  }
   libs = []
   configs += [
     "//build/config:precompiled_headers",
@@ -370,6 +374,13 @@ jumbo_source_set("base") {
 
   if (is_win) {
     deps += [ "//media/base/win" ]
+  }
+
+  if (use_neva_media) {
+    sources += [
+      "media_switches_neva.cc",
+      "media_switches_neva.h",
+    ]
   }
 
   if (is_chromecast) {

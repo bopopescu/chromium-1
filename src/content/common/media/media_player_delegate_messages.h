@@ -140,6 +140,20 @@ IPC_MESSAGE_ROUTED4(MediaPlayerDelegateHostMsg_OnPictureInPictureSurfaceChanged,
                     viz::SurfaceId /* surface_id */,
                     gfx::Size /* natural_size */,
                     bool /* show_play_pause_button */)
+#if defined(USE_NEVA_MEDIA)
+IPC_MESSAGE_ROUTED1(MediaPlayerDelegateHostMsg_OnMediaActivated,
+                    int /* delegate_id */)
+
+IPC_MESSAGE_ROUTED1(MediaPlayerDelegateHostMsg_OnMediaActivationRequested,
+                    int /* delegate_id */)
+
+IPC_MESSAGE_ROUTED2(MediaPlayerDelegateHostMsg_OnMediaCreated,
+                    int /* delegate_id */,
+                    bool /* will_use_media_resource */)
+
+IPC_MESSAGE_ROUTED1(MediaPlayerDelegateHostMsg_OnMediaSuspended,
+                    int /* delegate_id */)
+#endif  // defined(USE_NEVA_MEDIA)
 
 IPC_MESSAGE_ROUTED2(
     MediaPlayerDelegateHostMsg_OnSetPictureInPictureCustomControls,

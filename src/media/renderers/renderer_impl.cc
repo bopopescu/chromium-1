@@ -28,6 +28,10 @@
 #include "media/base/video_renderer.h"
 #include "media/base/wall_clock_time_source.h"
 
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/media_platform_api.h"
+#endif
+
 namespace media {
 
 // See |video_underflow_threshold_|.
@@ -266,6 +270,10 @@ void RendererImpl::SetVolume(float volume) {
 
   if (audio_renderer_)
     audio_renderer_->SetVolume(volume);
+#if defined(USE_NEVA_MEDIA)
+  if (media_platform_api_)
+    media_platform_api_->SetPlaybackVolume(volume);
+#endif
 }
 
 base::TimeDelta RendererImpl::GetMediaTime() {
@@ -299,6 +307,13 @@ void RendererImpl::EnableClocklessVideoPlaybackForTesting() {
 
   clockless_video_playback_enabled_for_testing_ = true;
 }
+
+#if defined(USE_NEVA_MEDIA)
+void RendererImpl::SetMediaPlatformAPI(
+    scoped_refptr<MediaPlatformAPI>& media_platform_api) {
+  media_platform_api_ = media_platform_api;
+}
+#endif
 
 bool RendererImpl::GetWallClockTimes(
     const std::vector<base::TimeDelta>& media_timestamps,
@@ -809,6 +824,11 @@ void RendererImpl::PausePlayback() {
 
   if (playback_rate_ > 0 && video_renderer_)
     video_renderer_->OnTimeStopped();
+
+#if defined(USE_NEVA_MEDIA)
+  if (media_platform_api_)
+    media_platform_api_->SetPlaybackRate(0.0f);
+#endif
 }
 
 void RendererImpl::StartPlayback() {
@@ -827,6 +847,11 @@ void RendererImpl::StartPlayback() {
     video_playing_ = true;
     video_renderer_->OnTimeProgressing();
   }
+
+#if defined(USE_NEVA_MEDIA)
+  if (media_platform_api_)
+    media_platform_api_->SetPlaybackRate(playback_rate_);
+#endif
 }
 
 void RendererImpl::OnRendererEnded(DemuxerStream::Type type) {

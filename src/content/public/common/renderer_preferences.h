@@ -154,6 +154,31 @@ struct CONTENT_EXPORT RendererPreferences {
   // The width of the arrow bitmap on a horizontal scroll bar in dips.
   int32_t arrow_bitmap_width_horizontal_scroll_bar_in_dips;
 #endif
+///@name USE_NEVA_APPRUNTIME
+///@{
+  // Web application id
+  std::string application_id;
+
+  // Media Codec Capability
+  std::string media_codec_capability;
+
+  // Board type
+  std::string board_type;
+
+  // Allows fake bold text
+  bool allow_fake_bold_text = true;
+
+  // Security origin for 'file://' protocol
+  std::string file_security_origin;
+
+  // This is the media player handling policy override for MediaStatePolicy.
+  // If the value is |true|, all media players in this renderer are managed
+  // under unlimited media policy.
+  bool use_unlimited_media_policy = false;
+
+  // Is application enact browser
+  bool is_enact_browser = false;
+///@}
 };
 
 }  // namespace content

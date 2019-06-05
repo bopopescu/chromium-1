@@ -39,6 +39,10 @@ class TimeSource;
 class VideoRenderer;
 class WallClockTimeSource;
 
+#if defined(USE_NEVA_MEDIA)
+class MediaPlatformAPI;
+#endif
+
 class MEDIA_EXPORT RendererImpl : public Renderer {
  public:
   // Renders audio/video streams using |audio_renderer| and |video_renderer|
@@ -78,6 +82,11 @@ class MEDIA_EXPORT RendererImpl : public Renderer {
   void set_video_underflow_threshold_for_testing(base::TimeDelta threshold) {
     video_underflow_threshold_ = threshold;
   }
+
+#if defined(USE_NEVA_MEDIA)
+  void SetMediaPlatformAPI(
+      scoped_refptr<MediaPlatformAPI>& media_platform_api);
+#endif
 
  private:
   class RendererClientInternal;
@@ -216,6 +225,10 @@ class MEDIA_EXPORT RendererImpl : public Renderer {
 
   DemuxerStream* current_audio_stream_;
   DemuxerStream* current_video_stream_;
+
+#if defined(USE_NEVA_MEDIA)
+  scoped_refptr<MediaPlatformAPI> media_platform_api_;
+#endif
 
   // Renderer-provided time source used to control playback.
   TimeSource* time_source_;

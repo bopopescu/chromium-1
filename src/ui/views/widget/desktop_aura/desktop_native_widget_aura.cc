@@ -427,6 +427,13 @@ gfx::NativeWindow DesktopNativeWidgetAura::GetNativeWindow() const {
   return content_window_;
 }
 
+#if defined(USE_NEVA_APPRUNTIME)
+// Getter for Neva NativeEventDelegate.
+NativeEventDelegate* DesktopNativeWidgetAura::GetNativeEventDelegate() const {
+  return nullptr;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // DesktopNativeWidgetAura, internal::NativeWidgetPrivate implementation:
 
@@ -444,7 +451,8 @@ void DesktopNativeWidgetAura::InitNativeWidget(
   if (!desktop_window_tree_host_) {
     if (params.desktop_window_tree_host) {
       desktop_window_tree_host_ = params.desktop_window_tree_host;
-    } else if (!ViewsDelegate::GetInstance()
+    } else if (ViewsDelegate::GetInstance() &&
+               !ViewsDelegate::GetInstance()
                     ->desktop_window_tree_host_factory()
                     .is_null()) {
       desktop_window_tree_host_ =

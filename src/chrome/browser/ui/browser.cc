@@ -232,6 +232,10 @@
 #include "chrome/browser/ui/settings_window_manager_chromeos.h"
 #endif
 
+#if defined(OS_WEBOS)
+#include "extensions/common/switches.h"
+#endif
+
 #if BUILDFLAG(ENABLE_PRINTING)
 #include "components/printing/browser/print_composite_client.h"
 #endif
@@ -371,6 +375,19 @@ class Browser::InterstitialObserver : public content::WebContentsObserver {
   InterstitialObserver(Browser* browser, content::WebContents* web_contents)
       : WebContentsObserver(web_contents),
         browser_(browser) {
+#if defined(OS_WEBOS)
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (web_contents && command_line->HasSwitch(extensions::switches::kWebOSAppId)) {
+    std::string app_id = command_line->GetSwitchValueASCII(extensions::switches::kWebOSAppId);
+    content::RenderViewHost* rvh = web_contents->GetRenderViewHost();
+    if (rvh) {
+      content::RendererPreferences* renderer_prefs =
+        web_contents->GetMutableRendererPrefs();
+      renderer_prefs->application_id = app_id;
+      rvh->SyncRendererPrefs();
+    }
+  }
+#endif
   }
 
   void DidAttachInterstitialPage() override {

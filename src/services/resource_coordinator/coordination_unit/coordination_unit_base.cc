@@ -81,7 +81,10 @@ void CoordinationUnitBase::SetProperty(mojom::PropertyType property_type,
 // static
 CoordinationUnitBase* CoordinationUnitBase::PassOwnershipToGraph(
     std::unique_ptr<CoordinationUnitBase> new_cu) {
-  return new_cu->graph()->AddNewCoordinationUnit(std::move(new_cu));
+  // TODO: this change is needed for old versions of GCC (6.4.0, 6.5.0)
+  // Without this change the chrome crashes at this place
+  CoordinationUnitGraph* graph = new_cu->graph();
+  return graph->AddNewCoordinationUnit(std::move(new_cu));
 }
 
 }  // namespace resource_coordinator

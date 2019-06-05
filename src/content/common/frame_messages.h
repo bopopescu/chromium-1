@@ -361,6 +361,9 @@ IPC_STRUCT_TRAITS_BEGIN(content::ScreenInfo)
   IPC_STRUCT_TRAITS_MEMBER(available_rect)
   IPC_STRUCT_TRAITS_MEMBER(orientation_type)
   IPC_STRUCT_TRAITS_MEMBER(orientation_angle)
+#if defined(USE_NEVA_MEDIA)
+  IPC_STRUCT_TRAITS_MEMBER(additional_contents_scale)
+#endif
 IPC_STRUCT_TRAITS_END()
 
 // Parameters structure for mojom::FrameHost::DidCommitProvisionalLoad.
@@ -867,6 +870,12 @@ IPC_MESSAGE_ROUTED0(FrameMsg_DidStopLoading)
 IPC_MESSAGE_ROUTED2(FrameMsg_AddMessageToConsole,
                     content::ConsoleMessageLevel /* level */,
                     std::string /* message */)
+
+#if defined(USE_NEVA_APPRUNTIME)
+// Request for the renderer to inject CSS into the frame.
+IPC_MESSAGE_ROUTED1(FrameMsg_CSSInjectRequest,
+                    std::string  /* css */)
+#endif
 
 // Request for the renderer to execute JavaScript in the frame's context.
 //
@@ -1621,6 +1630,16 @@ IPC_MESSAGE_ROUTED0(FrameHostMsg_DidDisplayInsecureContent)
 // Sent when the renderer displays a form containing a non-secure action target
 // url on a page in a secure origin.
 IPC_MESSAGE_ROUTED0(FrameHostMsg_DidContainInsecureFormAction)
+
+#if defined(USE_NEVA_APPRUNTIME)
+// Decide policy for response
+IPC_SYNC_MESSAGE_ROUTED4_1(FrameHostMsg_DecidePolicyForResponse,
+                           bool /* in - isMainFrame */,
+                           int /* in - status code */,
+                           GURL /* in - url */,
+                           base::string16 /* in - status text*/,
+                           bool /* out - hasPolicy */)
+#endif
 
 // Sent when the renderer runs insecure content in a secure origin.
 IPC_MESSAGE_ROUTED2(FrameHostMsg_DidRunInsecureContent,

@@ -18,7 +18,7 @@ PolicyMap::Entry::Entry() = default;
 PolicyMap::Entry::~Entry() = default;
 
 PolicyMap::Entry::Entry(Entry&&) noexcept = default;
-PolicyMap::Entry& PolicyMap::Entry::operator=(Entry&&) noexcept = default;
+PolicyMap::Entry& PolicyMap::Entry::operator=(Entry&&) = default;
 
 PolicyMap::Entry PolicyMap::Entry::DeepCopy() const {
   Entry copy;

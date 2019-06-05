@@ -12,7 +12,12 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
 #include "content/shell/browser/shell_javascript_dialog.h"
+#include "content/shell/browser/shell_javascript_dialog_neva.h"
 #include "content/shell/common/shell_switches.h"
+
+#if defined(USE_NEVA_APPRUNTIME)
+#include "content/shell/common/shell_neva_switches.h"
+#endif  // defined(USE_NEVA_APPRUNTIME)
 
 namespace content {
 
@@ -57,6 +62,19 @@ void ShellJavaScriptDialogManager::RunJavaScriptDialog(
 #else
   // TODO: implement ShellJavaScriptDialog for other platforms, drop this #if
   *did_suppress_message = true;
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kUseExternalJsDialogs)) {
+    if (dialog_) {
+      // One dialog at a time, please.
+      return;
+    }
+
+    *did_suppress_message = false;
+    gfx::NativeWindow parent_window = web_contents->GetTopLevelNativeWindow();
+    dialog_.reset(new neva::ShellJavaScriptDialog(
+        this, parent_window, render_frame_host->GetLastCommittedURL(), dialog_type, message_text,
+        default_prompt_text, std::move(callback)));
+  }
   return;
 #endif
 }
@@ -111,6 +129,14 @@ void ShellJavaScriptDialogManager::CancelDialogs(WebContents* web_contents,
   }
 #else
   // TODO: implement ShellJavaScriptDialog for other platforms, drop this #if
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kUseExternalJsDialogs)) {
+
+    if (dialog_) {
+      dialog_->Cancel();
+      dialog_.reset();
+    }
+  }
 #endif
 
   if (before_unload_callback_.is_null())
@@ -126,6 +152,11 @@ void ShellJavaScriptDialogManager::DialogClosed(ShellJavaScriptDialog* dialog) {
   dialog_.reset();
 #else
   // TODO: implement ShellJavaScriptDialog for other platforms, drop this #if
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kUseExternalJsDialogs)) {
+
+    dialog_.reset();
+  }
 #endif
 }
 

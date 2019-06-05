@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+<style>
+body {
+  background-color: white;
+  color: black;
+}
+
+#log_area {
+  position: absolute;
+  width: 300px;
+  bottom: 10px;
+  right: 10px;
+  padding: 10px;
+  color: yellow;
+  font-size: 9pt;
+  background-color: rgba(0, 0, 128, 0.8);
+}
+</style>
+</head>
+
+<body>
+  <h2>WebSockets Header Test</h2>
+  <input type="button" value="RunHTTPRequest" onclick="runHTTPRequest()">
+  <input type="button" value="RunWSRequest" onclick="runWSRequest()">
+</body>
+
+<script>
+function log(msg) {
+  var logArea = document.getElementById('log_area');
+  if (null === logArea) {
+    document.body.insertAdjacentHTML('beforeEnd', '<div id="log_area"></div>');
+    logArea = document.getElementById('log_area');
+  }
+  logArea.innerHTML += (msg + '<br/>');
+}
+
+function runHTTPRequest() {
+  log("runHTTPRequest: create");
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', "http://httpbin.org/ip", true);
+
+  xhr.onload = function() {
+    if (this.status == 200) {
+      log("runHTTPRequest: success");
+      log("runHTTPRequest: " + this.responseText);
+    } else {
+      log("runHTTPRequest: error: code = " + this.status);
+    }
+  };
+
+  xhr.onerror = function() {
+    log("runHTTPRequest: failed");
+    log("runHTTPRequest: " + this.statusText);
+  };
+
+  log("runHTTPRequest: send");
+  xhr.send();
+}
+
+function runWSRequest() {
+  log("runHTTPRequest: create");
+  var ws = new WebSocket("wss://echo.websocket.org/");
+
+  var msgToSend = "WebSocket out mesage";
+  ws.onopen = function(event) {
+    log("runWSRequest: connected");
+    log("runWSRequest: sent message: [" + msgToSend + "]");
+    ws.send(msgToSend);
+  };
+
+  ws.onclose = function(event) {
+    log("runWSRequest: disconnected");
+  };
+
+  ws.onmessage = function(event) {
+    log("runWSRequest: got message: [" + event.data + "]");
+    ws.close();
+  };
+
+  ws.onerror = function(event) {
+    log("runWSRequest: error: " + event.data);
+  };
+}
+
+window.onload = log("App loaded");
+</script>
+</html>

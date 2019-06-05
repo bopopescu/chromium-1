@@ -86,6 +86,10 @@
 #include "third_party/blink/public/common/mime_util/mime_util.h"
 #include "url/url_constants.h"
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "content/public/browser/web_contents.h"
+#endif
+
 namespace content {
 namespace {
 

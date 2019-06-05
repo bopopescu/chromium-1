@@ -114,10 +114,6 @@ void OzonePlatform::RegisterStartupCallback(StartupCallback callback) {
   std::move(callback).Run(inst);
 }
 
-IPC::MessageFilter* OzonePlatform::GetGpuMessageFilter() {
-  return nullptr;
-}
-
 std::unique_ptr<PlatformScreen> OzonePlatform::CreateScreen() {
   return nullptr;
 }

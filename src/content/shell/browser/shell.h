@@ -15,11 +15,15 @@
 #include "base/strings/string_piece.h"
 #include "build/build_config.h"
 #include "content/public/browser/session_storage_namespace.h"
-#include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "ipc/ipc_channel.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/gfx/native_widget_types.h"
+
+///@name USE_NEVA_APPRUNTIME
+///@{
+#include "content/public/browser/web_contents_delegate_neva.h"
+///@}
 
 #if defined(OS_ANDROID)
 #include "base/android/scoped_java_ref.h"
@@ -58,7 +62,10 @@ class WebContents;
 
 // This represents one window of the Content Shell, i.e. all the UI including
 // buttons and url bar, as well as the web content area.
-class Shell : public WebContentsDelegate,
+///@name USE_NEVA_APPRUNTIME
+///@{
+class Shell : public neva::WebContentsDelegate,
+///@}
               public WebContentsObserver {
  public:
   ~Shell() override;

@@ -19,6 +19,7 @@
 #include "ui/events/ozone/layout/keyboard_layout_engine_manager.h"
 #include "ui/events/ozone/layout/stub/stub_keyboard_layout_engine.h"
 #include "ui/events/system_input_injector.h"
+#include "ui/ozone/platform/cast/gpu_platform_support_cast.h"
 #include "ui/ozone/platform/cast/overlay_manager_cast.h"
 #include "ui/ozone/platform/cast/platform_window_cast.h"
 #include "ui/ozone/platform/cast/surface_factory_cast.h"
@@ -32,6 +33,9 @@ using chromecast::CastEglPlatform;
 
 namespace ui {
 namespace {
+
+base::LazyInstance<std::unique_ptr<GpuPlatformSupport>> g_gpu_platform_support =
+    LAZY_INSTANCE_INITIALIZER;
 
 // Ozone platform implementation for Cast.  Implements functionality
 // common to all Cast implementations:
@@ -85,6 +89,9 @@ class OzonePlatformCast : public OzonePlatform {
   InputController* GetInputController() override {
     return event_factory_ozone_->input_controller();
   }
+  GpuPlatformSupport* GetGpuPlatformSupport() override {
+    return g_gpu_platform_support.Get().get();
+  }
   GpuPlatformSupportHost* GetGpuPlatformSupportHost() override {
     return gpu_platform_support_host_.get();
   }
@@ -136,6 +143,8 @@ class OzonePlatformCast : public OzonePlatform {
   }
   void InitializeGPU(const InitParams& params) override {
     surface_factory_.reset(new SurfaceFactoryCast(std::move(egl_platform_)));
+    g_gpu_platform_support.Get() =
+        base::MakeUnique<GpuPlatformSupportCast>(surface_factory_.get());
   }
 
  private:

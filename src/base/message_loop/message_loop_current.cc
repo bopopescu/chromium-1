@@ -164,6 +164,16 @@ MessagePumpForUI* MessageLoopCurrentForUI::GetMessagePumpForUI() const {
 }
 
 #if defined(USE_OZONE) && !defined(OS_FUCHSIA) && !defined(OS_WIN)
+#if defined(USE_GLIB)
+bool MessageLoopCurrentForUI::WatchFileDescriptor(
+    int fd,
+    bool persistent,
+    MessagePumpForIO::Mode mode,
+    MessagePumpForIO::FdWatchController* controller,
+    MessagePumpForIO::FdWatcher* delegate) {
+  return false;
+}
+#else
 bool MessageLoopCurrentForUI::WatchFileDescriptor(
     int fd,
     bool persistent,
@@ -174,6 +184,7 @@ bool MessageLoopCurrentForUI::WatchFileDescriptor(
   return GetMessagePumpForUI()->WatchFileDescriptor(fd, persistent, mode,
                                                     controller, delegate);
 }
+#endif
 #endif
 
 #if defined(OS_IOS) || defined(OS_ANDROID)

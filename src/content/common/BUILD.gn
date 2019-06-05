@@ -370,6 +370,10 @@ source_set("common") {
     "//content/public/common:interfaces",
   ]
 
+  if (use_lttng) {
+    deps += [ "//content/common/neva/lttng:lttng" ]
+  }
+
   if (is_android && use_seccomp_bpf) {
     set_sources_assignment_filter([])
     sources += [
@@ -536,6 +540,11 @@ mojom("mojo_bindings") {
     "url_loader_factory_bundle.mojom",
     "widget.mojom",
   ]
+
+  # neva added
+  if (use_neva_media) {
+    sources += [ "media/neva/media_suppressor.mojom" ]
+  }
 
   if (is_win) {
     sources += [ "dwrite_font_proxy.mojom" ]

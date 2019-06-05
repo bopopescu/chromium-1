@@ -66,6 +66,11 @@
 #include "third_party/blink/public/platform/mac/web_scrollbar_theme.h"
 #endif
 
+#if defined(USE_NEVA_MEDIA) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+// Mix-in for neva
+#include "content/renderer/neva/render_thread_impl.h"
+#endif
+
 class SkBitmap;
 
 namespace blink {
@@ -159,6 +164,9 @@ class CONTENT_EXPORT RenderThreadImpl
       public ChildThreadImpl,
       public blink::scheduler::WebRAILModeObserver,
       public mojom::Renderer,
+#if defined(USE_NEVA_MEDIA) || defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+      public neva::RenderThreadImpl<RenderThreadImpl>,
+#endif
       public viz::mojom::CompositingModeWatcher,
       public CompositorDependencies {
  public:
@@ -564,6 +572,11 @@ class CONTENT_EXPORT RenderThreadImpl
   void SetProcessBackgrounded(bool backgrounded) override;
   void SetSchedulerKeepActive(bool keep_active) override;
   void ProcessPurgeAndSuspend() override;
+  ///@name USE_NEVA_APPRUNTIME
+  ///@{
+  void ProcessResume() override;
+  void ProcessSuspend() override;
+  ///@}
   void SetIsLockedToSite() override;
   void EnableV8LowMemoryMode() override;
 
@@ -756,6 +769,15 @@ class CONTENT_EXPORT RenderThreadImpl
   int32_t client_id_;
 
   mojom::FrameSinkProviderPtr frame_sink_provider_;
+
+#if defined(USE_NEVA_MEDIA)
+  template <typename original_t>
+  friend class neva::RenderThreadImpl;
+#endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+  unsigned suspension_count_ = 0;
+#endif
 
   // A mojo connection to the CompositingModeReporter service.
   viz::mojom::CompositingModeReporterPtr compositing_mode_reporter_;

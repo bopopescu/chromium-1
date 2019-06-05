@@ -23,6 +23,9 @@ class MEDIA_EXPORT RendererFactorySelector {
     DEFAULT,       // DefaultRendererFactory.
     MOJO,          // MojoRendererFactory.
     MEDIA_PLAYER,  // MediaPlayerRendererClientFactory.
+#if defined(USE_NEVA_MEDIA)
+    NEVA_MEDIA_PLAYER, // NevaMediaPlayerRendererFactory.
+#endif
     COURIER,       // CourierRendererFactory.
     FLINGING,      // FlingingRendererClientFactory
     FACTORY_TYPE_MAX = FLINGING,

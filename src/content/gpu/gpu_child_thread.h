@@ -71,6 +71,9 @@ class GpuChildThread : public ChildThreadImpl,
   // ChildThreadImpl:.
   bool Send(IPC::Message* msg) override;
 
+  // Recovered for ozone-wayland port.
+  bool OnControlMessageReceived(const IPC::Message& msg) override;
+
   // IPC::Listener implementation via ChildThreadImpl:
   void OnAssociatedInterfaceRequest(
       const std::string& name,

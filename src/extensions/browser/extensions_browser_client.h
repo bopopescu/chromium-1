@@ -87,6 +87,11 @@ class ExtensionsBrowserClient {
   ExtensionsBrowserClient();
   virtual ~ExtensionsBrowserClient();
 
+#if defined(USE_NEVA_EXTENSIONS)
+  virtual void InitWithBrowserContext(content::BrowserContext* context,
+                                      PrefService* pref_service) = 0;
+#endif
+
   // Returns the single instance of |this|.
   static ExtensionsBrowserClient* Get();
 

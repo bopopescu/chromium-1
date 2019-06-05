@@ -108,6 +108,12 @@
 #include "content/renderer/pepper/plugin_power_saver_helper.h"
 #endif
 
+// neva include
+#if defined(USE_NEVA_MEDIA)
+#include "content/common/media/neva/media_suppressor.mojom.h"
+#include "content/renderer/neva/media_suppressor_impl.h"
+#endif
+
 struct FrameMsg_MixedContentFound_Params;
 struct FrameMsg_PostMessage_Params;
 struct FrameMsg_SerializeAsMHTML_Params;
@@ -648,6 +654,20 @@ class CONTENT_EXPORT RenderFrameImpl
                    CrossOriginRedirects cross_origin_redirect_behavior,
                    mojo::ScopedMessagePipeHandle blob_url_token) override;
   void LoadErrorPage(int reason) override;
+#if defined(USE_NEVA_MEDIA)
+  // Out-of-process child frames receive a signal from RenderWidgetCompositor
+  // when a compositor frame has committed.
+  // ex) punch-hole based platform media pipeline
+  void DidCommitCompositorFrame();
+#endif
+#if defined(USE_NEVA_APPRUNTIME)
+  void OnCSSInjectRequest(const std::string& css);
+  bool DecidePolicyForResponse(const blink::WebURLResponse& response) override;
+  // content::RenderFrame
+  void ResetStateToMarkNextPaintForContainer() override;
+  // blink::WebFrameClient
+  void DidNonFirstMeaningPaintAfterLoad() override;
+#endif
   void BeginNavigation(std::unique_ptr<blink::WebNavigationInfo> info) override;
   void WillSendSubmitEvent(const blink::WebFormElement& form) override;
   void DidCreateDocumentLoader(
@@ -895,6 +915,9 @@ class CONTENT_EXPORT RenderFrameImpl
   explicit RenderFrameImpl(CreateParams params);
 
  private:
+#if defined(USE_NEVA_MEDIA)
+  friend class neva::MediaSuppressorImpl;
+#endif
   friend class RenderFrameImplTest;
   friend class RenderFrameObserver;
   friend class RenderAccessibilityImplTest;
@@ -1568,6 +1591,10 @@ class CONTENT_EXPORT RenderFrameImpl
   // scrolled and focused editable node.
   bool has_scrolled_focused_editable_node_into_rect_ = false;
   gfx::Rect rect_for_scrolled_focused_editable_node_;
+
+#if defined(USE_NEVA_MEDIA)
+  neva::MediaSuppressorImpl media_suppressor_impl_;
+#endif
 
   // Contains a representation of the accessibility tree stored in content for
   // use inside of Blink.

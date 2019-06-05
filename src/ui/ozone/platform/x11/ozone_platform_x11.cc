@@ -21,6 +21,7 @@
 #include "ui/ozone/platform/x11/x11_surface_factory.h"
 #include "ui/ozone/platform/x11/x11_window_manager_ozone.h"
 #include "ui/ozone/platform/x11/x11_window_ozone.h"
+#include "ui/ozone/public/gpu_platform_support.h"
 #include "ui/ozone/public/gpu_platform_support_host.h"
 #include "ui/ozone/public/input_controller.h"
 #include "ui/ozone/public/ozone_platform.h"
@@ -57,6 +58,10 @@ class OzonePlatformX11 : public OzonePlatform {
 
   InputController* GetInputController() override {
     return input_controller_.get();
+  }
+
+  GpuPlatformSupport* GetGpuPlatformSupport() override {
+    return gpu_platform_support_.get();
   }
 
   GpuPlatformSupportHost* GetGpuPlatformSupportHost() override {
@@ -102,6 +107,7 @@ class OzonePlatformX11 : public OzonePlatform {
       CreatePlatformEventSource();
 
     surface_factory_ozone_ = std::make_unique<X11SurfaceFactory>();
+    gpu_platform_support_.reset(CreateStubGpuPlatformSupport());
   }
 
   base::MessageLoop::Type GetMessageLoopTypeForGpu() override {
@@ -150,6 +156,7 @@ class OzonePlatformX11 : public OzonePlatform {
 
   // Objects in the GPU process.
   std::unique_ptr<X11SurfaceFactory> surface_factory_ozone_;
+  std::unique_ptr<GpuPlatformSupport> gpu_platform_support_;
 
   // Objects in both UI and GPU process.
   std::unique_ptr<X11EventSourceLibevent> event_source_;

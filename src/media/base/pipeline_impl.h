@@ -14,6 +14,10 @@
 #include "media/base/media_export.h"
 #include "media/base/pipeline.h"
 
+#if defined(USE_NEVA_MEDIA)
+#include "media/base/neva/media_platform_api.h"
+#endif
+
 namespace base {
 class SingleThreadTaskRunner;
 }
@@ -112,6 +116,11 @@ class MEDIA_EXPORT PipelineImpl : public Pipeline {
       base::Optional<MediaTrack::Id> selected_track_id,
       base::OnceClosure change_completed_cb) override;
 
+#if defined(USE_NEVA_MEDIA)
+  void SetMediaPlatformAPI(
+      const scoped_refptr<MediaPlatformAPI>& media_platform_api) override;
+#endif
+
  private:
   friend class MediaLog;
   class RendererWrapper;
@@ -135,7 +144,7 @@ class MEDIA_EXPORT PipelineImpl : public Pipeline {
   // Notifications from RendererWrapper.
   void OnError(PipelineStatus error);
   void OnEnded();
-  void OnMetadata(PipelineMetadata metadata);
+  void OnMetadata(const PipelineMetadata& metadata);
   void OnBufferingStateChange(BufferingState state);
   void OnDurationChange(base::TimeDelta duration);
   void OnWaitingForDecryptionKey();

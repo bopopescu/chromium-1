@@ -52,6 +52,28 @@ namespace {
 
 net::CertVerifier* g_cert_verifier_for_testing = nullptr;
 
+#if defined(USE_NEVA_APPRUNTIME)
+const int kDefaultDiskCacheSize = 16 * 1024 * 1024;  // default size is 16MB
+
+class SSLConfigServiceTLS13 : public net::SSLConfigService {
+ public:
+  SSLConfigServiceTLS13() {
+    config_.version_max = net::SSL_PROTOCOL_VERSION_TLS1_3;
+    config_.tls13_variant = net::kTLS13VariantFinal;
+  }
+  void GetSSLConfig(net::SSLConfig* config) override {
+    *config = config_;
+  }
+  bool CanShareConnectionWithClientCerts(
+      const std::string& hostname) const override {
+    return false;
+  }
+
+ private:
+  net::SSLConfig config_;
+};
+#endif
+
 // A CertVerifier that forwards all requests to
 // |g_cert_verifier_for_profile_io_data_testing|. This is used to allow
 // BrowserContexts to have their own std::unique_ptr<net::CertVerifier> while
@@ -175,7 +197,6 @@ net::URLRequestContext* ShellURLRequestContextGetter::GetURLRequestContext() {
                                         std::move(channel_id_service));
     builder.set_accept_language(GetAcceptLanguages());
     builder.set_user_agent(GetShellUserAgent());
-
     builder.SetCertVerifier(GetCertVerifier());
 
     std::unique_ptr<net::ProxyResolutionService> proxy_resolution_service =
@@ -194,6 +215,19 @@ net::URLRequestContext* ShellURLRequestContextGetter::GetURLRequestContext() {
       cache_params.type =
           net::URLRequestContextBuilder::HttpCacheParams::IN_MEMORY;
     }
+#if defined(USE_NEVA_APPRUNTIME)
+    std::unique_ptr<SSLConfigServiceTLS13> ssl_config_service =
+        std::make_unique<SSLConfigServiceTLS13>();
+    builder.set_ssl_config_service(std::move(ssl_config_service));
+    if (!off_the_record_) {
+      if (command_line.HasSwitch(switches::kShellDiskCacheSize))
+        base::StringToInt(
+            command_line.GetSwitchValueASCII(switches::kShellDiskCacheSize),
+            &cache_params.max_size);
+      else
+        cache_params.max_size = kDefaultDiskCacheSize;
+    }
+#endif
     builder.EnableHttpCache(cache_params);
 
     net::HttpNetworkSession::Params network_session_params;

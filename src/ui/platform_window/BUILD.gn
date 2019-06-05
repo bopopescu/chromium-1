@@ -15,6 +15,13 @@ source_set("platform_window") {
     "text_input_state.h",
   ]
 
+  sources += [
+    "neva/window_group_configuration.cc",
+    "neva/window_group_configuration.h",
+    "neva/window_group_configuration_param_traits.cc",
+    "neva/window_group_configuration_param_traits.h",
+  ]
+
   deps = [
     "//base",
     "//ui/base",

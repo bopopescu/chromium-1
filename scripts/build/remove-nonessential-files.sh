@@ -121,11 +121,12 @@ nonessential_test_dirs="
     ./src/third_party/catapult/tracing/test_data
 "
 
+v8_dir="./src/v8"
 new_paths="
 "
 
 #rm -Rf $new_paths
-rm -Rf $all_cipd_dirs $files_giving_yocto_warning $all_git_dirs $files_over_github_size_limit $nonessential_dirs_removed_earlier $new_nonessential_dirs $nonessential_test_dirs $fuchsia_paths
+rm -Rf $v8_dir $all_cipd_dirs $files_giving_yocto_warning $all_git_dirs $files_over_github_size_limit $nonessential_dirs_removed_earlier $new_nonessential_dirs $nonessential_test_dirs $fuchsia_paths
 #$1 $files_over_github_size_limit
 #-rw-rw-r-- 1 lokesh lokesh 210M Jun  3 12:30 ./src/third_party/instrumented_libraries/binaries/msan-chained-origins-trusty.tgz
 #-rw-rw-r-- 1 lokesh lokesh 188M Jun  3 12:30 ./src/third_party/instrumented_libraries/binaries/msan-no-origins-trusty.tgz

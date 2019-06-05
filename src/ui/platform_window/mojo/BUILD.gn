@@ -16,6 +16,7 @@ jumbo_component("mojo") {
   deps = [
     ":interfaces",
     "//base",
+    "//ipc",
     "//ui/platform_window",
   ]
 

@@ -82,6 +82,12 @@ blink::WebTimeRanges ConvertToWebTimeRanges(
 blink::WebMediaPlayer::NetworkState PipelineErrorToNetworkState(
     PipelineStatus error) {
   switch (error) {
+#if defined(USE_NEVA_MEDIA)
+    case DECODER_ERROR_RESOURCE_IS_RELEASED:
+    case PIPELINE_ERROR_DECRYPT:
+      return blink::WebMediaPlayer::kNetworkStateFormatError;
+#endif
+
     case PIPELINE_ERROR_NETWORK:
     case PIPELINE_ERROR_READ:
     case CHUNK_DEMUXER_ERROR_EOS_STATUS_NETWORK_ERROR:

@@ -9,6 +9,7 @@ import("//build/config/ui.gni")
 import("//build/split_static_library.gni")
 import("//content/common/features.gni")
 import("//media/media_options.gni")
+import("//neva/neva.gni")
 import("//ppapi/buildflags/buildflags.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//third_party/webrtc/webrtc.gni")
@@ -754,6 +755,14 @@ target(link_target_type, "renderer") {
     "//ui/surface",
     "//v8",
   ]
+
+  if (use_neva_media) {
+    deps += [
+      "//content/renderer/gpu/neva",
+      "//content/renderer/media/neva",
+    ]
+  }
+
   allow_circular_includes_from = []
 
   if (use_aura) {
@@ -1002,6 +1011,17 @@ target(link_target_type, "renderer") {
 
   if (is_chromecast) {
     defines += [ "MEDIA_EVENT_LOG_UTILITY=LOG(INFO)" ]
+  }
+  if (use_neva_media) {
+    sources += [
+      "neva/media_suppressor_impl.cc",
+      "neva/media_suppressor_impl.h",
+      "neva/render_thread_impl.h",
+    ]
+  }
+
+  if (use_neva_suspend_media_capture) {
+    deps += [ "//content/renderer/media/audio/neva" ]
   }
 }
 

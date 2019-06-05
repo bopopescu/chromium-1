@@ -6,6 +6,7 @@
 #define UI_BASE_IME_LINUX_LINUX_INPUT_METHOD_CONTEXT_H_
 
 #include "base/strings/string16.h"
+#include "ui/base/ime/linux/neva/linux_input_method_context_neva.h"
 #include "ui/base/ime/linux/ui_base_ime_linux_export.h"
 #include "ui/base/ime/text_input_type.h"
 
@@ -50,7 +51,8 @@ class UI_BASE_IME_LINUX_EXPORT LinuxInputMethodContext {
 };
 
 // An interface of callback functions called from LinuxInputMethodContext.
-class UI_BASE_IME_LINUX_EXPORT LinuxInputMethodContextDelegate {
+class UI_BASE_IME_LINUX_EXPORT LinuxInputMethodContextDelegate
+    : public NevaLinuxInputMethodContextDelegate {
  public:
   virtual ~LinuxInputMethodContextDelegate() {}
 

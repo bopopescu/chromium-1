@@ -1403,6 +1403,10 @@ void WebMediaPlayerImpl::SetCdm(blink::WebContentDecryptionModule* cdm) {
   CdmContext* cdm_context = cdm_context_ref->GetCdmContext();
   DCHECK(cdm_context);
 
+#if defined(USE_NEVA_MEDIA)
+  OnSetCdm(cdm);
+#endif
+
   // Keep the reference to the CDM, as it shouldn't be destroyed until
   // after the pipeline is done with the |cdm_context|.
   pending_cdm_context_ref_ = std::move(cdm_context_ref);
@@ -1664,7 +1668,7 @@ void WebMediaPlayerImpl::OnEnded() {
   UpdatePlayState();
 }
 
-void WebMediaPlayerImpl::OnMetadata(PipelineMetadata metadata) {
+void WebMediaPlayerImpl::OnMetadata(const PipelineMetadata& metadata) {
   DVLOG(1) << __func__;
   DCHECK(main_task_runner_->BelongsToCurrentThread());
 

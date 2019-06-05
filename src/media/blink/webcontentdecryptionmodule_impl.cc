@@ -159,4 +159,10 @@ WebContentDecryptionModuleImpl::GetCdmContextRef() {
   return adapter_->GetCdmContextRef();
 }
 
+#if defined(USE_NEVA_MEDIA)
+const std::string& WebContentDecryptionModuleImpl::GetKeySystem() const {
+  return adapter_->GetKeySystem();
+}
+#endif
+
 }  // namespace media

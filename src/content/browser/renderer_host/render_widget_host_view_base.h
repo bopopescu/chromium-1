@@ -595,6 +595,10 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
   virtual void SetParentUiLayer(ui::Layer* parent_ui_layer);
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+  void SetHardwareResolution(int width, int height);
+#endif
+
   virtual void DidNavigate();
 
   // Called when the RenderWidgetHostImpl has be initialized.
@@ -733,6 +737,10 @@ class CONTENT_EXPORT RenderWidgetHostViewBase
   }
 
   gfx::Rect current_display_area_;
+
+#if defined(USE_NEVA_APPRUNTIME)
+   gfx::Size hardware_resolution_;
+#endif
 
   uint32_t renderer_frame_number_ = 0;
 

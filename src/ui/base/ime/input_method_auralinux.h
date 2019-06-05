@@ -21,7 +21,7 @@ class UI_BASE_IME_EXPORT InputMethodAuraLinux
     : public InputMethodBase,
       public LinuxInputMethodContextDelegate {
  public:
-  explicit InputMethodAuraLinux(internal::InputMethodDelegate* delegate);
+  explicit InputMethodAuraLinux(internal::InputMethodDelegate* delegate, unsigned handle = 0);
   ~InputMethodAuraLinux() override;
 
   LinuxInputMethodContext* GetContextForTesting(bool is_simple);
@@ -48,6 +48,7 @@ class UI_BASE_IME_EXPORT InputMethodAuraLinux
                                 TextInputClient* focused) override;
 
  private:
+  friend class InputMethodAuraLinuxNeva;
   bool HasInputMethodResult();
   bool NeedInsertChar() const;
   ui::EventDispatchDetails SendFakeProcessKeyEvent(ui::KeyEvent* event) const

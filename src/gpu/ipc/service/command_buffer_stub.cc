@@ -61,6 +61,10 @@
 #include "gpu/ipc/service/stream_texture_android.h"
 #endif
 
+#if defined(USE_VIDEO_TEXTURE) && defined(USE_NEVA_MEDIA)
+#include "gpu/ipc/service/neva/stream_texture.h"
+#endif
+
 namespace gpu {
 struct WaitForCommandState {
   WaitForCommandState(int32_t start, int32_t end, IPC::Message* reply)
@@ -408,7 +412,7 @@ void CommandBufferStub::Destroy() {
 void CommandBufferStub::OnCreateStreamTexture(uint32_t texture_id,
                                               int32_t stream_id,
                                               bool* succeeded) {
-#if defined(OS_ANDROID)
+#if defined(OS_ANDROID) || defined(USE_VIDEO_TEXTURE) && defined(USE_NEVA_MEDIA)
   *succeeded = StreamTexture::Create(this, texture_id, stream_id);
 #else
   *succeeded = false;

@@ -4,6 +4,7 @@
 
 import("//build/config/jumbo.gni")
 import("//media/media_options.gni")
+import("//neva/neva.gni")
 import("//third_party/libaom/options.gni")
 
 jumbo_source_set("filters") {
@@ -105,6 +106,12 @@ jumbo_source_set("filters") {
     "//third_party/libaom:av1_buildflags",
     "//third_party/libyuv",
   ]
+
+  if (use_neva_media) {
+    deps += [
+      "//media/filters/neva",
+    ]
+  }
 
   libs = []
 

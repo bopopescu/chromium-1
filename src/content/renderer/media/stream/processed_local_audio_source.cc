@@ -25,6 +25,11 @@
 #include "third_party/webrtc/api/mediaconstraintsinterface.h"
 #include "third_party/webrtc/media/base/mediachannel.h"
 
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+#include "content/renderer/media/audio/neva/audio_capturer_source_manager.h"
+#include "content/renderer/render_thread_impl.h"
+#endif
+
 namespace content {
 
 using EchoCancellationType = AudioProcessingProperties::EchoCancellationType;
@@ -251,6 +256,10 @@ bool ProcessedLocalAudioSource::EnsureSourceIsStarted() {
   // We need to set the AGC control before starting the stream.
   new_source->SetAutomaticGainControl(true);
   source_ = std::move(new_source);
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  RenderThreadImpl::current()->audio_capturer_source_manager()->AddSource(
+      source_.get());
+#endif
   source_->Start();
 
   // Register this source with the WebRtcAudioDeviceImpl.
@@ -265,6 +274,10 @@ void ProcessedLocalAudioSource::EnsureSourceIsStopped() {
   if (!source_)
     return;
 
+#if defined(USE_NEVA_SUSPEND_MEDIA_CAPTURE)
+  RenderThreadImpl::current()->audio_capturer_source_manager()->RemoveSource(
+      source_.get());
+#endif
   scoped_refptr<media::AudioCapturerSource> source_to_stop(std::move(source_));
 
   if (WebRtcAudioDeviceImpl* rtc_audio_device =

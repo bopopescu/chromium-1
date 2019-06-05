@@ -79,6 +79,11 @@ class PipelineImpl::RendererWrapper : public DemuxerHost,
       base::Optional<MediaTrack::Id> selected_track_id,
       base::OnceClosure change_completed_cb);
 
+#if defined(USE_NEVA_MEDIA)
+  void SetMediaPlatformAPI(
+      const scoped_refptr<MediaPlatformAPI>& media_platform_api);
+#endif
+
  private:
   // Contains state shared between main and media thread. On the media thread
   // each member can be read without locking, but writing requires locking. On
@@ -155,6 +160,11 @@ class PipelineImpl::RendererWrapper : public DemuxerHost,
   void DestroyRenderer();
   void ReportMetadata(StartType start_type);
 
+#if defined(USE_NEVA_MEDIA)
+  void InitializeMediaPlatformAPI(const PipelineStatusCB& done_cb);
+  void SeekForMediaPlatformAPI(base::TimeDelta seek_timestamp);
+#endif
+
   const scoped_refptr<base::SingleThreadTaskRunner> media_task_runner_;
   const scoped_refptr<base::SingleThreadTaskRunner> main_task_runner_;
   MediaLog* const media_log_;
@@ -189,7 +199,13 @@ class PipelineImpl::RendererWrapper : public DemuxerHost,
   std::unique_ptr<SerialRunner> pending_callbacks_;
 
   base::WeakPtr<RendererWrapper> weak_this_;
+
+#if defined(USE_NEVA_MEDIA)
+  scoped_refptr<MediaPlatformAPI> media_platform_api_;
+#endif
+
   base::WeakPtrFactory<RendererWrapper> weak_factory_;
+
   DISALLOW_COPY_AND_ASSIGN(RendererWrapper);
 };
 
@@ -254,6 +270,13 @@ void PipelineImpl::RendererWrapper::Start(
 
   // Initialize demuxer.
   fns.Push(base::Bind(&RendererWrapper::InitializeDemuxer, weak_this_));
+
+#if defined(USE_NEVA_MEDIA)
+  // Initialize MediaPlatformAPI. Also ensure before reporting metadata
+  if (media_platform_api_)
+    fns.Push(
+        base::Bind(&RendererWrapper::InitializeMediaPlatformAPI, weak_this_));
+#endif
 
   // Once the demuxer is initialized successfully, media metadata must be
   // available - report the metadata to client. If starting without a renderer
@@ -339,6 +362,13 @@ void PipelineImpl::RendererWrapper::Seek(base::TimeDelta time) {
   bound_fns.Push(base::Bind(&Renderer::Flush,
                             base::Unretained(shared_state_.renderer.get())));
 
+#if defined(USE_NEVA_MEDIA)
+  // Seek in media_platform_api_ (just causes queued buffers to be flushed)
+  bound_fns.Push(
+      base::Bind(&RendererWrapper::SeekForMediaPlatformAPI,
+                 base::Unretained(this), seek_timestamp));
+#endif
+
   // Seek demuxer.
   bound_fns.Push(
       base::Bind(&Demuxer::Seek, base::Unretained(demuxer_), seek_timestamp));
@@ -371,6 +401,11 @@ void PipelineImpl::RendererWrapper::Suspend() {
     shared_state_.suspend_timestamp = shared_state_.renderer->GetMediaTime();
     DCHECK(shared_state_.suspend_timestamp != kNoTimestamp);
   }
+
+#if defined(USE_NEVA_MEDIA)
+  if (media_platform_api_)
+    media_platform_api_->SetPlaybackRate(0.0f);
+#endif
 
   // Queue the asynchronous actions required to stop playback.
   SerialRunner::Queue fns;
@@ -426,16 +461,28 @@ void PipelineImpl::RendererWrapper::SetPlaybackRate(double playback_rate) {
   DCHECK(media_task_runner_->BelongsToCurrentThread());
 
   playback_rate_ = playback_rate;
-  if (state_ == kPlaying)
+  if (state_ == kPlaying) {
     shared_state_.renderer->SetPlaybackRate(playback_rate_);
+
+#if defined(USE_NEVA_MEDIA)
+    if (media_platform_api_)
+      media_platform_api_->SetPlaybackRate(playback_rate_);
+#endif
+  }
 }
 
 void PipelineImpl::RendererWrapper::SetVolume(float volume) {
   DCHECK(media_task_runner_->BelongsToCurrentThread());
 
   volume_ = volume;
-  if (state_ == kPlaying)
+  if (state_ == kPlaying) {
     shared_state_.renderer->SetVolume(volume_);
+
+#if defined(USE_NEVA_MEDIA)
+    if (media_platform_api_)
+      media_platform_api_->SetPlaybackVolume(volume_);
+#endif
+  }
 }
 
 base::TimeDelta PipelineImpl::RendererWrapper::GetMediaTime() const {
@@ -1310,7 +1357,7 @@ void PipelineImpl::OnEnded() {
   client_->OnEnded();
 }
 
-void PipelineImpl::OnMetadata(PipelineMetadata metadata) {
+void PipelineImpl::OnMetadata(const PipelineMetadata& metadata) {
   DVLOG(2) << __func__;
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(IsRunning());
@@ -1432,5 +1479,63 @@ void PipelineImpl::OnSuspendDone() {
   DCHECK(suspend_cb_);
   std::move(suspend_cb_).Run(PIPELINE_OK);
 }
+
+#if defined(USE_NEVA_MEDIA)
+void PipelineImpl::RendererWrapper::SetMediaPlatformAPI(
+    const scoped_refptr<MediaPlatformAPI>& media_platform_api) {
+  media_platform_api_ = media_platform_api;
+}
+
+void PipelineImpl::RendererWrapper::InitializeMediaPlatformAPI(
+    const PipelineStatusCB& init_cb) {
+  DCHECK(media_task_runner_->BelongsToCurrentThread());
+  DCHECK(media_platform_api_);
+
+  // This is for fix compile error.
+  PipelineStatusCB init_cb_ = init_cb;
+
+  VideoDecoderConfig video_config;
+  AudioDecoderConfig audio_config;
+
+  DemuxerStream* video_stream = demuxer_->GetFirstStream(DemuxerStream::VIDEO);
+  DemuxerStream* audio_stream = demuxer_->GetFirstStream(DemuxerStream::AUDIO);
+
+  if (!video_stream && !audio_stream)
+    return base::ResetAndReturn(&init_cb_).Run(PIPELINE_OK);
+
+  {
+    base::AutoLock l(shared_state_lock_);
+    if (video_stream)
+      video_config = video_stream->video_decoder_config();
+    if (audio_stream)
+      audio_config = audio_stream->audio_decoder_config();
+  }
+
+  if (video_stream) {
+    if (video_config.codec() != kCodecH264 && video_config.codec() != kCodecVP9)
+      return base::ResetAndReturn(&init_cb_).Run(PIPELINE_OK);
+  }
+
+  media_platform_api_->Initialize(
+      audio_config,
+      video_config,
+      init_cb);
+}
+
+void PipelineImpl::RendererWrapper::SeekForMediaPlatformAPI(
+    base::TimeDelta seek_timestamp) {
+  DCHECK(media_task_runner_->BelongsToCurrentThread());
+
+  if (media_platform_api_) {
+    if (!media_platform_api_->Seek(seek_timestamp))
+      LOG(ERROR) << "media_platform_api_->Seek Failed!!";
+  }
+}
+
+void PipelineImpl::SetMediaPlatformAPI(
+    const scoped_refptr<MediaPlatformAPI>& media_platform_api) {
+  renderer_wrapper_->SetMediaPlatformAPI(media_platform_api);
+}
+#endif
 
 }  // namespace media

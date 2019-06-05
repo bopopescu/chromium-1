@@ -103,6 +103,10 @@ VisibilityTimerTabHelper::VisibilityTimerTabHelper(
       case blink::mojom::PageVisibilityState::kPrerender:
         is_visible_ = false;
         break;
+      ///@name USE_NEVA_APPRUNTIME
+      ///@{
+      case blink::mojom::PageVisibilityState::kLaunching:
+      ///@}
       case blink::mojom::PageVisibilityState::kVisible:
         is_visible_ = true;
         break;

@@ -61,6 +61,7 @@
 #include "extensions/common/constants.h"
 #include "extensions/common/extension_messages.h"
 #include "extensions/common/manifest_constants.h"
+#include "extensions/common/switches.h"
 #include "extensions/strings/grit/extensions_strings.h"
 #include "ipc/ipc_message_macros.h"
 #include "net/base/escape.h"
@@ -70,6 +71,17 @@
 #include "ui/base/models/simple_menu_model.h"
 #include "ui/events/keycodes/keyboard_codes.h"
 #include "url/url_constants.h"
+
+#if defined(USE_NEVA_APPRUNTIME)
+#include "content/common/media/media_player_delegate_messages.h"
+#include "content/common/renderer.mojom.h"
+#include "neva/neva_chromium/content/common/browser_control_messages.h"
+#include "neva/neva_chromium/content/common/injection_messages.h"
+#endif
+
+#if defined(USE_NEVA_MEDIA)
+#include "content/public/browser/neva/media_state_manager.h"
+#endif
 
 using base::UserMetricsAction;
 using content::GlobalRequestID;
@@ -353,13 +365,17 @@ void WebViewGuest::CreateWebContents(const base::DictionaryValue& create_params,
       GetSiteForGuestPartitionConfig(partition_domain, storage_partition_id,
                                      !persist_storage /* in_memory */));
 
-  // If we already have a webview tag in the same app using the same storage
-  // partition, we should use the same SiteInstance so the existing tag and
-  // the new tag can script each other.
-  auto* guest_view_manager = GuestViewManager::FromBrowserContext(
-      owner_render_process_host->GetBrowserContext());
-  scoped_refptr<content::SiteInstance> guest_site_instance =
-      guest_view_manager->GetGuestSiteInstance(guest_site);
+  scoped_refptr<content::SiteInstance> guest_site_instance;
+  base::CommandLine* cmd = base::CommandLine::ForCurrentProcess();
+  if (!cmd->HasSwitch(switches::kProcessPerGuestWebView)) {
+    // If we already have a webview tag in the same app using the same storage
+    // partition, we should use the same SiteInstance so the existing tag and
+    // the new tag can script each other.
+    auto* guest_view_manager = GuestViewManager::FromBrowserContext(
+        owner_render_process_host->GetBrowserContext());
+    guest_site_instance = guest_view_manager->GetGuestSiteInstance(guest_site);
+  }
+
   if (!guest_site_instance) {
     // Create the SiteInstance in a new BrowsingInstance, which will ensure
     // that webview tags are also not allowed to send messages across
@@ -743,6 +759,38 @@ void WebViewGuest::Stop() {
   web_contents()->Stop();
 }
 
+#if defined(USE_NEVA_APPRUNTIME)
+void WebViewGuest::Suspend() {
+  if (is_suspended_)
+    return;
+  is_suspended_ = true;
+  base::RecordAction(UserMetricsAction("WebView.Guest.Suspend"));
+#if defined(USE_NEVA_MEDIA)
+  content::MediaStateManager::GetInstance()->SuspendAllMedia(web_contents());
+#endif
+
+  content::RenderProcessHost* host =
+      web_contents()->GetMainFrame()->GetProcess();
+  if (host)
+    host->GetRendererInterface()->ProcessSuspend();
+}
+
+void WebViewGuest::Resume() {
+  if (!is_suspended_)
+    return;
+  is_suspended_ = false;
+  base::RecordAction(UserMetricsAction("WebView.Guest.Resume"));
+#if defined(USE_NEVA_MEDIA)
+  content::MediaStateManager::GetInstance()->ResumeAllMedia(web_contents());
+#endif
+
+  content::RenderProcessHost* host =
+      web_contents()->GetMainFrame()->GetProcess();
+  if (host)
+    host->GetRendererInterface()->ProcessResume();
+}
+#endif  // USE_NEVA_APPRUNTIME
+
 void WebViewGuest::Terminate() {
   base::RecordAction(UserMetricsAction("WebView.Guest.Terminate"));
   base::ProcessHandle process_handle =
@@ -813,9 +861,10 @@ WebViewGuest::WebViewGuest(WebContents* owner_web_contents)
       last_fullscreen_permission_was_allowed_by_embedder_(false),
       pending_zoom_factor_(0.0),
       did_set_explicit_zoom_(false),
+      is_suspended_(false),
       is_spatial_navigation_enabled_(
           base::CommandLine::ForCurrentProcess()->HasSwitch(
-              switches::kEnableSpatialNavigation)),
+              ::switches::kEnableSpatialNavigation)),
       weak_ptr_factory_(this) {
   web_view_guest_delegate_.reset(
       ExtensionsAPIClient::Get()->CreateWebViewGuestDelegate(this));
@@ -917,6 +966,50 @@ void WebViewGuest::DocumentOnLoadCompletedInMainFrame() {
   DispatchEventToView(std::make_unique<GuestViewEvent>(
       webview::kEventContentLoad, std::move(args)));
 }
+
+#if defined(USE_NEVA_APPRUNTIME)
+void WebViewGuest::RenderViewCreated(
+    content::RenderViewHost* render_view_host) {
+  render_view_host->Send(
+      new InjectionMsg_LoadExtension(
+          render_view_host->GetRoutingID(),"v8/webossystem"));
+}
+
+namespace {
+
+bool BrowserControlMsgHandler(WebContents* web_contents,
+                              const IPC::Message& message) {
+  content::RenderViewHost* rvh = web_contents->GetRenderViewHost();
+  if (!rvh)
+    return false;
+
+  IPC::Message* reply = IPC::SyncMessage::GenerateReply(&message);
+  // When WebOSSystem injection creates WebOSServiceBridge it sends to browser
+  // process BrowserControlMsg to obtain some necessary parameters.
+  // So browser process should listen for such messages and provide
+  // corresponding reply.
+  BrowserControlMsg_Function::WriteReplyParams(
+      reply,
+      R"JSON({
+        "identifier": "com.webos.app.neva.browser",
+        "devicePixelRatio": 2
+      })JSON");
+
+  return rvh->Send(reply);
+}
+
+}  // namespace
+
+bool WebViewGuest::OnMessageReceived(const IPC::Message& message) {
+  bool handled = true;
+  IPC_BEGIN_MESSAGE_MAP(WebViewGuest, message)
+    IPC_MESSAGE_HANDLER_GENERIC(BrowserControlMsg_Function,
+        handled = BrowserControlMsgHandler(web_contents(), message))
+    IPC_MESSAGE_UNHANDLED(handled = false)
+  IPC_END_MESSAGE_MAP()
+  return handled;
+}
+#endif
 
 void WebViewGuest::DidStartNavigation(
     content::NavigationHandle* navigation_handle) {

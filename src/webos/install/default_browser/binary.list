@@ -1,0 +1,10 @@
+chrome
+chrome_100_percent.pak
+chrome_200_percent.pak
+headless_lib.pak
+icudtl.dat
+locales
+natives_blob.bin
+product_logo_48.png
+resources.pak
+snapshot_blob.bin

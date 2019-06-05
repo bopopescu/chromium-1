@@ -287,6 +287,10 @@ class CONTENT_EXPORT RenderFrame : public IPC::Listener,
   virtual scoped_refptr<network::SharedURLLoaderFactory>
   GetURLLoaderFactory() = 0;
 
+#if defined(USE_NEVA_APPRUNTIME)
+  virtual void ResetStateToMarkNextPaintForContainer() {};
+#endif
+
  protected:
   ~RenderFrame() override {}
 

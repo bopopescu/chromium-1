@@ -543,7 +543,11 @@ void CompositorFrameSinkSupport::DidPresentCompositorFrame(
     const gfx::PresentationFeedback& feedback) {
   DCHECK(presentation_token);
   DCHECK(!presentation_feedbacks_.count(presentation_token));
+#if defined(OS_WEBOS)
+  presentation_feedbacks_.insert(std::make_pair(presentation_token, feedback));
+#else
   presentation_feedbacks_.emplace(presentation_token, feedback);
+#endif
   UpdateNeedsBeginFramesInternal();
 }
 

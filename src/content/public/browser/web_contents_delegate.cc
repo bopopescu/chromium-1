@@ -282,6 +282,16 @@ bool WebContentsDelegate::DoBrowserControlsShrinkRendererSize(
   return false;
 }
 
+#if defined(USE_NEVA_APPRUNTIME)
+bool WebContentsDelegate::DecidePolicyForResponse(
+    bool isMainFrame,
+    int statusCode,
+    const GURL& url,
+    const base::string16& statusText) {
+  return false;
+}
+#endif
+
 void WebContentsDelegate::SetTopControlsGestureScrollInProgress(
     bool in_progress) {}
 
