@@ -23,7 +23,6 @@
 
 namespace {
 
-const char kIdentifier[] = "com.webos.app.neva.browser";
 const char kGetLanguageMethod[] =
     "palm://com.webos.settingsservice/getSystemSettings";
 const char kGetLanguageRequest[] =
@@ -38,7 +37,7 @@ namespace webos {
 
 LanguageListener::LanguageListener(content::WebContents* web_contents)
     : content::WebContentsObserver(web_contents) {
-  lsm_ = LunaServiceManager::GetManager(kIdentifier);
+  lsm_ = LunaServiceManager::GetManager(web_contents->GetMutableRendererPrefs()->application_id.c_str());
   if (lsm_)
     lsm_->Call(kGetLanguageMethod, kGetLanguageRequest, this);
 }

@@ -37,10 +37,11 @@ MediaPlayerNevaFactory::GetMediaPlayerType(const std::string& mime_type) {
 MediaPlayerNeva* MediaPlayerNevaFactory::CreateMediaPlayerNeva(
     MediaPlayerNevaClient* client,
     const MediaPlayerType media_type,
-    const scoped_refptr<base::SingleThreadTaskRunner>& main_task_runner) {
+    const scoped_refptr<base::SingleThreadTaskRunner>& main_task_runner,
+    const std::string& app_id) {
   switch (media_type) {
     case MediaPlayerNevaFactory::MediaPlayerTypeUMS:
-      return new MediaPlayerUMS(client, main_task_runner);
+      return new MediaPlayerUMS(client, main_task_runner, app_id);
       break;
     default:
       break;

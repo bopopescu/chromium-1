@@ -18,12 +18,34 @@
 
 #include <glib.h>
 #include <lunaservice.h>
+#include <random>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "base/json/json_reader.h"
 #include "base/logging.h"
 #include "base/values.h"
+
+namespace {
+
+const char random_char() {
+  const std::string random_src =
+      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  std::mt19937 rd{std::random_device{}()};
+  std::uniform_int_distribution<int> mrand{0, random_src.size() - 1};
+  return random_src[mrand(rd)];
+}
+
+std::string unique_id_with_suffix(std::string& id) {
+  std::string unique_id = id + "-%%%%%%%%";
+  for (auto& ch : unique_id) {
+    if (ch == '%')
+      ch = random_char();
+  }
+  return unique_id;
+}
+
+}  // namespace
 
 // static
 std::mutex LunaServiceManager::storage_lock_;
@@ -108,19 +130,11 @@ void LunaServiceManager::Init() {
     return;
 
   bool is_phone = identifier_.find("com.palm.app.phone") == 0;
-  bool is_browser = identifier_.find("com.webos.app.neva.browser") == 0;
 
-  std::string identifier = identifier_ + '-' + std::to_string(getpid());
-
-  // app-shell does not have permissions to 'contain' any other applications,
-  // so function LSRegisterApplicationService will always return false for
-  // app-shell. That's why it is necessary to use LSRegister for app-shell
-  if (is_browser)
-    init = LSRegister(identifier.c_str(), &sh_, &lserror);
-  else
-    init = LSRegisterApplicationService(identifier.c_str(),
-                                        identifier_.c_str(),
-                                        &sh_, &lserror);
+  std::string identifier = unique_id_with_suffix(identifier_);
+  init = LSRegisterApplicationService(identifier.c_str(),
+                                      identifier_.c_str(),
+                                      &sh_, &lserror);
   if (!init) {
     log_error(lserror);
     return;

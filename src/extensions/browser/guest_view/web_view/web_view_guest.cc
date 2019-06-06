@@ -991,7 +991,7 @@ bool BrowserControlMsgHandler(WebContents* web_contents,
   BrowserControlMsg_Function::WriteReplyParams(
       reply,
       R"JSON({
-        "identifier": "com.webos.app.neva.browser",
+        "identifier": ")JSON" + web_contents->GetMutableRendererPrefs()->application_id + R"JSON(",
         "devicePixelRatio": 2
       })JSON");
 

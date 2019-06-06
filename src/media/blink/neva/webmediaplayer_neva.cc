@@ -234,7 +234,7 @@ WebMediaPlayerNeva::WebMediaPlayerNeva(
       params->audio_renderer_sink(), media_log_.get());
 
   player_api_.reset(MediaPlayerNevaFactory::CreateMediaPlayerNeva(
-      this, media_player_type, main_task_runner_));
+      this, media_player_type, main_task_runner_, app_id_));
 
   video_frame_provider_ = std::make_unique<VideoFrameProviderImpl>(
       stream_texture_factory_create_cb, compositor_task_runner_);
@@ -1238,7 +1238,7 @@ void WebMediaPlayerNeva::OnResume() {
     player_api_.reset(MediaPlayerNevaFactory::CreateMediaPlayerNeva(
         this, MediaPlayerNevaFactory::GetMediaPlayerType(
                   client_->ContentMIMEType().Latin1()),
-        main_task_runner_));
+        main_task_runner_, app_id_));
     player_api_->SetVolume(volume_);
     LoadMedia();
 #if defined(VIDEO_HOLE)

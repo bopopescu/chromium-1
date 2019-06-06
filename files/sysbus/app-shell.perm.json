@@ -1,0 +1,17 @@
+{
+    "com.webos.app.enactbrowser": [
+        "settings.read",
+        "signals.all"
+    ],
+    "com.webos.app.enactbrowser-*": [
+        "settings.read",
+        "signals.all"
+    ],
+    "com.webos.chromium.memory.*": [
+        "system",
+        "signals.all"
+    ],
+    "com.webos.rm.client.*": [
+        "media"
+    ]
+}

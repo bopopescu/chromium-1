@@ -45,6 +45,7 @@ namespace service_name {
 
 const char kChromiumMedia[] = "com.webos.chromium.media";
 const char kChromiumMemory[] = "com.webos.chromium.memory";
+const char kSettingsClient[] = "com.webos.settingsservice.client";
 
 }  // namespace service_name
 
