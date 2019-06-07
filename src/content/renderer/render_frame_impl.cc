@@ -2093,9 +2093,6 @@ bool RenderFrameImpl::OnMessageReceived(const IPC::Message& msg) {
 #endif
     IPC_MESSAGE_HANDLER(FrameMsg_CopyImageAt, OnCopyImageAt)
     IPC_MESSAGE_HANDLER(FrameMsg_SaveImageAt, OnSaveImageAt)
-#if defined(USE_NEVA_APPRUNTIME)
-    IPC_MESSAGE_HANDLER(FrameMsg_CSSInjectRequest, OnCSSInjectRequest)
-#endif
     IPC_MESSAGE_HANDLER(FrameMsg_AddMessageToConsole, OnAddMessageToConsole)
     IPC_MESSAGE_HANDLER(FrameMsg_JavaScriptExecuteRequest,
                         OnJavaScriptExecuteRequest)
@@ -5281,12 +5278,6 @@ bool RenderFrameImpl::DecidePolicyForResponse(
       routing_id_, IsMainFrame(), response.HttpStatusCode(), response.Url(),
       response.HttpStatusText().Utf16(), &hasPolicy));
   return hasPolicy;
-}
-
-void RenderFrameImpl::OnCSSInjectRequest(const std::string& css) {
-  WebVector<WebString> white;
-  frame_->View()->InjectStyleSheet(
-      WebString::FromUTF8(css.c_str()), white, WebView::kInjectStyleInAllFrames);
 }
 
 void RenderFrameImpl::ResetStateToMarkNextPaintForContainer() {

@@ -304,7 +304,6 @@ class CONTENT_EXPORT WebContentsImpl : public WebContents,
   // (added for the Neva AppRuntime API)
   bool IsInspectablePage() const override;
   void SetInspectablePage(bool inspectable) override;
-  void InjectCSS(const std::string& css) override;
   void ReplaceBaseURL(const GURL& newUrl) override;
   void DropAllPeerConnections(DropPeerConnectionReason) override;
 

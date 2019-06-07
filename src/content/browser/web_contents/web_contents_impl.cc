@@ -6855,11 +6855,6 @@ void WebContentsImpl::RenderProcessCreated(
     observer.RenderProcessCreated(render_process_host->GetProcess().Handle());
 }
 
-void WebContentsImpl::InjectCSS(const std::string& css) {
-  GetMainFrame()->Send(new FrameMsg_CSSInjectRequest(
-      GetMainFrame()->GetRoutingID(), css));
-}
-
 void WebContentsImpl::ReplaceBaseURL(const GURL& newURL) {
   GetRenderViewHost()->ReplaceBaseURL(newURL);
 }

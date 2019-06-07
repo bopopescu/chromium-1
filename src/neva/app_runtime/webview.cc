@@ -84,6 +84,17 @@
 void GetPluginsCallback(const std::vector<content::WebPluginInfo>& plugins) {}
 #endif
 
+namespace {
+
+void AddUserStyleSheetForFrame(const std::string& sheet,
+                               content::RenderFrameHost* rfh) {
+  app_runtime::mojom::AppRuntimeWebViewClientAssociatedPtr client;
+  rfh->GetRemoteAssociatedInterfaces()->GetInterface(&client);
+  client->InsertStyleSheet(sheet);
+}
+
+}  // namespace
+
 namespace app_runtime {
 
 void WebView::SetFileAccessBlocked(bool blocked) {
@@ -134,7 +145,9 @@ content::WebContents* WebView::GetWebContents() {
 }
 
 void WebView::AddUserStyleSheet(const std::string& sheet) {
-  web_contents_->InjectCSS(sheet);
+  web_contents_->ForEachFrame(
+      base::BindRepeating(AddUserStyleSheetForFrame, sheet));
+  injected_css_.insert(sheet);
 }
 
 std::string WebView::UserAgent() const {
@@ -1031,6 +1044,10 @@ void WebView::DocumentLoadedInFrame(
           ->frame_tree_node()
           ->IsMainFrame())
     webview_delegate_->DocumentLoadFinished();
+
+  for (const auto& css : injected_css_) {
+    AddUserStyleSheetForFrame(css, render_frame_host);
+  }
 }
 
 void WebView::DidReceiveCompositorFrame() {

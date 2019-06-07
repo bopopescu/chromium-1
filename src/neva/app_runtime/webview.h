@@ -17,6 +17,8 @@
 #ifndef NEVA_APP_RUNTIME_WEBVIEW_H_
 #define NEVA_APP_RUNTIME_WEBVIEW_H_
 
+#include <set>
+
 #include "base/memory/memory_pressure_listener.h"
 #include "content/public/browser/web_contents_binding_set.h"
 #include "content/public/browser/web_contents_delegate.h"
@@ -279,6 +281,7 @@ class WebView : public content::WebContentsDelegate,
   int height_;
   gfx::Size viewport_size_;
   std::string document_title_;
+  std::set<std::string> injected_css_;
   SSLCertErrorPolicy ssl_cert_error_policy_ = SSL_CERT_ERROR_POLICY_DEFAULT;
   WebViewProfile* profile_ = nullptr;
   std::map<WebView::Attribute, bool> webview_preferences_list_;

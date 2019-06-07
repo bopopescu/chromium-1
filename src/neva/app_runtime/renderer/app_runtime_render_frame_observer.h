@@ -51,12 +51,13 @@ class AppRuntimeRenderFrameObserver : public content::RenderFrameObserver,
   void SetNetworkQuietTimeout(double timeout) override;
   void SetDisallowScrollbarsInMainFrame(bool disallow) override;
   void GrantLoadLocalResources() override;
+  void InsertStyleSheet(const std::string& css) override;
 
   void BindRequest(mojom::AppRuntimeWebViewClientAssociatedRequest request);
 
  private:
   // Whether DOM activity is suspended or not.
-  bool dom_suspended_;
+  bool dom_suspended_ = false;
 
   mojo::AssociatedBinding<mojom::AppRuntimeWebViewClient> binding_;
 };

@@ -661,7 +661,6 @@ class CONTENT_EXPORT RenderFrameImpl
   void DidCommitCompositorFrame();
 #endif
 #if defined(USE_NEVA_APPRUNTIME)
-  void OnCSSInjectRequest(const std::string& css);
   bool DecidePolicyForResponse(const blink::WebURLResponse& response) override;
   // content::RenderFrame
   void ResetStateToMarkNextPaintForContainer() override;

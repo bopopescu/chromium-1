@@ -871,12 +871,6 @@ IPC_MESSAGE_ROUTED2(FrameMsg_AddMessageToConsole,
                     content::ConsoleMessageLevel /* level */,
                     std::string /* message */)
 
-#if defined(USE_NEVA_APPRUNTIME)
-// Request for the renderer to inject CSS into the frame.
-IPC_MESSAGE_ROUTED1(FrameMsg_CSSInjectRequest,
-                    std::string  /* css */)
-#endif
-
 // Request for the renderer to execute JavaScript in the frame's context.
 //
 // javascript is the string containing the JavaScript to be executed in the

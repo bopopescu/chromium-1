@@ -28,6 +28,7 @@ interface AppRuntimeWebViewClient {
   SetNetworkQuietTimeout(double timeout);
   SetDisallowScrollbarsInMainFrame(bool disallow);
   GrantLoadLocalResources();
+  InsertStyleSheet(string css);
 };
 
 interface AppRuntimeWebViewHost {

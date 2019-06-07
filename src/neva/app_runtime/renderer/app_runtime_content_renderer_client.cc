@@ -1,4 +1,4 @@
-// Copyright 2016-2018 LG Electronics, Inc.
+// Copyright 2016-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,10 +91,10 @@ void AppRuntimeContentRendererClient::RenderFrameCreated(
   extensions_renderer_client_->GetDispatcher()->OnRenderFrameCreated(
       render_frame);
 #endif
+  new AppRuntimeRenderFrameObserver(render_frame);
   // Only attach AppRuntimePageLoadTimingRenderFrameObserver to the main frame,
   // since we only want to observe page load timing for the main frame.
   if (render_frame->IsMainFrame()) {
-    new AppRuntimeRenderFrameObserver(render_frame);
     new AppRuntimePageLoadTimingRenderFrameObserver(render_frame);
   }
 }

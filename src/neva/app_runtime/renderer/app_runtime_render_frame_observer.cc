@@ -23,6 +23,7 @@
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_provider.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_registry.h"
 #include "third_party/blink/public/platform/web_size.h"
+#include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/web/web_document.h"
 #include "third_party/blink/public/web/web_frame.h"
 #include "third_party/blink/public/web/web_frame_widget.h"
@@ -36,7 +37,6 @@ namespace app_runtime {
 AppRuntimeRenderFrameObserver::AppRuntimeRenderFrameObserver(
     content::RenderFrame* render_frame)
     : content::RenderFrameObserver(render_frame),
-      dom_suspended_(false),
       binding_(this) {
   render_frame->GetAssociatedInterfaceRegistry()->AddInterface(base::Bind(
       &AppRuntimeRenderFrameObserver::BindRequest, base::Unretained(this)));
@@ -114,14 +114,19 @@ void AppRuntimeRenderFrameObserver::SetNetworkQuietTimeout(double timeout) {
 
 void AppRuntimeRenderFrameObserver::SetDisallowScrollbarsInMainFrame(
     bool disallow) {
+  if (!render_frame()->IsMainFrame())
+    return;
+
   render_frame()->GetRenderView()->GetWebView()->GetSettings()->
       SetDisallowScrollbarsInMainFrame(disallow);
 }
 
 void AppRuntimeRenderFrameObserver::DidClearWindowObject() {
+  if (!render_frame()->IsMainFrame())
+    return;
+
   mojom::AppRuntimeWebViewHostAssociatedPtr interface;
-  render_frame()->GetRemoteAssociatedInterfaces()->GetInterface(
-      &interface);
+  render_frame()->GetRemoteAssociatedInterfaces()->GetInterface(&interface);
   interface->DidClearWindowObject();
 }
 
@@ -129,7 +134,15 @@ void AppRuntimeRenderFrameObserver::GrantLoadLocalResources() {
   render_frame()->GetWebFrame()->GetDocument().GrantLoadLocalResources();
 }
 
+void AppRuntimeRenderFrameObserver::InsertStyleSheet(const std::string& css) {
+  render_frame()->GetWebFrame()->GetDocument().InsertStyleSheet(
+      blink::WebString::FromUTF8(css));
+}
+
 void AppRuntimeRenderFrameObserver::OnNotifyMemoryPressure(int level) {
+  if (!render_frame()->IsMainFrame())
+    return;
+
   switch (level) {
     case 1:
       base::MemoryPressureListener::NotifyMemoryPressure(

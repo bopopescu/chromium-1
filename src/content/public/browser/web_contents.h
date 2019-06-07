@@ -298,7 +298,6 @@ class WebContents : public PageNavigator,
 
   virtual bool IsInspectablePage() const = 0;
   virtual void SetInspectablePage(bool inspectable) = 0;
-  virtual void InjectCSS(const std::string& css) = 0;
   virtual void ReplaceBaseURL(const GURL& newUrl) = 0;
   virtual void DropAllPeerConnections(DropPeerConnectionReason) = 0;
   virtual void ExecuteJavaScriptInAllFrames(
