@@ -848,7 +848,7 @@ void UMediaClientImpl::DispatchSourceInfo(
   system_media_manager_->SourceInfoUpdated(has_audio_, has_video_);
 
   if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null()) {
-    std::string json_string = SourceInfoToJson(MediaId(), soureInfo);
+    std::string json_string = SourceInfoToJson(MediaId(), sourceInfo);
 
     if (previous_source_info_ != json_string) {
       previous_source_info_ = json_string;
