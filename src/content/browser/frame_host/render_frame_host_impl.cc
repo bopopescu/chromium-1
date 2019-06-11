@@ -1371,6 +1371,8 @@ bool RenderFrameHostImpl::OnMessageReceived(const IPC::Message &msg) {
     IPC_MESSAGE_HANDLER(FrameHostMsg_UpdateTitle, OnUpdateTitle)
     IPC_MESSAGE_HANDLER(FrameHostMsg_DidBlockFramebust, OnDidBlockFramebust)
     IPC_MESSAGE_HANDLER(FrameHostMsg_AbortNavigation, OnAbortNavigation)
+    IPC_MESSAGE_HANDLER(FrameHostMsg_DidHistoryBackOnTopPage,
+                        OnDidHistoryBackOnTopPage)
     IPC_MESSAGE_HANDLER(FrameHostMsg_DispatchLoad, OnDispatchLoad)
     IPC_MESSAGE_HANDLER(FrameHostMsg_ForwardResourceTimingToParent,
                         OnForwardResourceTimingToParent)
@@ -2995,6 +2997,10 @@ void RenderFrameHostImpl::OnAbortNavigation() {
   if (!is_active())
     return;
   frame_tree_node()->navigator()->OnAbortNavigation(frame_tree_node());
+}
+
+void RenderFrameHostImpl::OnDidHistoryBackOnTopPage() {
+  delegate_->DidHistoryBackOnTopPage();
 }
 
 void RenderFrameHostImpl::OnForwardResourceTimingToParent(

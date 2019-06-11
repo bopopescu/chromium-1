@@ -653,6 +653,10 @@ class CONTENT_EXPORT WebContentsDelegate {
       bool did_start_load,
       bool did_finish_load);
 
+  // Notifies the delegate that history.back() is called but there is
+  // nowhere to go back
+  virtual void DidHistoryBackOnTopPage() {}
+
  protected:
   virtual ~WebContentsDelegate();
 

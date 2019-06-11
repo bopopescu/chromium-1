@@ -430,6 +430,10 @@ class CONTENT_EXPORT RenderFrameHostDelegate {
   virtual void AudioContextPlaybackStopped(RenderFrameHost* host,
                                            int context_id){};
 
+  // Notifies the delegate that history.back() is called but there is
+  // nowhere to go back
+  virtual void DidHistoryBackOnTopPage() {}
+
  protected:
   virtual ~RenderFrameHostDelegate() {}
 };

@@ -937,6 +937,7 @@ class CONTENT_EXPORT RenderFrameHostImpl
   void OnDidBlockFramebust(const GURL& url);
   // Only used with PerNavigationMojoInterface disabled.
   void OnAbortNavigation();
+  void OnDidHistoryBackOnTopPage();
   void OnForwardResourceTimingToParent(
       const ResourceTimingInfo& resource_timing);
   void OnDispatchLoad();

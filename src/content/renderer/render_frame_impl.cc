@@ -4721,6 +4721,12 @@ void RenderFrameImpl::AbortClientNavigation() {
     Send(new FrameHostMsg_AbortNavigation(routing_id_));
 }
 
+void RenderFrameImpl::DidHistoryBackOnTopPage(const blink::WebFrame* frame) {
+  if (frame != render_view_->webview()->MainFrame())
+    return;
+  Send(new FrameHostMsg_DidHistoryBackOnTopPage(routing_id_));
+}
+
 void RenderFrameImpl::DidChangeSelection(bool is_empty_selection) {
 #if defined(USE_NEVA_APPRUNTIME)
   if (is_empty_selection &&
