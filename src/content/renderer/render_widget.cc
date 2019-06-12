@@ -2900,6 +2900,9 @@ cc::LayerTreeSettings RenderWidget::GenerateLayerTreeSettings(
           budget_bytes_mb * 1024 * 1024;
   }
 #endif
+#if defined(OS_WEBOS)
+  settings.max_memory_for_prepaint_percentage = 0;
+#endif
 
   if (using_low_memory_policy) {
     // RGBA_4444 textures are only enabled:
@@ -2987,8 +2990,13 @@ cc::ManagedMemoryPolicy RenderWidget::GetGpuMemoryPolicy(
     if (base::StringToSizeT(
             base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
                 switches::kForceGpuMemAvailableMb),
-            &actual.bytes_limit_when_visible))
+            &actual.bytes_limit_when_visible)) {
       actual.bytes_limit_when_visible *= 1024 * 1024;
+#if defined(OS_WEBOS)
+      actual.priority_cutoff_when_visible =
+          gpu::MemoryAllocation::CUTOFF_ALLOW_NICE_TO_HAVE;
+#endif
+    }
     return actual;
   }
 

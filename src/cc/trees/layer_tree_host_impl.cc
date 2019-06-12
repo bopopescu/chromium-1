@@ -2999,11 +2999,13 @@ void LayerTreeHostImpl::ActivateStateForImages() {
 void LayerTreeHostImpl::OnMemoryPressure(
     base::MemoryPressureListener::MemoryPressureLevel level) {
   // Only work for low-end devices for now.
+#if !defined(OS_WEBOS)
   if (!base::SysInfo::IsLowEndDevice())
     return;
 
   if (level != base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL)
     return;
+#endif
 
   ReleaseTileResources();
   active_tree_->OnPurgeMemory();
