@@ -93,8 +93,9 @@ void WebOSServiceBridgeInjection::DoCall(std::string uri, std::string payload) {
   if (identifier_.empty())
     return;
 
-  waiting_responses_.insert(this);
   system_bridge_->Call(std::move(uri), std::move(payload));
+  if (WebOSServiceBridgeInjection::is_closing_)
+    waiting_responses_.insert(this);
 }
 
 void WebOSServiceBridgeInjection::Cancel() {
@@ -110,14 +111,7 @@ void WebOSServiceBridgeInjection::OnConnect(
   client_binding_.Bind(std::move(request));
 }
 
-void WebOSServiceBridgeInjection::Response(const std::string& body) {
-  bool shouldCallCloseNotify = false;
-  if (WebOSServiceBridgeInjection::is_closing_) {
-    waiting_responses_.erase(this);
-    if (waiting_responses_.empty())
-      shouldCallCloseNotify = true;
-  }
-
+void WebOSServiceBridgeInjection::CallJSHandler(const std::string& body) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::HandleScope handle_scope(isolate);
   v8::MaybeLocal<v8::Object> maybe_wrapper = GetWrapper(isolate);
@@ -141,12 +135,20 @@ void WebOSServiceBridgeInjection::Response(const std::string& body) {
   const int argc = 1;
   v8::Local<v8::Value> argv[] = { gin::StringToV8(isolate, body) };
   func->Call(wrapper, argc, argv);
+}
 
-  if (shouldCallCloseNotify) {
-    // This function should be executed after context_scope(context)
-    // Unless there will be libv8.so crash
+void WebOSServiceBridgeInjection::Response(pal::mojom::ResponseStatus status,
+                                           const std::string& body) {
+  if (status == pal::mojom::ResponseStatus::kSuccess)
+    CallJSHandler(body);
+
+  if (!WebOSServiceBridgeInjection::is_closing_)
+    return;
+
+  waiting_responses_.erase(this);
+
+  if (waiting_responses_.empty())
     CloseNotify();
-  }
 }
 
 gin::ObjectTemplateBuilder
@@ -160,9 +162,15 @@ gin::ObjectTemplateBuilder
 
 void WebOSServiceBridgeInjection::SetupIdentifier() {
   const char* data = "webOSSystem.getIdentifier()";
+
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::HandleScope handle_scope(isolate);
-  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::MaybeLocal<v8::Object> maybe_wrapper = GetWrapper(isolate);
+  v8::Local<v8::Object> wrapper;
+  if (!maybe_wrapper.ToLocal(&wrapper))
+    return;
+
+  auto context = wrapper->CreationContext();
   v8::Local<v8::String> source = gin::StringToV8(isolate, data);
   v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source);
   if (script.IsEmpty())
@@ -174,14 +182,17 @@ void WebOSServiceBridgeInjection::SetupIdentifier() {
 }
 
 void WebOSServiceBridgeInjection::CloseNotify() {
-  if (!WebOSServiceBridgeInjection::is_closing_ ||
-      !WebOSServiceBridgeInjection::waiting_responses_.empty())
-    return;
-
   const char* data = "webOSSystem.onCloseNotify(\"didRunOnCloseCallback\")";
+
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
   v8::HandleScope handle_scope(isolate);
-  v8::Local<v8::Context> context = isolate->GetCurrentContext();
+  v8::MaybeLocal<v8::Object> maybe_wrapper = GetWrapper(isolate);
+  v8::Local<v8::Object> wrapper;
+  if (!maybe_wrapper.ToLocal(&wrapper))
+    return;
+
+  auto context = wrapper->CreationContext();
+  v8::Context::Scope context_scope(wrapper->CreationContext());
   v8::Local<v8::String> source = gin::StringToV8(isolate, data);
   v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source);
   if (!script.IsEmpty())

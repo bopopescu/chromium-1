@@ -38,11 +38,16 @@ class SystemServiceBridgeDelegateWebOS : public SystemServiceBridgeDelegate {
   void Cancel() override;
 
  private:
-  void CancelAllSubscriptions();
+  void OnSubscription(luna::Client::ResponseStatus status,
+                      unsigned token,
+                      const std::string& json);
+  void OnResponse(luna::Client::ResponseStatus status,
+                  unsigned token,
+                  const std::string& json);
 
-  void OnResponse(const std::string& json);
+  std::set<unsigned> subscription_tokens_;
+  std::set<unsigned> response_tokens_;
 
-  std::list<unsigned> subscription_tokens_;
   Response callback_;
   std::shared_ptr<luna::Client> luna_client_;
   base::WeakPtrFactory<SystemServiceBridgeDelegateWebOS> weak_factory_;

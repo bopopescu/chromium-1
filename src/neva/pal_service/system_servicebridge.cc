@@ -24,7 +24,8 @@ namespace pal {
 
 // SystemServiceBridgeImpl
 
-SystemServiceBridgeImpl::SystemServiceBridgeImpl() {
+SystemServiceBridgeImpl::SystemServiceBridgeImpl()
+  : weak_factory_(this) {
 }
 
 SystemServiceBridgeImpl::~SystemServiceBridgeImpl() {
@@ -43,7 +44,7 @@ void SystemServiceBridgeImpl::Connect(const std::string& name,
       name,
       appid,
       base::BindRepeating(&SystemServiceBridgeImpl::OnResponse,
-                          base::Unretained(this)));
+                          weak_factory_.GetWeakPtr()));
   std::move(callback).Run(mojo::MakeRequest(&(client_)));
 }
 
@@ -58,9 +59,10 @@ void SystemServiceBridgeImpl::Cancel() {
     delegate_->Cancel();
 }
 
-void SystemServiceBridgeImpl::OnResponse(const std::string& payload) {
+void SystemServiceBridgeImpl::OnResponse(mojom::ResponseStatus status,
+                                         const std::string& payload) {
   if (client_)
-    client_->Response(payload);
+    client_->Response(status, payload);
 }
 
 // SystemServiceBridgeProviderImpl

@@ -18,13 +18,16 @@
 #define NEVA_PAL_SERVICE_SYSTEM_SERVICEBRIDGE_DELEGATE_H_
 
 #include "base/callback.h"
+#include "neva/pal_service/public/mojom/system_servicebridge.mojom.h"
+
 #include <string>
 
 namespace pal {
 
 class SystemServiceBridgeDelegate {
  public:
-  using Response = base::RepeatingCallback<void (const std::string&)>;
+  using Response =
+      base::RepeatingCallback<void (mojom::ResponseStatus, const std::string&)>;
   virtual void Call(std::string uri, std::string payload) = 0;
   virtual void Cancel() = 0;
 

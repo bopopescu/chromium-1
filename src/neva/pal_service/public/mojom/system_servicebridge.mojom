@@ -16,8 +16,14 @@
 
 module pal.mojom;
 
+enum ResponseStatus {
+  kSuccess,
+  kCanceled,
+  kError,
+};
+
 interface SystemServiceBridgeClient {
-  Response(string json);
+  Response(ResponseStatus status, string json);
 };
 
 interface SystemServiceBridge {

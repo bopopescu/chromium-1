@@ -37,6 +37,7 @@ source_set("pal_service_webos") {
 
   deps = [
     "//base",
+    "//neva/pal_service/public/mojom",
   ]
 
   configs += [

@@ -75,13 +75,17 @@ bool MemoryManagerDelegateWebOS::IsSubscribed() const {
 }
 
 void MemoryManagerDelegateWebOS::OnMemoryStatus(OnceResponse callback,
-                                        const std::string& json) {
+                                                luna::Client::ResponseStatus,
+                                                unsigned,
+                                                const std::string& json) {
   // TODO(pikulik): convert to unified structure
   // ...
   std::move(callback).Run(json);
 }
 
-void MemoryManagerDelegateWebOS::OnLevelChanged(const std::string& json) {
+void MemoryManagerDelegateWebOS::OnLevelChanged(luna::Client::ResponseStatus,
+                                                unsigned,
+                                                const std::string& json) {
   // TODO(pikulik): convert to unified structure
   // ...
   if (subscribed_)

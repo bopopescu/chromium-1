@@ -37,20 +37,21 @@ class ClientImpl : public Client {
   bool Call(std::string uri,
             std::string param,
             OnceResponse callback = base::DoNothing(),
-            std::string on_cancel_value = std::string()) override;
+            std::string on_cancel_value = std::string(),
+            unsigned* token = nullptr) override;
+
+  void Cancel(unsigned token) override;
 
   bool Subscribe(std::string uri,
                  std::string param,
                  RepeatingResponse callback,
-                 unsigned* token) override;
+                 std::string on_cancel_value = std::string(),
+                 unsigned* token = nullptr) override;
 
   void Unsubscribe(unsigned token) override;
 
-  void CancelWaitingCalls() override;
-
  private:
-  struct Response {
-    Client::OnceResponse callback;
+  struct Context {
     ClientImpl* ptr = nullptr;
     LSMessageToken token;
     std::string uri;
@@ -58,15 +59,18 @@ class ClientImpl : public Client {
     std::string on_cancel_value;
   };
 
+  struct Response {
+    Client::OnceResponse callback;
+    Context context;
+  };
+
   struct Subscription {
     Client::RepeatingResponse callback;
-    LSMessageToken token;
-    std::string uri;
-    std::string param;
+    Context context;
   };
 
   void CancelAllSubscriptions();
-  void CancelAllResponses();
+  void CancelWaitingCalls();
 
   static bool HandleResponse(LSHandle* sh, LSMessage* reply, void* ctx);
   static bool HandleSubscribe(LSHandle* sh, LSMessage* reply, void* ctx);
@@ -75,7 +79,7 @@ class ClientImpl : public Client {
   LSHandle* handle_ = nullptr;
   GMainContext* context_ = nullptr;
 
-  std::map<Response*, std::unique_ptr<Response>> responses_;
+  std::map<unsigned, std::unique_ptr<Response>> responses_;
   std::map<unsigned, std::unique_ptr<Subscription>> subscriptions_;
 };
 

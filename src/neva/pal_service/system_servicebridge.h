@@ -18,6 +18,7 @@
 #define NEVA_PAL_SERVICE_SYSTEM_SERVICEBRIDGE_H_
 
 #include "base/callback.h"
+#include "base/memory/weak_ptr.h"
 #include "mojo/public/cpp/bindings/binding_set.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "neva/pal_service/public/mojom/system_servicebridge.mojom.h"
@@ -39,10 +40,12 @@ class SystemServiceBridgeImpl : public mojom::SystemServiceBridge {
   void Cancel() override;
 
  private:
-  void OnResponse(const std::string& payload);
+  void OnResponse(mojom::ResponseStatus status,
+                  const std::string& payload);
 
   std::unique_ptr<SystemServiceBridgeDelegate> delegate_;
   mojo::AssociatedInterfacePtr<mojom::SystemServiceBridgeClient> client_;
+  base::WeakPtrFactory<SystemServiceBridgeImpl> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(SystemServiceBridgeImpl);
 };

@@ -113,38 +113,45 @@ std::string ClientImpl::GetAppId() const {
 bool ClientImpl::Call(std::string uri,
                       std::string param,
                       OnceResponse callback,
-                      std::string on_cancel_value) {
+                      std::string on_cancel_value,
+                      unsigned* token) {
   if (!handle_)
     return false;
 
   Error error;
   auto response = std::make_unique<Response>();
-  response->ptr = this;
   response->callback = std::move(callback);
-  response->uri = std::move(uri);
-  response->param = std::move(param);
-  response->on_cancel_value = std::move(on_cancel_value);
+  response->context.ptr = this;
+  response->context.uri = std::move(uri);
+  response->context.param = std::move(param);
+  response->context.on_cancel_value = std::move(on_cancel_value);
 
-  LSMessageToken token;
   if (!LSCallOneReply(handle_,
-                      response->uri.c_str(),
-                      response->param.c_str(),
+                      response->context.uri.c_str(),
+                      response->context.param.c_str(),
                       HandleResponse,
                       response.get(),
-                      &(response->token),
+                      &(response->context.token),
                       &error)) {
     LogError(error);
-    std::move(callback).Run(response->on_cancel_value);
+    std::move(callback).Run(ResponseStatus::ERROR,
+                            static_cast<unsigned>(response->context.token),
+                            response->context.on_cancel_value);
     return false;
   }
 
-  responses_[response.get()] = std::move(response);
+  unsigned ret_token = static_cast<unsigned>(response->context.token);
+  responses_[ret_token] = std::move(response);
+
+  if (token)
+    *token = ret_token;
   return true;
 }
 
 bool ClientImpl::Subscribe(std::string uri,
                            std::string param,
                            RepeatingResponse callback,
+                           std::string on_cancel_value,
                            unsigned* token) {
   if (!handle_)
     return false;
@@ -152,26 +159,50 @@ bool ClientImpl::Subscribe(std::string uri,
   Error error;
   auto subscription = std::make_unique<Subscription>();
   subscription->callback = std::move(callback);
-  subscription->uri = std::move(uri);
-  subscription->param = std::move(param);
+  subscription->context.ptr = this;
+  subscription->context.uri = std::move(uri);
+  subscription->context.param = std::move(param);
+  subscription->context.on_cancel_value = std::move(on_cancel_value);
 
   if (!LSCall(handle_,
-              subscription->uri.c_str(),
-              subscription->param.c_str(),
+              subscription->context.uri.c_str(),
+              subscription->context.param.c_str(),
               HandleSubscribe,
               subscription.get(),
-              &(subscription->token),
+              &(subscription->context.token),
               &error)) {
     LogError(error);
-    callback.Run("{}");
+    callback.Run(ResponseStatus::ERROR,
+                 static_cast<unsigned>(subscription->context.token),
+                 subscription->context.on_cancel_value);
     return false;
   }
 
-  unsigned ret_token = static_cast<unsigned>(subscription->token);
+  unsigned ret_token = static_cast<unsigned>(subscription->context.token);
   subscriptions_[ret_token] = std::move(subscription);
+
   if (token)
     *token = ret_token;
   return true;
+}
+
+void ClientImpl::Cancel(unsigned token) {
+  if (!handle_)
+    return;
+
+  auto it = responses_.find(token);
+  if (it == responses_.end())
+    return;
+
+  LSMessageToken key = it->second->context.token;
+  Error error;
+  if (!LSCallCancel(handle_, key, &error))
+    LOG(INFO) << "[CANCEL] " << key << " fail [" << error.message << "]";
+
+  std::move(it->second->callback)
+      .Run(ResponseStatus::CANCELED, token,
+           it->second->context.on_cancel_value);
+  responses_.erase(it);
 }
 
 void ClientImpl::Unsubscribe(unsigned token) {
@@ -183,25 +214,13 @@ void ClientImpl::Unsubscribe(unsigned token) {
     return;
 
   Error error;
-  LSMessageToken key = it->second->token;
+  LSMessageToken key = it->second->context.token;
   if (!LSCallCancel(handle_, key, &error))
     LOG(INFO) << "[UNSUB] " << key << " fail [" << error.message << "]";
-
+  std::move(it->second->callback)
+      .Run(ResponseStatus::CANCELED, token,
+           it->second->context.on_cancel_value);
   subscriptions_.erase(it);
-}
-
-void ClientImpl::CancelWaitingCalls() {
-  if (!handle_)
-    return;
-
-  Error error;
-  for (auto& response : responses_) {
-    LSMessageToken key = response.second->token;
-    if (!LSCallCancel(handle_, key, &error))
-      LOG(INFO) << "[CANCEL] " << key << " fail [" << error.message << "]";
-    std::move(response.second->callback).Run(response.second->on_cancel_value);
-  }
-  responses_.clear();
 }
 
 void ClientImpl::CancelAllSubscriptions() {
@@ -210,24 +229,47 @@ void ClientImpl::CancelAllSubscriptions() {
 
   Error error;
   for (auto& subscription : subscriptions_) {
-    LSMessageToken key = subscription.second->token;
+    LSMessageToken key = subscription.second->context.token;
     if (!LSCallCancel(handle_, key, &error))
       LOG(INFO) << "[UNSUB] " << key << " fail [" << error.message << "]";
+
+    std::move(subscription.second->callback)
+        .Run(ResponseStatus::CANCELED,
+             subscription.second->context.token,
+             subscription.second->context.on_cancel_value);
   }
   subscriptions_.clear();
+}
+
+void ClientImpl::CancelWaitingCalls() {
+  if (!handle_)
+    return;
+
+  Error error;
+  for (auto& response : responses_) {
+    LSMessageToken key = response.second->context.token;
+    if (!LSCallCancel(handle_, key, &error))
+      LOG(INFO) << "[CANCEL] " << key << " fail [" << error.message << "]";
+    std::move(response.second->callback)
+        .Run(ResponseStatus::CANCELED,
+             response.second->context.token,
+             response.second->context.on_cancel_value);
+  }
+  responses_.clear();
 }
 
 // static
 bool ClientImpl::HandleResponse(LSHandle* sh, LSMessage* reply, void* ctx) {
   ClientImpl::Response* response = static_cast<ClientImpl::Response*>(ctx);
-  if (response && response->ptr) {
-    auto self = response->ptr;
-    auto it = self->responses_.find(response);
+  if (response && response->context.ptr) {
+    auto self = response->context.ptr;
+    auto it = self->responses_.find(response->context.token);
     if (it != self->responses_.end()) {
       LSMessageRef(reply);
       const std::string dump = LSMessageGetPayload(reply);
-      std::move(response->callback).Run(dump);
-      self->responses_.erase(response);
+      std::move(response->callback).Run(
+          ResponseStatus::SUCCESS, response->context.token, dump);
+      self->responses_.erase(it);
       LSMessageUnref(reply);
     }
   } else {
@@ -245,7 +287,8 @@ bool ClientImpl::HandleSubscribe(LSHandle* sh, LSMessage* reply, void* ctx) {
   if (subscription) {
     LSMessageRef(reply);
     const std::string dump = LSMessageGetPayload(reply);
-    subscription->callback.Run(dump);
+    subscription->callback.Run(
+        ResponseStatus::SUCCESS, subscription->context.token, dump);
     LSMessageUnref(reply);
   } else {
     NOTREACHED();

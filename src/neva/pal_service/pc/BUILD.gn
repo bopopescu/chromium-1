@@ -20,4 +20,9 @@ source_set("pal_service_pc") {
   sources = [
     "pal_platform_factory_pc.cc",
   ]
+
+  deps = [
+    "//base",
+    "//neva/pal_service/public/mojom",
+  ]
 }

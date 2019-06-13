@@ -54,7 +54,9 @@ class WebOSServiceBridgeInjection
 
   void OnConnect(
       pal::mojom::SystemServiceBridgeClientAssociatedRequest request);
-  void Response(const std::string& payload) override;
+  void CallJSHandler(const std::string& body);
+  void Response(pal::mojom::ResponseStatus status,
+                const std::string& payload) override;
 
   gin::ObjectTemplateBuilder GetObjectTemplateBuilder(
       v8::Isolate* isolate) override;

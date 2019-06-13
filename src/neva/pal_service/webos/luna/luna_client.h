@@ -49,21 +49,32 @@ class Client {
 
   virtual std::string GetAppId() const = 0;
 
-  using OnceResponse = base::OnceCallback<void (const std::string&)>;
+  enum class ResponseStatus : int32_t {
+    SUCCESS,
+    CANCELED,
+    ERROR,
+  };
+
+  using OnceResponse = base::OnceCallback<
+      void (ResponseStatus, unsigned token, const std::string&)>;
   virtual bool Call(std::string uri,
                     std::string param,
                     OnceResponse callback = base::DoNothing(),
-                    std::string on_cancel_value = std::string()) = 0;
+                    std::string on_cancel_value = std::string(),
+                    unsigned* token = nullptr) = 0;
 
-  using RepeatingResponse = base::RepeatingCallback<void (const std::string&)>;
+  virtual void Cancel(unsigned token) = 0;
+
+  using RepeatingResponse = base::RepeatingCallback<
+      void (ResponseStatus, unsigned token, const std::string&)>;
   virtual bool Subscribe(std::string uri,
                          std::string param,
                          RepeatingResponse callback,
+                         std::string on_cancel_value = std::string(),
                          unsigned* token = nullptr) = 0;
 
   virtual void Unsubscribe(unsigned token) = 0;
 
-  virtual void CancelWaitingCalls() = 0;
 };
 
 std::unique_ptr<Client> CreateClient(const Client::Params& params);

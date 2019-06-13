@@ -19,6 +19,23 @@
 #include "base/callback.h"
 #include "neva/pal_service/webos/luna/luna_names.h"
 
+namespace {
+
+pal::mojom::ResponseStatus ConvertLunaClientStatusToPalStatus(
+    pal::luna::Client::ResponseStatus status) {
+  switch (status) {
+    case pal::luna::Client::ResponseStatus::SUCCESS:
+      return pal::mojom::ResponseStatus::kSuccess;
+    case pal::luna::Client::ResponseStatus::CANCELED:
+      return pal::mojom::ResponseStatus::kCanceled;
+    case pal::luna::Client::ResponseStatus::ERROR:
+      return pal::mojom::ResponseStatus::kError;
+  }
+  return pal::mojom::ResponseStatus::kError;
+}
+
+}  // anonymous namespace
+
 namespace pal {
 namespace webos {
 
@@ -44,38 +61,64 @@ void SystemServiceBridgeDelegateWebOS::Call(std::string uri,
   if (!luna_client_)
     return;
 
+  unsigned token;
   if (luna::IsSubscription(payload)) {
-    unsigned token;
     const bool subscribed = luna_client_->Subscribe(
         uri,
         payload,
-        base::BindRepeating(
-            &SystemServiceBridgeDelegateWebOS::OnResponse,
-            weak_factory_.GetWeakPtr()),
+        base::BindRepeating(&SystemServiceBridgeDelegateWebOS::OnSubscription,
+                            weak_factory_.GetWeakPtr()),
+        std::string("{}"),
         &token);
     if (subscribed)
-      subscription_tokens_.push_back(token);
+      subscription_tokens_.insert(token);
   } else {
-    luna_client_->Call(
+    const bool called = luna_client_->Call(
         uri,
         payload,
-        base::BindOnce(
-            &SystemServiceBridgeDelegateWebOS::OnResponse,
-            weak_factory_.GetWeakPtr()),
-        std::string("{}"));
+        base::BindOnce(&SystemServiceBridgeDelegateWebOS::OnResponse,
+                       weak_factory_.GetWeakPtr()),
+        std::string("{}"),
+        &token);
+    if (called)
+      response_tokens_.insert(token);
   }
 }
 
 void SystemServiceBridgeDelegateWebOS::Cancel() {
-  if (luna_client_) {
-    for (const auto token : subscription_tokens_)
-      luna_client_->Unsubscribe(token);
-    luna_client_->CancelWaitingCalls();
-  }
+  if (!luna_client_)
+    return;
+
+  std::set<unsigned> cached_subscription_tokens;
+  cached_subscription_tokens.swap(subscription_tokens_);
+  for (unsigned token : cached_subscription_tokens)
+    luna_client_->Unsubscribe(token);
+
+  std::set<unsigned> cached_response_tokens;
+  cached_response_tokens.swap(response_tokens_);
+  for (unsigned token : cached_response_tokens)
+    luna_client_->Cancel(token);
 }
 
-void SystemServiceBridgeDelegateWebOS::OnResponse(const std::string& json) {
-  callback_.Run(json);
+void SystemServiceBridgeDelegateWebOS::OnSubscription(
+    luna::Client::ResponseStatus status,
+    unsigned token,
+    const std::string& json) {
+  const pal::mojom::ResponseStatus pal_status =
+      ConvertLunaClientStatusToPalStatus(status);
+  if (status != luna::Client::ResponseStatus::SUCCESS)
+    subscription_tokens_.erase(token);
+  callback_.Run(pal_status, json);
+}
+
+void SystemServiceBridgeDelegateWebOS::OnResponse(
+    luna::Client::ResponseStatus status,
+    unsigned token,
+    const std::string& json) {
+  const pal::mojom::ResponseStatus pal_status =
+      ConvertLunaClientStatusToPalStatus(status);
+  response_tokens_.erase(token);
+  callback_.Run(pal_status, json);
 }
 
 }  // namespace webos

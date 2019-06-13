@@ -38,8 +38,13 @@ class MemoryManagerDelegateWebOS : public MemoryManagerDelegate {
   bool IsSubscribed() const override;
 
  private:
-  void OnMemoryStatus(OnceResponse callback, const std::string& json);
-  void OnLevelChanged(const std::string& json);
+  void OnMemoryStatus(OnceResponse callback,
+                      luna::Client::ResponseStatus,
+                      unsigned token,
+                      const std::string& json);
+  void OnLevelChanged(luna::Client::ResponseStatus,
+                      unsigned token,
+                      const std::string& json);
 
   bool subscribed_ = false;
   unsigned subscription_token_ = 0;
