@@ -28,6 +28,10 @@
 #include "webos/common/webos_resource_delegate.h"
 #include "webos/renderer/webos_content_renderer_client.h"
 
+#if defined(USE_PMLOG)
+#include "base/logging_pmlog_provider.h"
+#endif
+
 using base::CommandLine;
 
 namespace {
@@ -66,6 +70,16 @@ void WebOSContentMainDelegate::PreSandboxStartup() {
 
   base::PathService::Override(ui::DIR_LOCALES,
                               pak_file.AppendASCII(kLocaleResourcesDirName));
+
+}
+
+int WebOSContentMainDelegate::RunProcess(
+    const std::string& process_type,
+    const content::MainFunctionParams& main_function_params) {
+#if defined(USE_PMLOG)
+  logging::PmLogProvider::Initialize("wam.log");
+#endif
+  return -1;
 }
 
 content::ContentRendererClient*
