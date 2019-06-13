@@ -1076,6 +1076,10 @@ void RenderView::ApplyWebPreferences(const WebPreferences& prefs,
 #endif
 
   WebRuntimeFeatures::EnableTranslateService(prefs.translate_service_available);
+
+#if defined(USE_NEVA_APPRUNTIME)
+  settings->SetBackHistoryAPIEnabled(!prefs.back_history_api_disabled);
+#endif
 }
 
 /*static*/

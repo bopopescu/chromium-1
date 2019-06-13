@@ -69,6 +69,7 @@
 #include "ui/events/event.h"
 #include "ui/events/event_constants.h"
 #include "ui/events/event_utils.h"
+#include "ui/events/keycodes/dom/dom_code.h"
 #include "ui/gfx/font_render_params.h"
 
 #if defined(USE_APPDRM)
@@ -509,6 +510,9 @@ void WebView::UpdatePreferencesAttributeForPrefs(
     case Attribute::AllowUniversalAccessFromFileUrls:
       preferences->allow_universal_access_from_file_urls = enable;
       break;
+    case Attribute::BackHistoryAPIDisabled:
+      preferences->back_history_api_disabled = enable;
+      break;
     case Attribute::SuppressesIncrementalRendering:
       NOTIMPLEMENTED()
           << "Attribute::SuppressesIncrementalRendering is not supported";
@@ -822,7 +826,9 @@ void WebView::ForwardAppRuntimeEvent(AppRuntimeEvent* event) {
           ui::KeyEvent(event->GetType() == AppRuntimeKeyEvent::KeyPress
                            ? ui::ET_KEY_PRESSED
                            : ui::ET_KEY_RELEASED,
-                       ui::KeyboardCode(keycode), key_event->GetFlags()),
+                       ui::KeyboardCode(keycode), ui::DomCode::NONE,
+                       key_event->GetFlags(), key_event->GetDomKey(),
+                       base::TimeTicks()),
           wchar_t(keycode));
 
       native_event.windows_key_code = keycode;
