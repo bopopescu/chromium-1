@@ -20,6 +20,7 @@ import("//neva/neva.gni")
 if (use_gst_media) {
   pkg_config("media_base_webos_config") {
     packages = [ "umedia_api" ]
+  }
 }
 
 source_set("webos") {
