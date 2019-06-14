@@ -1763,9 +1763,14 @@ void RenderFrameHostImpl::OnDidAddMessageToConsole(
   if (delegate_->DidAddMessageToConsole(level, message, line_no, source_id))
     return;
 
+#if defined(OS_WEBOS) && defined(USE_PMLOG)
+  // In webOS we keep always the original debug level to forward to LOG
+  const bool is_web_ui = true;
+#else
   // Pass through log level only on WebUI pages to limit console spew.
   const bool is_web_ui =
       HasWebUIScheme(delegate_->GetMainFrameLastCommittedURL());
+#endif
   const int32_t resolved_level = is_web_ui ? level : ::logging::LOG_INFO;
 
   // LogMessages can be persisted so this shouldn't be logged in incognito mode.
