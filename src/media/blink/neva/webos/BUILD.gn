@@ -34,10 +34,13 @@ source_set("webos") {
     sources += [
       "media_util.cc",
       "media_util.h",
-      "umediaclient_impl.cc",
-      "umediaclient_impl.h",
       "system_media_manager.h",
+      "system_media_manager_gmp.cc",
+      "system_media_manager_gmp.h",
+      "umediaclient_impl.cc",
+      "umediaclient_impl.h"
     ]
+    defines = [ "UMS_INTERNAL_API_VERSION=2" ]
   }
   else {
     sources += [

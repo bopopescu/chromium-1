@@ -71,13 +71,6 @@ config("config") {
     defines += [ "USE_NEVA_MEDIA=1" ]
   }
 
-  if (use_gst_media) {
-    defines += [
-      "USE_GST_MEDIA",
-      "UMS_INTERNAL_API_VERSION=2",
-    ]
-  }
-
   if (enable_webm_audio_codecs) {
     defines += [ "ENABLE_WEBM_AUDIO_CODECS=1" ]
   }
@@ -104,7 +97,6 @@ config("config") {
     ]
   }
 
-
   if (use_pmlog && current_toolchain == default_toolchain) {
     defines += [ "USE_PMLOG=1" ]
   }
@@ -129,5 +121,9 @@ config("config") {
 
   if (use_filescheme_codecache) {
     defines += [ "USE_FILESCHEME_CODECACHE=1" ]
+  }
+
+  if (use_gst_media) {
+    defines += [ "USE_GST_MEDIA=1" ]
   }
 }

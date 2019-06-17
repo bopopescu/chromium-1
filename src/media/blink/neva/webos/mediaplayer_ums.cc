@@ -97,7 +97,7 @@ MediaPlayerUMS::MediaPlayerUMS(
       is_video_offscreen_(false),
       main_task_runner_(main_task_runner) {
   LOG(ERROR) << __func__;
-  umedia_client_.reset(WebOSMediaClient::Create(main_task_runner_, app_id));
+  umedia_client_ = WebOSMediaClient::Create(main_task_runner_, app_id);
 }
 
 MediaPlayerUMS::~MediaPlayerUMS() {
@@ -202,13 +202,13 @@ bool MediaPlayerUMS::IsPreloadable(const std::string& content_media_option) {
 
 bool MediaPlayerUMS::HasVideo() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
+  FUNC_LOG(2);
   return umedia_client_->HasVideo();
 }
 
 bool MediaPlayerUMS::HasAudio() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
+  FUNC_LOG(2);
   return umedia_client_->HasAudio();
 }
 
@@ -264,13 +264,11 @@ void MediaPlayerUMS::SetAudioFocus(bool focus) {
 
 bool MediaPlayerUMS::HasVisibility(void) const {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
   return umedia_client_->Visibility();
 }
 
 void MediaPlayerUMS::SetVisibility(bool visibility) {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  VLOG(1) << __func__ << " visibility=" << visibility;
   if (!is_video_offscreen_)
     umedia_client_->SetVisibility(visibility);
 }

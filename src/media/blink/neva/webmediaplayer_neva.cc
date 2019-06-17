@@ -515,13 +515,13 @@ void WebMediaPlayerNeva::SetPreload(Preload preload) {
 
 bool WebMediaPlayerNeva::HasVideo() const {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
+  FUNC_LOG(2);
   return player_api_->HasVideo();
 }
 
 bool WebMediaPlayerNeva::HasAudio() const {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  FUNC_LOG(1);
+  FUNC_LOG(2);
   return player_api_->HasAudio();
 }
 
