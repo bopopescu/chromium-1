@@ -22,6 +22,7 @@
 
 #include "base/strings/string16.h"
 #include "neva/app_runtime/public/app_runtime_constants.h"
+#include "ui/base/ime/neva/input_method_common.h"
 #include "ui/base/ime/text_input_type.h"
 #include "ui/gfx/geometry/rect.h"
 #include "ui/gfx/native_widget_types.h"
@@ -72,7 +73,7 @@ class WaylandPlatformWindow {
   virtual void SetWindowProperty(const std::string& name,
                                  const std::string& value) {}
   virtual void ShowInputPanel() {}
-  virtual void HideInputPanel() {}
+  virtual void HideInputPanel(ImeHiddenType) {}
   virtual void SetInputContentType(ui::TextInputType text_input_type, int text_input_flags) {}
 ///@name USE_NEVA_APPRUNTIME
 ///@{

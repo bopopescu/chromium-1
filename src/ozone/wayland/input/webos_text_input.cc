@@ -187,8 +187,17 @@ void WaylandTextInput::ShowInputPanel(wl_seat* input_seat, unsigned handle) {
   }
 }
 
-void WaylandTextInput::HideInputPanel(wl_seat* input_seat) {
+void WaylandTextInput::HideInputPanel(wl_seat* input_seat,
+                                      ui::ImeHiddenType hidden_type) {
+  if (!text_model_)
+    return;
+
+  if (hidden_type == ui::ImeHiddenType::kDeactivate) {
   DeactivateTextModel();
+  } else {
+    SetHiddenState();
+    text_model_hide_input_panel(text_model_);
+  }
 }
 
 void WaylandTextInput::SetActiveWindow(WaylandWindow* window) {
@@ -417,7 +426,7 @@ void WaylandTextInput::OnKeysym(void* data,
     hide_ime = true;
 
   if (hide_ime)
-    dispatcher->PrimarySeat()->HideInputPanel();
+    dispatcher->PrimarySeat()->HideInputPanel(ui::ImeHiddenType::kHide);
 }
 
 void WaylandTextInput::OnEnter(void* data,
