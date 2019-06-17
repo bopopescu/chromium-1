@@ -1205,7 +1205,7 @@ void DesktopWindowTreeHostOzone::SetWindowProperty(const std::string& name,
 void DesktopWindowTreeHostOzone::SetUseVirtualKeyboard(bool enable) {
   SetImeEnabled(enable);
   if (!enable)
-    OnHideIme(ui::ImeHiddenType::kHide);
+    OnHideIme();
 }
 
 void DesktopWindowTreeHostOzone::CreateGroup(
@@ -1234,8 +1234,8 @@ void DesktopWindowTreeHostOzone::OnShowIme() {
   platform_window_->ShowInputPanel();
 }
 
-void DesktopWindowTreeHostOzone::OnHideIme(ui::ImeHiddenType hidden_type) {
-  platform_window_->HideInputPanel(hidden_type);
+void DesktopWindowTreeHostOzone::OnHideIme() {
+  platform_window_->HideInputPanel();
 }
 
 void DesktopWindowTreeHostOzone::OnTextInputTypeChanged(ui::TextInputType text_input_type,
