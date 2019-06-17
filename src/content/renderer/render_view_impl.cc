@@ -226,6 +226,10 @@
 #include "content/renderer/media/audio/neva/audio_capturer_source_manager.h"
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+#include "cc/base/switches_neva.h"
+#endif
+
 using blink::WebAXObject;
 using blink::WebApplicationCacheHost;
 using blink::WebApplicationCacheHostClient;
@@ -629,6 +633,13 @@ void RenderViewImpl::Initialize(
   // there. Browser-created RenderViews do not send a Show request to the
   // browser, so have no such callback.
   was_created_by_renderer_ = has_show_callback;
+#endif
+#if defined(USE_NEVA_APPRUNTIME)
+  // This is for checking condition whether native scroll is enabled
+  // on blink side. In initial phase of this feature, all related changes
+  // are blocked inside this condition.
+  webview()->GetSettings()->SetWebOSNativeScrollEnabled(
+      command_line.HasSwitch(cc::switches::kEnableWebOSNativeScroll));
 #endif
 }
 
