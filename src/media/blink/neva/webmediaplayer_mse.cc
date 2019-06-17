@@ -33,6 +33,9 @@
 #include "third_party/blink/public/platform/web_media_player_client.h"
 #include "ui/gfx/geometry/rect_f.h"
 
+#define FUNC_LOG(x) DVLOG(x) << __func__
+#define THIS_FUNC_LOG(x) DVLOG(x) << "[" << this << "] " << __func__
+
 namespace media {
 namespace {
 
@@ -76,6 +79,7 @@ WebMediaPlayerMSE::WebMediaPlayerMSE(
       is_fullscreen_mode_(false),
       is_loading_(false),
       render_mode_(blink::WebMediaPlayer::RenderModeNone) {
+  THIS_FUNC_LOG(1);
   // Use the null sink for our MSE player
   audio_source_provider_ = new media::WebAudioSourceProviderImpl(
       new media::NullAudioSink(media_task_runner_), media_log_.get());
@@ -110,6 +114,7 @@ WebMediaPlayerMSE::WebMediaPlayerMSE(
 }
 
 WebMediaPlayerMSE::~WebMediaPlayerMSE() {
+  THIS_FUNC_LOG(1);
   DCHECK(main_task_runner_->BelongsToCurrentThread());
 
   if (video_layer_)
@@ -134,6 +139,7 @@ blink::WebMediaPlayer::LoadTiming WebMediaPlayerMSE::Load(
     const blink::WebMediaPlayerSource& source,
     CorsMode cors_mode) {
   DCHECK(source.IsURL());
+  THIS_FUNC_LOG(1);
 
   is_loading_ = true;
   pending_load_type_ = load_type;
@@ -147,6 +153,7 @@ blink::WebMediaPlayer::LoadTiming WebMediaPlayerMSE::Load(
 
 void WebMediaPlayerMSE::Play() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
+  THIS_FUNC_LOG(1);
   if (!has_activation_permit_) {
     status_on_suspended_ = PlayingStatus;
     if (!client_->IsSuppressedMediaPlay())
@@ -158,6 +165,7 @@ void WebMediaPlayerMSE::Play() {
 
 void WebMediaPlayerMSE::Pause() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
+  THIS_FUNC_LOG(1);
   if (is_suspended_) {
     status_on_suspended_ = PausedStatus;
     return;
@@ -176,6 +184,7 @@ void WebMediaPlayerMSE::SetRate(double rate) {
 }
 
 void WebMediaPlayerMSE::SetVolume(double volume) {
+  THIS_FUNC_LOG(1);
   DCHECK(main_task_runner_->BelongsToCurrentThread());
 
   media::WebMediaPlayerImpl::SetVolume(volume);
@@ -207,6 +216,7 @@ void WebMediaPlayerMSE::ExitedFullscreen() {
 }
 
 void WebMediaPlayerMSE::OnSuspend() {
+  THIS_FUNC_LOG(1) << " is_suspended_ was " << is_suspended_;
   if (is_suspended_) {
     delegate_->DidMediaSuspended(delegate_id_);
     return;
@@ -267,6 +277,7 @@ void WebMediaPlayerMSE::OnMediaActivationPermitted() {
 }
 
 void WebMediaPlayerMSE::OnResume() {
+  THIS_FUNC_LOG(1) << " is_suspended_ was " << is_suspended_;
   if (!is_suspended_) {
     delegate_->DidMediaActivated(delegate_id_);
     return;

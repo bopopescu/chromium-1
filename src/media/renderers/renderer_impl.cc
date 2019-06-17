@@ -270,7 +270,7 @@ void RendererImpl::SetVolume(float volume) {
 
   if (audio_renderer_)
     audio_renderer_->SetVolume(volume);
-#if defined(USE_NEVA_MEDIA)
+#if defined(USE_NEVA_MEDIA) && defined(USE_UMEDIASERVER)
   if (media_platform_api_)
     media_platform_api_->SetPlaybackVolume(volume);
 #endif

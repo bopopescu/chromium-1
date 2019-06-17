@@ -18,8 +18,12 @@ import("//build/config/linux/pkg_config.gni")
 import("//neva/neva.gni")
 
 if (use_gst_media) {
-  pkg_config("media_base_webos_config") {
-    packages = [ "umedia_api" ]
+  pkg_config("media_base_gst_config") {
+    packages = [
+      "gmp-player-client",
+      "gstreamer-1.0",
+      "umedia_api",
+    ]
   }
 }
 
@@ -33,11 +37,19 @@ source_set("webos") {
   sources = [
     "neva_mime_util_internal_webos.cc",
   ]
-  sources += [
-    "media_platform_api_webos_stub.cc",
-    "media_platform_api_webos_stub.h",
-  ]
+
   if (use_gst_media) {
-    configs += [ ":media_base_webos_config" ]
+    configs += [
+      ":media_base_gst_config",
+    ]
+    sources += [
+      "media_platform_api_webos_gmp.cc",
+      "media_platform_api_webos_gmp.h",
+    ]
+  } else {
+    sources += [
+      "media_platform_api_webos_stub.cc",
+      "media_platform_api_webos_stub.h",
+    ]
   }
 }
