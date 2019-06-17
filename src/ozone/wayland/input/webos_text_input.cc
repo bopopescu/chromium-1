@@ -135,10 +135,10 @@ void WaylandTextInput::ResetIme() {
   }
 }
 
-void WaylandTextInput::ActivateTextModel() {
-  if (text_model_ && active_window_ && !activated_) {
+void WaylandTextInput::ActivateTextModel(WaylandWindow* active_window) {
+  if (text_model_ && active_window && !activated_) {
     text_model_activate(text_model_, serial, seat_->GetWLSeat(),
-                        active_window_->ShellSurface()->GetWLSurface());
+                        active_window->ShellSurface()->GetWLSurface());
   }
 }
 
@@ -168,8 +168,18 @@ void WaylandTextInput::ShowInputPanel(wl_seat* input_seat, unsigned handle) {
   if (!text_model_)
     CreateTextModel();
 
-  if (text_model_ && active_window_ && active_window_->Handle() == handle) {
-    activated_ ? text_model_show_input_panel(text_model_) : ActivateTextModel();
+  if (!text_model_)
+    return;
+
+  WaylandWindow* active_window = NULL;
+  if (active_window_ && active_window_->Handle() == handle)
+    active_window = active_window_;
+  else if (last_active_window_ && last_active_window_->Handle() == handle)
+    active_window = last_active_window_;
+
+  if (active_window) {
+    activated_ ? text_model_show_input_panel(text_model_)
+               : ActivateTextModel(active_window);
     text_model_set_content_type(
         text_model_,
         ContentHintFromInputContentType(input_content_type_, text_input_flags_),

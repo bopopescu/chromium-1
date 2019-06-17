@@ -119,7 +119,7 @@ class WaylandTextInput {
                       uint32_t height);
 
  private:
-  void ActivateTextModel();
+  void ActivateTextModel(WaylandWindow*);
   void CreateTextModel();
   void DeactivateTextModel();
   enum InputPanelState {
