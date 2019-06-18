@@ -603,7 +603,7 @@ class CONTENT_EXPORT RenderWidget
   // Pauses the compositor's scheduler and tears down its IPC channels.
   void StopCompositor();
 
-  void DoDeferredClose();
+  virtual void DoDeferredClose();
 
   gfx::Size GetSizeForWebWidget() const;
   void ResizeWebWidget();

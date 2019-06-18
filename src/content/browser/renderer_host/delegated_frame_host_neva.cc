@@ -37,6 +37,34 @@ viz::CompositorFrame CreateDelegatedFrame(float scale_factor, gfx::Size size) {
 
 }  // namespace
 
+class ClosedKeepAliveWebAppTrigger : public viz::BeginFrameObserverBase {
+ public:
+  ClosedKeepAliveWebAppTrigger(DelegatedFrameHost* host) : host_(host) {
+    task_runner_ = base::CreateSingleThreadTaskRunnerWithTraits(
+        {content::BrowserThread::UI});
+    begin_frame_source_ = std::make_unique<viz::DelayBasedBeginFrameSource>(
+        std::make_unique<viz::DelayBasedTimeSource>(task_runner_.get()),
+        viz::BeginFrameSource::kNotRestartableId);
+    begin_frame_source_->AddObserver(this);
+  }
+
+  ~ClosedKeepAliveWebAppTrigger() override = default;
+
+  // viz::BeginFrameObserverBase
+  bool OnBeginFrameDerivedImpl(const viz::BeginFrameArgs& args) override {
+    host_->OnBeginFrame(args,
+                        base::flat_map<uint32_t, gfx::PresentationFeedback>());
+    return true;
+  }
+
+  void OnBeginFrameSourcePausedChanged(bool paused) override {}
+
+ private:
+  DelegatedFrameHost* host_;
+  scoped_refptr<base::SingleThreadTaskRunner> task_runner_;
+  std::unique_ptr<viz::SyntheticBeginFrameSource> begin_frame_source_;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // DelegatedFrameHost
 
@@ -71,6 +99,11 @@ void DelegatedFrameHost::WasShown(
         compositor_->ResumeDrawing();
     }
   }
+
+  DelegatedFrameHostClient* client =
+      static_cast<DelegatedFrameHostClient*>(client_);
+  if (!compositor_ && client->DelegatedFrameHostIsKeepAliveWebApp())
+    keep_alive_trigger_ = std::make_unique<ClosedKeepAliveWebAppTrigger>(this);
 }
 
 void DelegatedFrameHost::WasHidden() {
@@ -106,8 +139,11 @@ void DelegatedFrameHost::SubmitCompositorFrame(
     base::Optional<viz::HitTestRegionList> hit_test_region_list) {
   // Calling origin procedure
   neva::DelegatedFrameHost::SubmitCompositorFrame(
-
       local_surface_id, std::move(frame), std::move(hit_test_region_list));
+
+  if (keep_alive_trigger_)
+    keep_alive_trigger_.reset();
+
   if (compositor_ && deferred_resume_drawing_) {
     deferred_resume_drawing_ = false;
     compositor_->ResumeDrawing();
@@ -124,4 +160,15 @@ void DelegatedFrameHost::OnFirstSurfaceActivation(
   // Calling origin procedure
   neva::DelegatedFrameHost::OnFirstSurfaceActivation(surface_info);
 }
+
+void DelegatedFrameHost::AttachToCompositor(ui::Compositor* compositor) {
+  if (!compositor)
+    return;
+
+  if (keep_alive_trigger_)
+    keep_alive_trigger_.reset();
+
+  neva::DelegatedFrameHost::AttachToCompositor(compositor);
+}
+
 }  // namespace content

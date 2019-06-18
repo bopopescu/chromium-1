@@ -328,6 +328,7 @@ class CONTENT_EXPORT RenderWidgetHostViewAura
 #if defined(USE_NEVA_APPRUNTIME)
   void SetEnableHtmlSystemKeyboardAttr(bool enable);
   bool SystemKeyboardDisabled() const override;
+  bool IsKeepAliveWebApp() const;
 #endif
 
   // RenderWidgetHostViewEventHandler::Delegate:

@@ -20,8 +20,10 @@
 namespace content {
 
 struct WebPreferencesNeva {
-  WebPreferencesNeva() : back_history_api_disabled(false) {}
+  WebPreferencesNeva()
+      : back_history_api_disabled(false), keep_alive_webapp(false) {}
   bool back_history_api_disabled;
+  bool keep_alive_webapp;
 };
 
 }  // namespace content

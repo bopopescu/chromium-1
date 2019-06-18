@@ -219,6 +219,11 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
   void RegisterRendererPreferenceWatcherForWorker(
       mojom::RendererPreferenceWatcherPtr watcher);
 
+#if defined(USE_NEVA_APPRUNTIME)
+  void SetKeepAliveWebApp(bool keepAlive) override;
+  void DoDeferredClose() override;
+#endif  // defined(USE_NEVA_APPRUNTIME)
+
   // IPC::Listener implementation (via RenderWidget inheritance).
   bool OnMessageReceived(const IPC::Message& msg) override;
 

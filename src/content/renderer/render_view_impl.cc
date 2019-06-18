@@ -215,6 +215,7 @@
 ///@}
 
 #if defined(USE_NEVA_APPRUNTIME)
+#include "content/common/widget_messages.h"
 #include "third_party/blink/public/platform/web_security_origin.h"
 #endif
 
@@ -1092,6 +1093,7 @@ void RenderView::ApplyWebPreferences(const WebPreferences& prefs,
 
 #if defined(USE_NEVA_APPRUNTIME)
   settings->SetBackHistoryAPIEnabled(!prefs.back_history_api_disabled);
+  settings->SetKeepAliveWebApp(prefs.keep_alive_webapp);
 #endif
 }
 
@@ -2328,6 +2330,22 @@ void RenderViewImpl::SetFocusAndActivateForTesting(bool enable) {
 }
 
 #if defined(USE_NEVA_APPRUNTIME)
+void RenderViewImpl::DoDeferredClose() {
+  if (!webkit_preferences_.keep_alive_webapp) {
+    blink::WebWidget* widget = GetWebWidgetForWidget();
+    if (!widget)
+      widget = RenderWidget::GetWebWidget();
+    widget->WillCloseLayerTreeView();
+  }
+  Send(new WidgetHostMsg_Close(routing_id_));
+}
+
+void RenderViewImpl::SetKeepAliveWebApp(bool keepAlive) {
+  webkit_preferences_.keep_alive_webapp = keepAlive;
+  if (webview() && webview()->GetSettings())
+    webview()->GetSettings()->SetKeepAliveWebApp(keepAlive);
+}
+
 void RenderViewImpl::OnReplaceBaseURL(const GURL& newUrl) {
   if (!webview())
     return;
