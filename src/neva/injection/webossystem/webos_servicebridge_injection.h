@@ -48,6 +48,7 @@ class WebOSServiceBridgeInjection
   void Call(gin::Arguments* args);
   void DoCall(std::string uri, std::string payload);
   void Cancel();
+  void OnServiceCallback(const gin::Arguments& args);
 
   void SetupIdentifier();
   void CloseNotify();

@@ -106,6 +106,9 @@ void WebOSServiceBridgeInjection::Cancel() {
   waiting_responses_.erase(this);
 }
 
+void WebOSServiceBridgeInjection::OnServiceCallback(
+    const gin::Arguments& args) {}
+
 void WebOSServiceBridgeInjection::OnConnect(
     pal::mojom::SystemServiceBridgeClientAssociatedRequest request) {
   client_binding_.Bind(std::move(request));
@@ -154,10 +157,12 @@ void WebOSServiceBridgeInjection::Response(pal::mojom::ResponseStatus status,
 gin::ObjectTemplateBuilder
     WebOSServiceBridgeInjection::GetObjectTemplateBuilder(
         v8::Isolate* isolate) {
-   return gin::Wrappable<WebOSServiceBridgeInjection>::
-      GetObjectTemplateBuilder(isolate)
-        .SetMethod(kCallMethodName, &WebOSServiceBridgeInjection::Call)
-        .SetMethod(kCancelMethodName, &WebOSServiceBridgeInjection::Cancel);
+  return gin::Wrappable<WebOSServiceBridgeInjection>::GetObjectTemplateBuilder(
+             isolate)
+      .SetMethod(kCallMethodName, &WebOSServiceBridgeInjection::Call)
+      .SetMethod(kCancelMethodName, &WebOSServiceBridgeInjection::Cancel)
+      .SetMethod(kOnServiceCallbackName,
+                 &WebOSServiceBridgeInjection::OnServiceCallback);
 }
 
 void WebOSServiceBridgeInjection::SetupIdentifier() {
