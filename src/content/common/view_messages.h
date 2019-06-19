@@ -226,6 +226,9 @@ IPC_MESSAGE_ROUTED1(ViewMsg_ReplaceBaseURL, GURL)
 // goes background.
 IPC_MESSAGE_ROUTED1(ViewMsg_DropAllPeerConnections,
                     content::DropPeerConnectionReason)
+
+// Report application is being preloaded. Used for blocking writes on eMMC
+IPC_MESSAGE_ROUTED1(ViewMsg_SetAppPreloadHint, bool /* is_preload */)
 #endif
 
 // Sent to the main-frame's view to request performing a page scale animation

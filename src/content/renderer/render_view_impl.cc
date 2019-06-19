@@ -485,6 +485,9 @@ RenderViewImpl::RenderViewImpl(CompositorDependencies* compositor_deps,
       webkit_preferences_(params.web_preferences),
       page_is_hidden_(params.hidden),
       session_storage_namespace_id_(params.session_storage_namespace_id),
+#if defined(USE_NEVA_APPRUNTIME)
+      is_app_preload_hint_set_(false),
+#endif
       weak_ptr_factory_(this) {
   DCHECK(!session_storage_namespace_id_.empty())
       << "Session storage namespace must be populated.";
@@ -1380,6 +1383,7 @@ bool RenderViewImpl::OnMessageReceived(const IPC::Message& message) {
     IPC_MESSAGE_HANDLER(ViewMsg_ReplaceBaseURL, OnReplaceBaseURL)
     IPC_MESSAGE_HANDLER(ViewMsg_DropAllPeerConnections,
                         OnDropAllPeerConnections)
+    IPC_MESSAGE_HANDLER(ViewMsg_SetAppPreloadHint, OnSetAppPreloadHint)
 #endif
 
     // Have the super handle all other messages.
@@ -2356,7 +2360,11 @@ void RenderViewImpl::OnReplaceBaseURL(const GURL& newUrl) {
 void RenderViewImpl::OnDropAllPeerConnections(DropPeerConnectionReason reason) {
   DropAllPeerConnections(reason);
 }
-#endif
+
+void RenderViewImpl::OnSetAppPreloadHint(bool is_preload) {
+  is_app_preload_hint_set_ = is_preload;
+}
+#endif  // defined(USE_NEVA_APPRUNTIME)
 
 void RenderViewImpl::OnAnimateDoubleTapZoomInMainFrame(
     const blink::WebPoint& point,

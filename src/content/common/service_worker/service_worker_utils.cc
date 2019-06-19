@@ -209,6 +209,12 @@ blink::mojom::FetchCacheMode ServiceWorkerUtils::GetCacheModeFromLoadFlags(
     DCHECK(!(load_flags & net::LOAD_BYPASS_CACHE));
     return blink::mojom::FetchCacheMode::kUnspecifiedOnlyIfCachedStrict;
   }
+
+#if defined(USE_NEVA_APPRUNTIME)
+  if (load_flags & net::LOAD_BLOCK_WRITE_CACHE)
+    return blink::mojom::FetchCacheMode::kPreloadDisableCache;
+#endif
+
   return blink::mojom::FetchCacheMode::kDefault;
 }
 

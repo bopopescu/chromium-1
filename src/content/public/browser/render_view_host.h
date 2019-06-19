@@ -119,6 +119,7 @@ class CONTENT_EXPORT RenderViewHost : public IPC::Sender {
 #if defined(USE_NEVA_APPRUNTIME)
   virtual void ReplaceBaseURL(const GURL& newUrl) = 0;
   virtual void DropAllPeerConnections(DropPeerConnectionReason) = 0;
+  virtual void SetAppPreloadHint(bool is_preload) = 0;
 #endif
 
   // Passes a list of Webkit preferences to the renderer.

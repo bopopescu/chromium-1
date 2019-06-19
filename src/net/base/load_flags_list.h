@@ -105,3 +105,9 @@ LOAD_FLAG(SKIP_VARY_CHECK, 1 << 16)
 // does not complete in 60 seconds, the cache treat the stale resource as
 // invalid, as it did not specify stale-while-revalidate.
 LOAD_FLAG(SUPPORT_ASYNC_REVALIDATION, 1 << 17)
+
+#if defined(USE_NEVA_APPRUNTIME)
+// This is "preload", meaning a app preloading
+// while preloading, block writing cache
+LOAD_FLAG(BLOCK_WRITE_CACHE, 1 << 18)
+#endif

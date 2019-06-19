@@ -86,4 +86,7 @@ declare_args() {
 declare_args() {
   # Suspend capturing audio/video when tab or app is suspended
   use_neva_suspend_media_capture = is_webos
+
+  # Enable optimizations to reduce writes to eMMC storages
+  enable_emmc_optimizations = is_webos
 }

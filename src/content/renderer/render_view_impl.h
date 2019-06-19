@@ -220,8 +220,10 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
       mojom::RendererPreferenceWatcherPtr watcher);
 
 #if defined(USE_NEVA_APPRUNTIME)
+  // NEVA app runtime specific ------------------------------------------------
   void SetKeepAliveWebApp(bool keepAlive) override;
   void DoDeferredClose() override;
+  bool is_app_preload_hint_set() const { return is_app_preload_hint_set_; }
 #endif  // defined(USE_NEVA_APPRUNTIME)
 
   // IPC::Listener implementation (via RenderWidget inheritance).
@@ -471,6 +473,7 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
 #if defined(USE_NEVA_APPRUNTIME)
   void OnReplaceBaseURL(const GURL& newurl);
   void OnDropAllPeerConnections(DropPeerConnectionReason reason);
+  void OnSetAppPreloadHint(bool blocked);
 #endif
   void OnExitFullscreen();
   void OnSetHistoryOffsetAndLength(int history_offset, int history_length);
@@ -681,6 +684,13 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
   base::ObserverList<RenderViewObserver>::Unchecked observers_;
 
   blink::WebScopedVirtualTimePauser history_navigation_virtual_time_pauser_;
+
+#if defined(USE_NEVA_APPRUNTIME)
+  // NEVA app runtime Specific -------------------------------------------------
+
+  // Hint app is preloaded, so policies like eMMC write save can be set in place
+  bool is_app_preload_hint_set_;
+#endif  // defined(USE_NEVA_APPRUNTIME)
 
   // ---------------------------------------------------------------------------
   // ADDING NEW DATA? Please see if it fits appropriately in one of the above
