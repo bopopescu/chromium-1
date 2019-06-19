@@ -214,6 +214,11 @@ bool StructTraits<content::mojom::EventDataView, InputEventUniquePtr>::Read(
                 .previous_update_in_sequence_prevented =
                 gesture_data->scroll_data->update_details
                     ->previous_update_in_sequence_prevented;
+#if defined(USE_NEVA_APPRUNTIME)
+            gesture_event->data.scroll_update.generated_from_mouse_wheel_event =
+                gesture_data->scroll_data->update_details
+                    ->generated_from_mouse_wheel_event;
+#endif
           }
           break;
       }
@@ -470,7 +475,12 @@ StructTraits<content::mojom::EventDataView, InputEventUniquePtr>::gesture_data(
               gesture_event->data.scroll_update.velocity_x,
               gesture_event->data.scroll_update.velocity_y,
               gesture_event->data.scroll_update
-                  .previous_update_in_sequence_prevented));
+                  .previous_update_in_sequence_prevented
+#if defined(USE_NEVA_APPRUNTIME)
+              ,
+              gesture_event->data.scroll_update.generated_from_mouse_wheel_event
+#endif
+              ));
       break;
     case blink::WebInputEvent::Type::kGestureFlingStart:
       gesture_data->fling_data = content::mojom::FlingData::New(
