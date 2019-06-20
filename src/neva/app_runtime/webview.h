@@ -130,7 +130,6 @@ class WebView : public content::WebContentsDelegate,
   // URLs (kFileScheme). It's needed to set the unique application origin
   // of local storage. This works only for renderer per application model.
   void SetSecurityOrigin(const std::string& identifier);
-  void SetUseOverwriteOrigin(bool enabled) { overwrite_origin_ = enabled; }
   void SetAcceptLanguages(const std::string& languages);
   void SetUseLaunchOptimization(bool enabled, int delay_ms);
   void SetUseEnyoOptimization(bool enabled);
@@ -274,7 +273,6 @@ class WebView : public content::WebContentsDelegate,
 
   bool should_suppress_dialogs_ = false;
   bool active_on_non_blank_paint_ = false;
-  bool overwrite_origin_ = false;
   bool full_screen_ = false;
   bool enable_skip_frame_ = false;
   int width_;

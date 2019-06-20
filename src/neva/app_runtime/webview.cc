@@ -387,9 +387,6 @@ void WebView::SetAppId(const std::string& app_id) {
   content::RenderViewHost* rvh = web_contents_->GetRenderViewHost();
   if (rvh)
     rvh->SyncRendererPrefs();
-
-  if (overwrite_origin_)
-    SetSecurityOrigin(app_id);
 }
 
 void WebView::SetSecurityOrigin(const std::string& identifier) {

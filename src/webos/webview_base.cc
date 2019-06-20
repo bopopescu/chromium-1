@@ -65,7 +65,6 @@ WebViewBase::WebViewBase(bool alt_storage_path, int width, int height) {
 
   injection_browser_control_handler_->SetDelegate(this);
   webview_->SetDelegate(this);
-  webview_->SetUseOverwriteOrigin(true);
   PushStateToIOThread();
 }
 
