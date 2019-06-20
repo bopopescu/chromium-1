@@ -54,6 +54,9 @@ bool WebOSContentMainDelegate::BasicStartupComplete(int* exit_code) {
   if (process_type.empty()) {
     startup_callback_.Run();
   }
+#if defined(USE_PMLOG)
+  logging::PmLogProvider::Initialize("wam.log");
+#endif
   return false;
 }
 
@@ -71,15 +74,6 @@ void WebOSContentMainDelegate::PreSandboxStartup() {
   base::PathService::Override(ui::DIR_LOCALES,
                               pak_file.AppendASCII(kLocaleResourcesDirName));
 
-}
-
-int WebOSContentMainDelegate::RunProcess(
-    const std::string& process_type,
-    const content::MainFunctionParams& main_function_params) {
-#if defined(USE_PMLOG)
-  logging::PmLogProvider::Initialize("wam.log");
-#endif
-  return -1;
 }
 
 content::ContentRendererClient*
