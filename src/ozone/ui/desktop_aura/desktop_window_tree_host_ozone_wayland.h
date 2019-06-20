@@ -43,6 +43,9 @@ class Tooltip;
 }
 
 class DesktopDragDropClientWayland;
+#if defined(OS_WEBOS)
+class WebosDragDropClientWayland;
+#endif
 
 class VIEWS_EXPORT DesktopWindowTreeHostOzone
     : public DesktopWindowTreeHost,
@@ -284,7 +287,11 @@ class VIEWS_EXPORT DesktopWindowTreeHostOzone
   base::string16 title_;
 
   // Owned by DesktopNativeWidgetAura.
+#if defined(OS_WEBOS)
+  WebosDragDropClientWayland* drag_drop_client_;
+#else
   DesktopDragDropClientWayland* drag_drop_client_;
+#endif
   views::internal::NativeWidgetDelegate* native_widget_delegate_;
   aura::Window* content_window_;
 
