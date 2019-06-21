@@ -140,7 +140,11 @@ void TestURLRequestContext::Init() {
         std::make_unique<HttpNetworkSession>(session_params, session_context));
     context_storage_.set_http_transaction_factory(std::make_unique<HttpCache>(
         context_storage_.http_network_session(),
-        HttpCache::DefaultBackend::InMemory(0), true /* is_main_cache */));
+        HttpCache::DefaultBackend::InMemory(0),
+#if defined(USE_NEVA_APPRUNTIME)
+        0, false,
+#endif
+        true /* is_main_cache */));
   }
   if (!http_user_agent_settings() && create_default_http_user_agent_settings_) {
     context_storage_.set_http_user_agent_settings(

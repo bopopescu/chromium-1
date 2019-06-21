@@ -455,6 +455,9 @@ SpdyURLRequestContext::SpdyURLRequestContext() : storage_(this) {
   pool_peer.SetEnableSendingInitialData(false);
   storage_.set_http_transaction_factory(std::make_unique<HttpCache>(
       storage_.http_network_session(), HttpCache::DefaultBackend::InMemory(0),
+#if defined(USE_NEVA_APPRUNTIME)
+      0, false,
+#endif
       false));
 }
 

@@ -192,7 +192,14 @@ class ContainerURLRequestContext final : public URLRequestContext {
 
 URLRequestContextBuilder::HttpCacheParams::HttpCacheParams()
     : type(IN_MEMORY),
-      max_size(0) {}
+      max_size(0)
+#if defined(USE_NEVA_APPRUNTIME)
+      ,
+      min_content_length(0),
+      exclude_media(false)
+#endif
+{
+}
 URLRequestContextBuilder::HttpCacheParams::~HttpCacheParams() = default;
 
 URLRequestContextBuilder::URLRequestContextBuilder()
@@ -635,9 +642,16 @@ std::unique_ptr<URLRequestContext> URLRequestContextBuilder::Build() {
         http_cache_params_.app_status_listener);
 #endif
 
+#if defined(USE_NEVA_APPRUNTIME)
+    http_transaction_factory.reset(new HttpCache(
+        std::move(http_transaction_factory), std::move(http_cache_backend),
+        http_cache_params_.min_content_length, http_cache_params_.exclude_media,
+        true));
+#else
     http_transaction_factory.reset(
         new HttpCache(std::move(http_transaction_factory),
                       std::move(http_cache_backend), true));
+#endif
   }
   storage->set_http_transaction_factory(std::move(http_transaction_factory));
 

@@ -131,6 +131,13 @@ class NET_EXPORT URLRequestContextBuilder {
     // is useful if the cache will not be in the main process.
     base::android::ApplicationStatusListener* app_status_listener = nullptr;
 #endif
+
+#if defined(USE_NEVA_APPRUNTIME)
+    // Content-length smaller than this will be excluded from this cache.
+    int min_content_length;
+    // Do not store media files
+    bool exclude_media;
+#endif
   };
 
   URLRequestContextBuilder();

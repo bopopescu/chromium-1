@@ -1234,7 +1234,11 @@ std::unique_ptr<net::HttpCache> ProfileIOData::CreateHttpFactory(
   net::HttpNetworkSession* shared_session = main_http_factory->GetSession();
   return std::make_unique<net::HttpCache>(
       content::CreateDevToolsNetworkTransactionFactory(shared_session),
-      std::move(backend), false /* is_main_cache */);
+      std::move(backend),
+#if defined(USE_NEVA_APPRUNTIME)
+      0, false,
+#endif
+      false /* is_main_cache */);
 }
 
 void ProfileIOData::MaybeDeleteMediaCache(
