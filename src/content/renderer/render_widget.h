@@ -400,6 +400,8 @@ class CONTENT_EXPORT RenderWidget
   }
 
 #if defined(USE_NEVA_APPRUNTIME)
+  virtual void WillDoDeferredClose() {}
+
   bool has_ime_event_guard() const { return ime_event_guard_ != nullptr; }
 #endif
 
@@ -603,7 +605,7 @@ class CONTENT_EXPORT RenderWidget
   // Pauses the compositor's scheduler and tears down its IPC channels.
   void StopCompositor();
 
-  virtual void DoDeferredClose();
+  void DoDeferredClose();
 
   gfx::Size GetSizeForWebWidget() const;
   void ResizeWebWidget();

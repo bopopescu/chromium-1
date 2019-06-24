@@ -1703,6 +1703,9 @@ void RenderWidget::AbortWarmupCompositor() {
 }
 
 void RenderWidget::DoDeferredClose() {
+#if defined(USE_NEVA_APPRUNTIME)
+  WillDoDeferredClose();
+#endif
   Send(new WidgetHostMsg_Close(routing_id_));
 }
 

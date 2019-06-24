@@ -222,7 +222,7 @@ class CONTENT_EXPORT RenderViewImpl : private RenderWidget,
 #if defined(USE_NEVA_APPRUNTIME)
   // NEVA app runtime specific ------------------------------------------------
   void SetKeepAliveWebApp(bool keepAlive) override;
-  void DoDeferredClose() override;
+  void WillDoDeferredClose() override;
   bool is_app_preload_hint_set() const { return is_app_preload_hint_set_; }
 #endif  // defined(USE_NEVA_APPRUNTIME)
 

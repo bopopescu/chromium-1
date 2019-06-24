@@ -2334,14 +2334,13 @@ void RenderViewImpl::SetFocusAndActivateForTesting(bool enable) {
 }
 
 #if defined(USE_NEVA_APPRUNTIME)
-void RenderViewImpl::DoDeferredClose() {
+void RenderViewImpl::WillDoDeferredClose() {
   if (!webkit_preferences_.keep_alive_webapp) {
     blink::WebWidget* widget = GetWebWidgetForWidget();
     if (!widget)
       widget = RenderWidget::GetWebWidget();
     widget->WillCloseLayerTreeView();
   }
-  Send(new WidgetHostMsg_Close(routing_id_));
 }
 
 void RenderViewImpl::SetKeepAliveWebApp(bool keepAlive) {
