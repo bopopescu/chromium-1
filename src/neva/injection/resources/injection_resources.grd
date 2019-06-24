@@ -10,6 +10,8 @@
   <release seq="1">
     <includes>
       <include name="IDR_SAMPLE_INJECTION_JS" file="sample_injection.js" type="BINDATA" />
+      <include name="IDR_WEBOSSERVICEBRIDGE_INJECTION_JS" file="webosservicebridge_injection.js" type="BINDATA" />
+      <include name="IDR_WEBOSSERVICEBRIDGE_ROLLBACK_JS" file="webosservicebridge_rollback.js" type="BINDATA" />
       <include name="IDR_WEBOSSYSTEM_INJECTION_JS" file="webossystem_injection.js" type="BINDATA" />
       <include name="IDR_WEBOSSYSTEM_ROLLBACK_JS" file="webossystem_rollback.js" type="BINDATA" />
     </includes>

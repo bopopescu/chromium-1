@@ -79,9 +79,7 @@ Object.defineProperty(window, 'devicePixelRatio', {
   }
 });
 
-// Support PalmServiceBridge for backward compatibility
-window.PalmServiceBridge = webOSServiceBridge;
 // Support PalmSystem for backward compatibility
-window.palmGetResource = webOSGetResource
+window.palmGetResource = webOSGetResource;
 // Place this code always at the end of injection API
 window.PalmSystem = webOSSystem;

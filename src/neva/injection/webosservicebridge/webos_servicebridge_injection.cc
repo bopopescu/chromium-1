@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "neva/injection/webossystem/webos_servicebridge_injection.h"
+#include "neva/injection/webosservicebridge/webos_servicebridge_injection.h"
 
 #include "base/rand_util.h"
 #include "content/public/child/child_thread.h"
@@ -24,15 +24,21 @@
 #include "gin/function_template.h"
 #include "gin/handle.h"
 #include "neva/injection/common/gin/function_template_neva.h"
+#include "neva/injection/grit/injection_resources.h"
 #include "neva/pal_service/public/mojom/constants.mojom.h"
 #include "services/service_manager/public/cpp/connector.h"
+#include "third_party/blink/public/web/blink.h"
+#include "third_party/blink/public/web/web_local_frame.h"
+#include "third_party/blink/public/web/web_script_source.h"
+#include "ui/base/resource/resource_bundle.h"
 
 namespace {
 
 const char kCallMethodName[] = "call";
 const char kCancelMethodName[] = "cancel";
 const char kOnServiceCallbackName[] = "onservicecallback";
-
+const char kMethodInvocationAsConstructorOnly[] =
+    "webOSServiceBridge function must be invoked as a constructor only";
 
 std::string GetServiceNameWithPID(const std::string& name) {
   std::string result(name);
@@ -44,11 +50,13 @@ std::string GetServiceNameWithPID(const std::string& name) {
 namespace injections {
 
 gin::WrapperInfo WebOSServiceBridgeInjection::kWrapperInfo = {
-  gin::kEmbedderNativeGin };
+    gin::kEmbedderNativeGin};
 
 bool WebOSServiceBridgeInjection::is_closing_ = false;
 std::set<WebOSServiceBridgeInjection*>
     WebOSServiceBridgeInjection::waiting_responses_;
+v8::Persistent<v8::ObjectTemplate>
+    WebOSServiceBridgeInjection::request_template_;
 
 WebOSServiceBridgeInjection::WebOSServiceBridgeInjection()
     : client_binding_(this) {
@@ -69,11 +77,9 @@ WebOSServiceBridgeInjection::WebOSServiceBridgeInjection()
 
   provider->GetSystemServiceBridge(mojo::MakeRequest(&system_bridge_));
   system_bridge_->Connect(
-      GetServiceNameWithPID(identifier_),
-      identifier_,
-      base::BindRepeating(
-          &WebOSServiceBridgeInjection::OnConnect,
-          base::Unretained(this)));
+      GetServiceNameWithPID(identifier_), identifier_,
+      base::BindRepeating(&WebOSServiceBridgeInjection::OnConnect,
+                          base::Unretained(this)));
 }
 
 WebOSServiceBridgeInjection::~WebOSServiceBridgeInjection() {
@@ -136,7 +142,7 @@ void WebOSServiceBridgeInjection::CallJSHandler(const std::string& body) {
   v8::Local<v8::Function> func = v8::Local<v8::Function>::Cast(func_value);
 
   const int argc = 1;
-  v8::Local<v8::Value> argv[] = { gin::StringToV8(isolate, body) };
+  v8::Local<v8::Value> argv[] = {gin::StringToV8(isolate, body)};
   func->Call(wrapper, argc, argv);
 }
 
@@ -155,8 +161,7 @@ void WebOSServiceBridgeInjection::Response(pal::mojom::ResponseStatus status,
 }
 
 gin::ObjectTemplateBuilder
-    WebOSServiceBridgeInjection::GetObjectTemplateBuilder(
-        v8::Isolate* isolate) {
+WebOSServiceBridgeInjection::GetObjectTemplateBuilder(v8::Isolate* isolate) {
   return gin::Wrappable<WebOSServiceBridgeInjection>::GetObjectTemplateBuilder(
              isolate)
       .SetMethod(kCallMethodName, &WebOSServiceBridgeInjection::Call)
@@ -202,6 +207,78 @@ void WebOSServiceBridgeInjection::CloseNotify() {
   v8::MaybeLocal<v8::Script> script = v8::Script::Compile(context, source);
   if (!script.IsEmpty())
     script.ToLocalChecked()->Run(context);
+}
+
+const char WebOSServiceBridgeInjectionExtension::kInjectionName[] =
+    "v8/webosservicebridge";
+const char WebOSServiceBridgeInjectionExtension::kObsoleteName[] =
+    "v8/palmservicebridge";
+
+void WebOSServiceBridgeInjectionExtension::Install(
+    blink::WebLocalFrame* frame) {
+  v8::Isolate* isolate = blink::MainThreadIsolate();
+  v8::HandleScope handle_scope(isolate);
+  v8::Local<v8::Context> context = frame->MainWorldScriptContext();
+  if (context.IsEmpty())
+    return;
+
+  v8::Context::Scope context_scope(context);
+  v8::Local<v8::Object> global = context->Global();
+
+  v8::Local<v8::FunctionTemplate> templ = gin::CreateConstructorTemplate(
+      isolate,
+      base::Bind(
+          &WebOSServiceBridgeInjection::WebOSServiceBridgeConstructorCallback));
+  global->Set(gin::StringToSymbol(isolate, "webOSServiceBridge"),
+              templ->GetFunction());
+
+  const std::string extra_objects_js(
+      ui::ResourceBundle::GetSharedInstance().GetRawDataResource(
+          IDR_WEBOSSERVICEBRIDGE_INJECTION_JS));
+
+  v8::Local<v8::Script> local_script;
+  v8::MaybeLocal<v8::Script> script = v8::Script::Compile(
+      context, gin::StringToV8(isolate, extra_objects_js.c_str()));
+  if (script.ToLocal(&local_script))
+    local_script->Run(context);
+}
+
+// static
+void WebOSServiceBridgeInjection::WebOSServiceBridgeConstructorCallback(
+    gin::Arguments* args) {
+  if (!args->IsConstructCall()) {
+    args->isolate()->ThrowException(v8::Exception::Error(
+        gin::StringToV8(args->isolate(), kMethodInvocationAsConstructorOnly)));
+    return;
+  }
+
+  v8::Isolate* isolate = args->isolate();
+  v8::HandleScope handle_scope(isolate);
+  gin::Handle<WebOSServiceBridgeInjection> wrapper =
+      gin::CreateHandle(isolate, new WebOSServiceBridgeInjection());
+  if (!wrapper.IsEmpty())
+    args->Return(wrapper.ToV8());
+}
+
+void WebOSServiceBridgeInjectionExtension::Uninstall(
+    blink::WebLocalFrame* frame) {
+  const std::string extra_objects_js(
+      ui::ResourceBundle::GetSharedInstance().GetRawDataResource(
+          IDR_WEBOSSERVICEBRIDGE_ROLLBACK_JS));
+
+  v8::Isolate* isolate = blink::MainThreadIsolate();
+  v8::HandleScope handle_scope(isolate);
+  v8::Local<v8::Context> context = frame->MainWorldScriptContext();
+  if (context.IsEmpty())
+    return;
+
+  v8::Context::Scope context_scope(context);
+  v8::Local<v8::Script> local_script;
+  v8::MaybeLocal<v8::Script> script = v8::Script::Compile(
+      context, gin::StringToV8(isolate, extra_objects_js.c_str()));
+
+  if (script.ToLocal(&local_script))
+    local_script->Run(context);
 }
 
 }  // namespace injections

@@ -19,6 +19,7 @@
 #include "base/logging.h"
 
 #if defined(OS_WEBOS)
+#include "neva/injection/webosservicebridge/webos_servicebridge_injection.h"
 #include "neva/injection/webossystem/webossystem_injection.h"
 #endif
 
@@ -43,6 +44,13 @@ bool GetInjectionInstallAPI(const std::string& name, InstallAPI* api) {
       (name == WebOSSystemInjectionExtension::kObsoleteName)) {
     api->install_func = WebOSSystemInjectionExtension::Install;
     api->uninstall_func = WebOSSystemInjectionExtension::Uninstall;
+    return true;
+  }
+
+  if ((name == WebOSServiceBridgeInjectionExtension::kInjectionName) ||
+      (name == WebOSServiceBridgeInjectionExtension::kObsoleteName)) {
+    api->install_func = WebOSServiceBridgeInjectionExtension::Install;
+    api->uninstall_func = WebOSServiceBridgeInjectionExtension::Uninstall;
     return true;
   }
 

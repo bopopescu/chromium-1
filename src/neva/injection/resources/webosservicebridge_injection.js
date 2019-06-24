@@ -14,17 +14,5 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-(function () {
-  Object.defineProperty(
-      window, 'devicePixelRatio', originalDevicePixelRatio);
-
-  delete originalDevicePixelRatio;
-
-  delete palmGetResource;
-  delete webOSGetResource;
-
-  delete PalmSystem;
-  delete webOSSystem;
-
-  delete webos;
-})();
+// Support PalmServiceBridge for backward compatibility
+window.PalmServiceBridge = webOSServiceBridge;

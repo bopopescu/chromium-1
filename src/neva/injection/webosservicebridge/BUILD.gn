@@ -1,4 +1,4 @@
-# Copyright 2018-2019 LG Electronics, Inc.
+# Copyright 2019 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,17 +16,15 @@
 
 import("//neva/neva.gni")
 
-config("webossystem") {
-  defines = [ "WEBOSSYSTEM_IMPLEMENTATION" ]
+config("webosservicebridge") {
+  defines = [ "WEBOSSERVICEBRIDGE_IMPLEMENTATION" ]
 }
 
-source_set("webossystem_injection") {
+source_set("webosservicebridge_injection") {
   sources = [
-    "webossystem_datamanager.cc",
-    "webossystem_datamanager.h",
-    "webossystem_export.h",
-    "webossystem_injection.cc",
-    "webossystem_injection.h",
+    "webosservicebridge_export.h",
+    "webos_servicebridge_injection.cc",
+    "webos_servicebridge_injection.h",
   ]
 
   deps = [
@@ -36,13 +34,7 @@ source_set("webossystem_injection") {
   ]
 
   configs += [
-    ":webossystem",
+    ":webosservicebridge",
     "//build/config/linux:glib",
   ]
-
-  if (use_lttng) {
-    deps += [
-      "//base/trace_event/neva/lttng:webossystem_lttng_provider",
-    ]
-  }
 }

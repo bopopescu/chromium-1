@@ -34,7 +34,7 @@
 #include "neva/injection/common/gin/function_template_neva.h"
 #include "neva/injection/common/public/renderer/injection_webos.h"
 #include "neva/injection/common/webos/luna_service_mgr.h"
-#include "neva/injection/webossystem/webos_servicebridge_injection.h"
+#include "neva/injection/webosservicebridge/webos_servicebridge_injection.h"
 #include "neva/injection/webossystem/webossystem_datamanager.h"
 #include "neva/injection/grit/injection_resources.h"
 #include "third_party/blink/public/web/blink.h"
@@ -43,9 +43,6 @@
 #include "ui/base/resource/resource_bundle.h"
 
 namespace injections {
-
-const char kMethodInvocationAsConstructorOnly[] =
-    "webOSServiceBridge function must be invoked as a constructor only";
 
 class CursorInjection : public gin::Wrappable<CursorInjection> {
  public:
@@ -235,12 +232,6 @@ class WebOSSystemInjection : public gin::Wrappable<WebOSSystemInjection>,
   void UpdateInjectionData(const std::string& key, const std::string& value);
   void ReloadInjectionData();
 
-  // webOSServiceBridge
-  void InstallWebOSServiceBridge(v8::Isolate* isolate, v8::Local<v8::Context> context);
-  static void WebOSServiceBridgeConstructorCallback(gin::Arguments* args);
-  static v8::Local<v8::ObjectTemplate> MakeRequestTemplate(v8::Isolate* isolate);
-  static v8::Persistent<v8::ObjectTemplate> request_template_;
-
   std::string GetInjectionData(const std::string& name);
 
   WebOSSystemDataManager* data_manager_;
@@ -249,7 +240,6 @@ class WebOSSystemInjection : public gin::Wrappable<WebOSSystemInjection>,
 };
 
 gin::WrapperInfo WebOSSystemInjection::kWrapperInfo = {gin::kEmbedderNativeGin};
-v8::Persistent<v8::ObjectTemplate> WebOSSystemInjection::request_template_;
 
 WebOSSystemInjection::WebOSSystemInjection() {
   data_manager_ = new WebOSSystemDataManager(CallFunction("initialize"));
@@ -263,9 +253,6 @@ WebOSSystemInjection::~WebOSSystemInjection() {
 void WebOSSystemInjection::BuildExtraObjects(v8::Local<v8::Object> obj,
                                              v8::Isolate* isolate,
                                              v8::Local<v8::Context> context) {
-  // Build webOSServiceBridge
-  InstallWebOSServiceBridge(isolate, context);
-
   // Build webOSSystem.window
   gin::Handle<WindowInjection> window_obj =
     gin::CreateHandle(isolate, new WindowInjection(this));
@@ -388,14 +375,12 @@ void WebOSSystemInjection::UpdateInjectionData(
 }
 
 bool WebOSSystemInjection::DidRunOnCloseCallback() {
-  fprintf(stderr, "[%s:%s] \n", __FILE__, __func__);
   return WebOSServiceBridgeInjection::waiting_responses_.empty();
 }
 
 void WebOSSystemInjection::SetAppInClosing() {
   // Even if app A set this class static variable to true
   // This does not affect to other apps
-  fprintf(stderr, "[%s:%s] \n", __FILE__, __func__);
   WebOSServiceBridgeInjection::is_closing_ = true;
 }
 
@@ -777,39 +762,6 @@ std::string WebOSSystemInjection::GetResource(const std::string& arg) {
 
 double WebOSSystemInjection::DevicePixelRatio() {
   return std::stod(GetInjectionData("devicePixelRatio"));
-}
-
-void WebOSSystemInjection::InstallWebOSServiceBridge(
-    v8::Isolate* isolate, v8::Local<v8::Context> context) {
-  v8::HandleScope handle_scope(isolate);
-
-  if (context.IsEmpty())
-    return;
-
-  v8::Context::Scope context_scope(context);
-  v8::Local<v8::Object> global = context->Global();
-
-  v8::Local<v8::FunctionTemplate> templ = gin::CreateConstructorTemplate(
-     isolate, base::Bind(&WebOSSystemInjection::WebOSServiceBridgeConstructorCallback));
-  global->Set(gin::StringToSymbol(isolate, "webOSServiceBridge"),
-      templ->GetFunction());
-}
-
-// static
-void WebOSSystemInjection::WebOSServiceBridgeConstructorCallback(
-    gin::Arguments* args) {
-  if (!args->IsConstructCall()) {
-    args->isolate()->ThrowException(v8::Exception::Error(gin::StringToV8(
-            args->isolate(), kMethodInvocationAsConstructorOnly)));
-    return;
-  }
-
-  v8::Isolate* isolate = args->isolate();
-  v8::HandleScope handle_scope(isolate);
-  gin::Handle<WebOSServiceBridgeInjection> wrapper =
-      gin::CreateHandle(isolate, new WebOSServiceBridgeInjection());
-  if (!wrapper.IsEmpty())
-    args->Return(wrapper.ToV8());
 }
 
 const char WebOSSystemInjectionExtension::kInjectionName[] = "v8/webossystem";

@@ -20,6 +20,7 @@
 #include "neva/injection/browser_control/browser_control_injection.h"
 #include "neva/injection/memorymanager/memorymanager_injection.h"
 #include "neva/injection/sample/sample_injection.h"
+#include "neva/injection/webosservicebridge/webos_servicebridge_injection.h"
 #include "neva/injection/webossystem/webossystem_injection.h"
 #include "neva/neva_chromium/content/common/injection_messages.h"
 
@@ -28,6 +29,8 @@ namespace {
 
 std::set<std::string> allowed_injections = {
 #if defined(OS_WEBOS)
+  std::string(injections::WebOSServiceBridgeInjectionExtension::kInjectionName),
+  std::string(injections::WebOSServiceBridgeInjectionExtension::kObsoleteName),
   std::string(injections::WebOSSystemInjectionExtension::kInjectionName),
   std::string(injections::WebOSSystemInjectionExtension::kObsoleteName),
 #endif

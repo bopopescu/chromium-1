@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef NEVA_INJECTION_WEBOSSYSTEM_WEBOS_SERVICEBRIDGE_INJECTION_H_
-#define NEVA_INJECTION_WEBOSSYSTEM_WEBOS_SERVICEBRIDGE_INJECTION_H_
+#ifndef NEVA_INJECTION_WEBOSSERVICEBRIDGE_WEBOS_SERVICEBRIDGE_INJECTION_H_
+#define NEVA_INJECTION_WEBOSSERVICEBRIDGE_WEBOS_SERVICEBRIDGE_INJECTION_H_
 
 #include "gin/arguments.h"
 #include "gin/object_template_builder.h"
@@ -23,22 +23,38 @@
 #include "mojo/public/cpp/bindings/associated_binding.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
+#include "neva/injection/webosservicebridge/webosservicebridge_export.h"
 #include "neva/pal_service/public/mojom/system_servicebridge.mojom.h"
 
 #include <memory>
 #include <set>
 #include <string>
 
+namespace blink {
+class WebLocalFrame;
+}
+
 namespace injections {
 
+class WEBOSSERVICEBRIDGE_EXPORT WebOSServiceBridgeInjectionExtension {
+ public:
+  static const char kInjectionName[];
+  static const char kObsoleteName[];
+
+  static void Install(blink::WebLocalFrame* frame);
+  static void Uninstall(blink::WebLocalFrame* frame);
+};
+
 class WebOSServiceBridgeInjection
-    : public gin::Wrappable<WebOSServiceBridgeInjection>
-    , public pal::mojom::SystemServiceBridgeClient {
+    : public gin::Wrappable<WebOSServiceBridgeInjection>,
+      public pal::mojom::SystemServiceBridgeClient {
  public:
   static gin::WrapperInfo kWrapperInfo;
 
   WebOSServiceBridgeInjection();
   ~WebOSServiceBridgeInjection();
+
+  static void WebOSServiceBridgeConstructorCallback(gin::Arguments* args);
 
   // To handle luna call in webOSSystem.onclose callback
   static std::set<WebOSServiceBridgeInjection*> waiting_responses_;
@@ -66,8 +82,9 @@ class WebOSServiceBridgeInjection
   mojo::AssociatedBinding<pal::mojom::SystemServiceBridgeClient>
       client_binding_;
   pal::mojom::SystemServiceBridgePtr system_bridge_;
+  static v8::Persistent<v8::ObjectTemplate> request_template_;
 };
 
 }  // namespace injections
 
-#endif  // NEVA_INJECTION_WEBOSSYSTEM_WEBOS_SERVICEBRIDGE_INJECTION_H_
+#endif  // NEVA_INJECTION_WEBOSSERVICEBRIDGE_WEBOS_SERVICEBRIDGE_INJECTION_H_

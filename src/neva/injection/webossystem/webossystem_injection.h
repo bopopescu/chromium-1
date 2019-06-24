@@ -19,19 +19,8 @@
 
 #include "base/compiler_specific.h"
 #include "neva/injection/common/public/renderer/injection_install.h"
+#include "neva/injection/webossystem/webossystem_export.h"
 #include "v8/include/v8.h"
-
-#if defined(COMPONENT_BUILD)
-
-#if defined(WEBOSSYSTEM_IMPLEMENTATION)
-#define WEBOSSYSTEM_EXPORT __attribute__((visibility("default")))
-#else
-#define WEBOSSYSTEM_EXPORT
-#endif  // defined(WEBOSSYSTEM_IMPLEMENTATION)
-
-#else
- #define WEBOSSYSTEM_EXPORT
-#endif  // defined(COMPONENT_BUILD)
 
 namespace blink {
 class WebLocalFrame;
