@@ -46,6 +46,10 @@ class LunaServiceManager {
   unsigned long Call(const char* uri,
                      const char* payload,
                      LunaServiceManagerListener*);
+  unsigned long CallFromApplication(const char* uri,
+                                    const char* payload,
+                                    const char* app_id,
+                                    LunaServiceManagerListener*);
   void Cancel(LunaServiceManagerListener*);
   bool Initialized() { return initialized_; }
 

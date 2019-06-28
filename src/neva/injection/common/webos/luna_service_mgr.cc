@@ -162,6 +162,14 @@ unsigned long LunaServiceManager::Call(
     const char* uri,
     const char* payload,
     LunaServiceManagerListener* inListener) {
+  return LunaServiceManager::CallFromApplication(uri, payload, "", inListener);
+}
+
+unsigned long LunaServiceManager::CallFromApplication(
+    const char* uri,
+    const char* payload,
+    const char* app_id,
+    LunaServiceManagerListener* inListener) {
   bool retVal;
   LSErrorSafe lserror;
   LSMessageToken token = 0;
@@ -182,11 +190,12 @@ unsigned long LunaServiceManager::Call(
   }
 
   if (subscription)
-    retVal = LSCall(sh_, uri, payload, message_filter, inListener, &token,
-                    &lserror);
+    retVal = LSCallFromApplication(sh_, uri, payload, app_id, message_filter,
+                                   inListener, &token, &lserror);
   else
-    retVal = LSCallOneReply(sh_, uri, payload, message_filter, inListener,
-                            &token, &lserror);
+    retVal =
+        LSCallFromApplicationOneReply(sh_, uri, payload, app_id, message_filter,
+                                      inListener, &token, &lserror);
   if (retVal)
     inListener->SetListenerToken(token);
   else

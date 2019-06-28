@@ -256,6 +256,8 @@ source_set("app_shell_lib") {
     sources += [
       "neva/webos_language_listener.cc",
       "neva/webos_language_listener.h",
+      "neva/webos_register_app.cc",
+      "neva/webos_register_app.h",
     ]
     deps += ["//webos:webos_impl"]
   } else if (use_neva_appruntime) {

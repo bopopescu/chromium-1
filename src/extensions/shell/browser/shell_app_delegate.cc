@@ -17,6 +17,7 @@
 
 #if defined(OS_WEBOS)
 #include "extensions/shell/neva/webos_language_listener.h"
+#include "extensions/shell/neva/webos_register_app.h"
 #endif
 
 namespace extensions {
@@ -31,6 +32,8 @@ void ShellAppDelegate::InitWebContents(content::WebContents* web_contents) {
   ShellExtensionWebContentsObserver::CreateForWebContents(web_contents);
 #if defined(OS_WEBOS)
   content::WebContentsUserData<webos::LanguageListener>::CreateForWebContents(
+      web_contents);
+  content::WebContentsUserData<webos::RegisterApp>::CreateForWebContents(
       web_contents);
 #endif
 }

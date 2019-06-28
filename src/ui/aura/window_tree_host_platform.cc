@@ -366,4 +366,10 @@ void WindowTreeHostPlatform::SetSurroundingText(const std::string& text,
 }
 ///@}
 
+void WindowTreeHostPlatform::ToggleFullscreen() {
+#if defined(USE_OZONE)
+  platform_window_->ToggleFullscreen();
+#endif
+}
+
 }  // namespace aura
