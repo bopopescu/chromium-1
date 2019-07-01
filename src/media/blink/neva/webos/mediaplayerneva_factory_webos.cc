@@ -51,7 +51,7 @@ MediaPlayerNeva* MediaPlayerNevaFactory::CreateMediaPlayerNeva(
   switch (media_type) {
 #if defined(USE_GST_MEDIA)
     case MediaPlayerNevaFactory::MediaPlayerTypeCamera:
-      return new MediaPlayerCamera(client, main_task_runner);
+      return new MediaPlayerCamera(client, main_task_runner, app_id);
       break;
 #endif
     case MediaPlayerNevaFactory::MediaPlayerTypeUMS:
