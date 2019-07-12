@@ -135,7 +135,7 @@ bool CreateThread(size_t stack_size,
   return success;
 }
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) && !(defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL))
 
 // Store the thread ids in local storage since calling the SWI can
 // expensive and PlatformThread::CurrentId is used liberally. Clear
@@ -146,6 +146,9 @@ bool CreateThread(size_t stack_size,
 // but is blocked on a clang bug for Mac (https://crbug.com/829078)
 // and we can't use ThreadLocalStorage because of re-entrancy due to
 // CHECK/DCHECKs.
+//
+// We exclude using this with GCC and ARM32. Thread storage will get
+// corrupt and PlatformThreadId will not work as expected.
 thread_local pid_t g_thread_id = -1;
 
 void ClearTidCache() {
@@ -157,7 +160,7 @@ class InitAtFork {
   InitAtFork() { pthread_atfork(nullptr, nullptr, ClearTidCache); }
 };
 
-#endif  // defined(OS_LINUX)
+#endif  // defined(OS_LINUX) && !(defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL))
 
 }  // namespace
 
@@ -168,6 +171,9 @@ PlatformThreadId PlatformThread::CurrentId() {
 #if defined(OS_MACOSX)
   return pthread_mach_thread_np(pthread_self());
 #elif defined(OS_LINUX)
+#if defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
+  return syscall(__NR_gettid);
+#else
   static NoDestructor<InitAtFork> init_at_fork;
   if (g_thread_id == -1) {
     g_thread_id = syscall(__NR_gettid);
@@ -178,6 +184,7 @@ PlatformThreadId PlatformThread::CurrentId() {
            "through fork().";
   }
   return g_thread_id;
+#endif  // defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
 #elif defined(OS_ANDROID)
   return gettid();
 #elif defined(OS_FUCHSIA)
