@@ -66,12 +66,9 @@ if (use_cbe) {
 
 template("app_shell_executable") {
   executable(target_name) {
-    testonly = true
-
     forward_variables_from(invoker,
                            "*",
                            [
-                           "testonly",
                            ])
 
     ldflags = exe_ld_flags_to_add

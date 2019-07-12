@@ -27,7 +27,6 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/url_constants.h"
 #include "content/public/common/user_agent.h"
-#include "content/shell/browser/layout_test/secondary_test_window_observer.h"
 #include "content/shell/browser/shell.h"
 #include "content/shell/common/shell_content_client.h"
 #include "content/shell/common/shell_switches.h"
@@ -48,6 +47,10 @@
 #if defined(OS_ANDROID)
 #include "content/public/browser/android/devtools_auth.h"
 #include "net/socket/unix_domain_server_socket_posix.h"
+#endif
+
+#if !defined(USE_CBE)
+#include "content/shell/browser/layout_test/secondary_test_window_observer.h"
 #endif
 
 namespace content {
@@ -208,8 +211,10 @@ ShellDevToolsManagerDelegate::CreateNewTarget(const GURL& url) {
                                         url,
                                         nullptr,
                                         gfx::Size());
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent())
     SecondaryTestWindowObserver::CreateForWebContents(shell->web_contents());
+#endif
   return DevToolsAgentHost::GetOrCreateFor(shell->web_contents());
 }
 

@@ -32,20 +32,23 @@
 #include "content/public/common/content_switches.h"
 #include "content/public/common/renderer_preferences.h"
 #include "content/public/common/webrtc_ip_handling_policy.h"
+#include "content/shell/browser/shell_browser_main_parts.h"
+#include "content/shell/browser/shell_content_browser_client.h"
+#include "content/shell/browser/shell_devtools_frontend.h"
+#include "content/shell/browser/shell_javascript_dialog_manager.h"
+#include "content/shell/common/shell_messages.h"
+#include "content/shell/common/shell_switches.h"
+#include "media/media_buildflags.h"
+#include "third_party/blink/public/web/web_presentation_receiver_flags.h"
+
+#if !defined(USE_CBE)
 #include "content/shell/browser/layout_test/blink_test_controller.h"
 #include "content/shell/browser/layout_test/layout_test_bluetooth_chooser_factory.h"
 #include "content/shell/browser/layout_test/layout_test_devtools_bindings.h"
 #include "content/shell/browser/layout_test/layout_test_javascript_dialog_manager.h"
 #include "content/shell/browser/layout_test/secondary_test_window_observer.h"
-#include "content/shell/browser/shell_browser_main_parts.h"
-#include "content/shell/browser/shell_content_browser_client.h"
-#include "content/shell/browser/shell_devtools_frontend.h"
-#include "content/shell/browser/shell_javascript_dialog_manager.h"
 #include "content/shell/common/layout_test/layout_test_switches.h"
-#include "content/shell/common/shell_messages.h"
-#include "content/shell/common/shell_switches.h"
-#include "media/media_buildflags.h"
-#include "third_party/blink/public/web/web_presentation_receiver_flags.h"
+#endif
 
 namespace content {
 
@@ -91,6 +94,7 @@ Shell::Shell(std::unique_ptr<WebContents> web_contents,
   if (should_set_delegate)
     web_contents_->SetDelegate(this);
 
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent()) {
     headless_ = true;
     // In a headless shell, disable occlusion tracking. Otherwise, WebContents
@@ -99,6 +103,7 @@ Shell::Shell(std::unique_ptr<WebContents> web_contents,
     base::CommandLine::ForCurrentProcess()->AppendSwitch(
         switches::kDisableBackgroundingOccludedWindowsForTesting);
   }
+#endif
 
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kContentShellHideToolbar))
@@ -147,6 +152,7 @@ Shell* Shell::CreateShell(std::unique_ptr<WebContents> web_contents,
 
   shell->PlatformResizeSubViews();
 
+#if !defined(USE_CBE)
   // Note: Do not make RenderFrameHost or RenderViewHost specific state changes
   // here, because they will be forgotten after a cross-process navigation. Use
   // RenderFrameCreated or RenderViewCreated instead.
@@ -154,6 +160,7 @@ Shell* Shell::CreateShell(std::unique_ptr<WebContents> web_contents,
     raw_web_contents->GetMutableRendererPrefs()->use_custom_colors = false;
     raw_web_contents->GetRenderViewHost()->SyncRendererPrefs();
   }
+#endif
 
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
   if (command_line->HasSwitch(switches::kForceWebRtcIPHandlingPolicy)) {
@@ -335,8 +342,10 @@ void Shell::AddNewContents(WebContents* source,
   CreateShell(
       std::move(new_contents), AdjustWindowSize(initial_rect.size()),
       !delay_popup_contents_delegate_for_testing_ /* should_set_delegate */);
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent())
     SecondaryTestWindowObserver::CreateForWebContents(raw_new_contents);
+#endif
 }
 
 void Shell::GoBackOrForward(int offset) {
@@ -420,8 +429,10 @@ WebContents* Shell::OpenURLFromTab(WebContents* source,
                                  params.source_site_instance,
                                  gfx::Size());  // Use default size.
       target = new_window->web_contents();
+#if !defined(USE_CBE)
       if (switches::IsRunWebTestsSwitchPresent())
         SecondaryTestWindowObserver::CreateForWebContents(target);
+#endif
       break;
     }
 
@@ -483,6 +494,7 @@ void Shell::ToggleFullscreenModeForTab(WebContents* web_contents,
 #if defined(OS_ANDROID)
   PlatformToggleFullscreenModeForTab(web_contents, enter_fullscreen);
 #endif
+#if !defined(USE_CBE)
   if (!switches::IsRunWebTestsSwitchPresent())
     return;
   if (is_fullscreen_ != enter_fullscreen) {
@@ -491,6 +503,7 @@ void Shell::ToggleFullscreenModeForTab(WebContents* web_contents,
         ->GetWidget()
         ->SynchronizeVisualProperties();
   }
+#endif
 }
 
 bool Shell::IsFullscreenForTabOrPending(const WebContents* web_contents) const {
@@ -536,9 +549,13 @@ void Shell::DidNavigateMainFramePostCommit(WebContents* web_contents) {
 JavaScriptDialogManager* Shell::GetJavaScriptDialogManager(
     WebContents* source) {
   if (!dialog_manager_) {
+#if defined(USE_CBE)
+    dialog_manager_.reset(new ShellJavaScriptDialogManager);
+#else
     dialog_manager_.reset(switches::IsRunWebTestsSwitchPresent()
                               ? new LayoutTestJavaScriptDialogManager
                               : new ShellJavaScriptDialogManager);
+#endif
   }
   return dialog_manager_.get();
 }
@@ -546,9 +563,11 @@ JavaScriptDialogManager* Shell::GetJavaScriptDialogManager(
 std::unique_ptr<BluetoothChooser> Shell::RunBluetoothChooser(
     RenderFrameHost* frame,
     const BluetoothChooser::EventHandler& event_handler) {
+#if !defined(USE_CBE)
   BlinkTestController* blink_test_controller = BlinkTestController::Get();
   if (blink_test_controller && switches::IsRunWebTestsSwitchPresent())
     return blink_test_controller->RunBluetoothChooser(frame, event_handler);
+#endif
   return nullptr;
 }
 
@@ -557,16 +576,22 @@ bool Shell::DidAddMessageToConsole(WebContents* source,
                                    const base::string16& message,
                                    int32_t line_no,
                                    const base::string16& source_id) {
+#if !defined(USE_CBE)
   return switches::IsRunWebTestsSwitchPresent();
+#else
+  return false;
+#endif
 }
 
 void Shell::RendererUnresponsive(
     WebContents* source,
     RenderWidgetHost* render_widget_host,
     base::RepeatingClosure hang_monitor_restarter) {
+#if !defined(USE_CBE)
   BlinkTestController* blink_test_controller = BlinkTestController::Get();
   if (blink_test_controller && switches::IsRunWebTestsSwitchPresent())
     blink_test_controller->RendererUnresponsive();
+#endif
 }
 
 void Shell::ActivateContents(WebContents* contents) {
@@ -594,22 +619,28 @@ bool Shell::ShouldAllowRunningInsecureContent(
     const url::Origin& origin,
     const GURL& resource_url) {
   bool allowed_by_test = false;
+#if !defined(USE_CBE)
   BlinkTestController* blink_test_controller = BlinkTestController::Get();
   if (blink_test_controller && switches::IsRunWebTestsSwitchPresent()) {
     const base::DictionaryValue& test_flags =
         blink_test_controller->accumulated_layout_test_runtime_flags_changes();
     test_flags.GetBoolean("running_insecure_content_allowed", &allowed_by_test);
   }
+#endif
 
   return allowed_per_prefs || allowed_by_test;
 }
 
 gfx::Size Shell::EnterPictureInPicture(const viz::SurfaceId& surface_id,
                                        const gfx::Size& natural_size) {
+#if !defined(USE_CBE)
   // During tests, returning a fake window size (same aspect ratio) to pretend
   // the window was created and allow tests to run accordingly.
   return switches::IsRunWebTestsSwitchPresent() ? natural_size
                                                 : gfx::Size(0, 0);
+#else
+  return gfx::Size(0, 0);
+#endif
 }
 
 bool Shell::ShouldResumeRequestsForCreatedWindow() {

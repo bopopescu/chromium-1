@@ -28,16 +28,12 @@
 #include "content/shell/app/blink_test_platform_support.h"
 #include "content/shell/app/shell_crash_reporter_client.h"
 #include "content/shell/browser/layout_test/layout_test_browser_main.h"
-#include "content/shell/browser/layout_test/layout_test_content_browser_client.h"
 #include "content/shell/browser/shell_browser_main.h"
 #include "content/shell/browser/shell_content_browser_client.h"
-#include "content/shell/common/layout_test/layout_test_content_client.h"
-#include "content/shell/common/layout_test/layout_test_switches.h"
 #include "content/shell/common/shell_content_client.h"
 #include "content/shell/common/shell_switches.h"
 #include "content/shell/gpu/shell_content_gpu_client.h"
 #include "content/shell/renderer/shell_content_renderer_client.h"
-#include "content/shell/renderer/web_test/web_test_content_renderer_client.h"
 #include "content/shell/utility/shell_content_utility_client.h"
 #include "gpu/config/gpu_switches.h"
 #include "ipc/ipc_buildflags.h"
@@ -92,6 +88,13 @@
 #if defined(OS_FUCHSIA)
 #include "base/base_paths_fuchsia.h"
 #endif  // OS_FUCHSIA
+
+#if !defined(USE_CBE)
+#include "content/shell/browser/layout_test/layout_test_content_browser_client.h"
+#include "content/shell/common/layout_test/layout_test_content_client.h"
+#include "content/shell/common/layout_test/layout_test_switches.h"
+#include "content/shell/renderer/layout_test/layout_test_content_renderer_client.h"
+#endif
 
 namespace {
 
@@ -182,6 +185,7 @@ bool ShellMainDelegate::BasicStartupComplete(int* exit_code) {
 
   InitLogging(command_line);
 
+#if !defined(USE_CBE)
   if (command_line.HasSwitch("run-layout-test")) {
     std::cerr << std::string(79, '*') << "\n"
               << "* The flag --run-layout-test is obsolete. Please use --"
@@ -306,6 +310,9 @@ bool ShellMainDelegate::BasicStartupComplete(int* exit_code) {
   content_client_.reset(switches::IsRunWebTestsSwitchPresent()
                             ? new LayoutTestContentClient
                             : new ShellContentClient);
+#else
+  content_client_.reset(new ShellContentClient);
+#endif
   SetContentClient(content_client_.get());
 
   return false;
@@ -365,10 +372,14 @@ int ShellMainDelegate::RunProcess(
       kTraceEventBrowserProcessSortIndex);
 
   browser_runner_.reset(BrowserMainRunner::Create());
+#if defined(USE_CBE)
+  return ShellBrowserMain(main_function_params, browser_runner_);
+#else
   base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
   return command_line.HasSwitch(switches::kRunWebTests)
              ? LayoutTestBrowserMain(main_function_params, browser_runner_)
              : ShellBrowserMain(main_function_params, browser_runner_);
+#endif
 }
 
 #if defined(OS_LINUX)
@@ -439,9 +450,13 @@ void ShellMainDelegate::PreCreateMainMessageLoop() {
 }
 
 ContentBrowserClient* ShellMainDelegate::CreateContentBrowserClient() {
+#if defined(USE_CBE)
+  browser_client_.reset(new ShellContentBrowserClient);
+#else
   browser_client_.reset(switches::IsRunWebTestsSwitchPresent()
                             ? new LayoutTestContentBrowserClient
                             : new ShellContentBrowserClient);
+#endif
 
   return browser_client_.get();
 }
@@ -452,9 +467,13 @@ ContentGpuClient* ShellMainDelegate::CreateContentGpuClient() {
 }
 
 ContentRendererClient* ShellMainDelegate::CreateContentRendererClient() {
+#if defined(USE_CBE)
+  renderer_client_.reset(new ShellContentRendererClient);
+#else
   renderer_client_.reset(switches::IsRunWebTestsSwitchPresent()
                              ? new WebTestContentRendererClient
                              : new ShellContentRendererClient);
+#endif
 
   return renderer_client_.get();
 }

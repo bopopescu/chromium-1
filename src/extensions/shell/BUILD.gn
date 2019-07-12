@@ -36,7 +36,7 @@ source_set("app_shell_lib") {
   # TODO(jamescook): investigate and get rid of test dependencies. This library
   # is testonly because it depends on testonly libraries, namely
   # //content/shell:content_shell_lib. See http://crbug.com/438283
-  testonly = true
+  testonly = !use_cbe
   deps = [
     ":resources",
     ":version_header",
@@ -57,7 +57,7 @@ source_set("app_shell_lib") {
     "//components/user_prefs",
     "//components/version_info",
     "//content",
-    "//content/shell:content_shell_lib",
+    "//content/shell:content_shell_nontest_lib",
     "//device/base",
     "//device/bluetooth",
     "//device/usb",
@@ -308,7 +308,7 @@ source_set("app_shell_lib") {
 
 app_shell_executable("app_shell") {
   # testonly because :app_shell_lib is testonly. See :app_shell_lib comment.
-  testonly = true
+  testonly = !use_cbe
   sources = [
     "app/shell_main.cc",
   ]

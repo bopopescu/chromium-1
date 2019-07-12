@@ -28,7 +28,9 @@ std::vector<std::string> GetSideloadFontFiles();
 // TODO(lukasza): The function below somewhat violates the layering (by
 // enabling shell -> layout_tests dependency) but at least narrows the extent of
 // the dependency to a single switch...
+#if !defined(USE_CBE)
 bool IsRunWebTestsSwitchPresent();
+#endif
 
 }  // namespace switches
 

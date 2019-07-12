@@ -69,8 +69,10 @@ ShellWebContentsViewDelegate::~ShellWebContentsViewDelegate() {}
 void ShellWebContentsViewDelegate::ShowContextMenu(
     RenderFrameHost* render_frame_host,
     const ContextMenuParams& params) {
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent())
     return;
+#endif
 
   gfx::Point screen_point(params.x, params.y);
 

@@ -38,6 +38,7 @@ std::string ShellContentClient::GetUserAgent() const {
 }
 
 base::string16 ShellContentClient::GetLocalizedString(int message_id) const {
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent()) {
     switch (message_id) {
       case IDS_FORM_OTHER_DATE_LABEL:
@@ -56,12 +57,14 @@ base::string16 ShellContentClient::GetLocalizedString(int message_id) const {
         return base::ASCIIToUTF16("<<ThisWeekLabel>>");
     }
   }
+#endif
   return l10n_util::GetStringUTF16(message_id);
 }
 
 base::StringPiece ShellContentClient::GetDataResource(
     int resource_id,
     ui::ScaleFactor scale_factor) const {
+#if !defined(USE_CBE)
   if (switches::IsRunWebTestsSwitchPresent()) {
     switch (resource_id) {
       case IDR_BROKENIMAGE:
@@ -73,6 +76,7 @@ base::StringPiece ShellContentClient::GetDataResource(
         break;
     }
   }
+#endif
   return ui::ResourceBundle::GetSharedInstance().GetRawDataResourceForScale(
       resource_id, scale_factor);
 }
