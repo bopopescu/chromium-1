@@ -29,6 +29,9 @@ namespace {
 const int kBackgroundCleanupDelayMs = 1000;
 
 viz::CompositorFrame CreateDelegatedFrame(float scale_factor, gfx::Size size) {
+  if (scale_factor == 0.0f || size.IsEmpty())
+    LOG(ERROR) << __func__ << " Requested DelegatedFrame is invalid";
+
   viz::CompositorFrame frame;
   frame.metadata.device_scale_factor = scale_factor;
 
@@ -114,7 +117,8 @@ void DelegatedFrameHost::WasHidden() {
       GetCurrentSurfaceId().is_valid())
     support_->SubmitCompositorFrame(
         GetCurrentSurfaceId().local_surface_id(),
-        CreateDelegatedFrame(active_device_scale_factor_, surface_dip_size_));
+        CreateDelegatedFrame(client_->GetDeviceScaleFactor(),
+                             surface_dip_size_));
 
   // Calling origin procedure
   neva::DelegatedFrameHost::WasHidden();
@@ -154,14 +158,6 @@ void DelegatedFrameHost::SubmitCompositorFrame(
   }
 
   did_first_swap_ = true;
-}
-
-void DelegatedFrameHost::OnFirstSurfaceActivation(
-    const viz::SurfaceInfo& surface_info) {
-  active_device_scale_factor_ = surface_info.device_scale_factor();
-
-  // Calling origin procedure
-  neva::DelegatedFrameHost::OnFirstSurfaceActivation(surface_info);
 }
 
 void DelegatedFrameHost::AttachToCompositor(ui::Compositor* compositor) {

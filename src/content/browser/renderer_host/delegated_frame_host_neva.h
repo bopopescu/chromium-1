@@ -48,7 +48,6 @@ class CONTENT_EXPORT DelegatedFrameHost : public neva::DelegatedFrameHost {
                      bool should_register_frame_sink_id);
   ~DelegatedFrameHost() override;
 
-  void OnFirstSurfaceActivation(const viz::SurfaceInfo& surface_info) override;
   void SubmitCompositorFrame(
       const viz::LocalSurfaceId& local_surface_id,
       viz::CompositorFrame frame,
@@ -69,7 +68,6 @@ class CONTENT_EXPORT DelegatedFrameHost : public neva::DelegatedFrameHost {
   bool did_first_swap_ = false;
   bool was_hidden_ = false;
   base::CancelableOnceClosure background_cleanup_task_;
-  float active_device_scale_factor_ = 0.f;
 
   std::unique_ptr<ClosedKeepAliveWebAppTrigger> keep_alive_trigger_;
   base::WeakPtrFactory<DelegatedFrameHost> weak_factory_;
