@@ -594,6 +594,7 @@ void RenderViewImpl::Initialize(
   UpdateWebViewWithDeviceScaleFactor();
   OnSetRendererPrefs(params->renderer_preferences);
   OnSynchronizeVisualProperties(params->visual_properties);
+  RenderWidget::SetUpIdleUserDetector();
 
   ///@name USE_NEVA_APPRUNTIME
   ///@{
