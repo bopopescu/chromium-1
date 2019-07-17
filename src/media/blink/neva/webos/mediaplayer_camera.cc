@@ -258,7 +258,11 @@ void MediaPlayerCamera::OnUpdateUMSInfo(const std::string& detail) {
 
   Json::Reader reader;
   Json::Value root;
-  reader.parse(detail, root);
+  if (!reader.parse(detail, root)) {
+    LOG(ERROR) << " Json::Reader::parse (" << detail << ") - Failed!!!";
+    return;
+  }
+
   if (root.isMember("cameraId"))
     camera_id_ = root["cameraId"].asString();
 
@@ -269,10 +273,9 @@ void MediaPlayerCamera::OnUpdateUMSInfo(const std::string& detail) {
 void MediaPlayerCamera::OnActiveRegionChanged(const gfx::Rect& active_region) {
   FUNC_LOG(1) << gfx::Rect(active_region).ToString();
 
-  if (active_video_region_ != active_region) {
+  if (active_video_region_ != active_region)
     active_video_region_ = active_region;
-    active_video_region_changed_ = true;
-  }
+
   client_->OnActiveRegionChanged(blink::WebRect(
       active_video_region_.x(), active_video_region_.y(),
       active_video_region_.width(), active_video_region_.height()));

@@ -126,7 +126,6 @@ class MediaPlayerCamera : public base::SupportsWeakPtr<MediaPlayerCamera>,
   gfx::Rect display_window_out_rect_;
   gfx::Rect display_window_in_rect_;
   gfx::Rect active_video_region_;
-  bool active_video_region_changed_;
 
   base::RepeatingTimer time_update_timer_;
 
