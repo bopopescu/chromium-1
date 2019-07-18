@@ -102,6 +102,7 @@
 #include "gpu/command_buffer/client/context_support.h"
 #include "gpu/command_buffer/client/gles2_interface.h"
 #include "gpu/command_buffer/client/raster_interface.h"
+#include "gpu/command_buffer/client/shared_image_interface.h"
 #include "services/metrics/public/cpp/ukm_recorder.h"
 #include "third_party/skia/include/gpu/GrContext.h"
 #include "ui/gfx/geometry/point_conversions.h"
@@ -1898,6 +1899,14 @@ void LayerTreeHostImpl::ReclaimResources(
   if (!visible_ && layer_tree_frame_sink_->context_provider()) {
     auto* gl = layer_tree_frame_sink_->context_provider()->ContextGL();
     gl->ShallowFlushCHROMIUM();
+
+#if defined(USE_NEVA_APPRUNTIME)
+    // Note(Neva): memory optimization
+    // It needs to force flush gpu channel host to free up the gpu memory.
+    auto* sii =
+        layer_tree_frame_sink_->context_provider()->SharedImageInterface();
+    sii->Flush();
+#endif
   }
 }
 

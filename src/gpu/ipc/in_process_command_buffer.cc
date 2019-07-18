@@ -213,6 +213,10 @@ class InProcessCommandBuffer::SharedImageInterface
     return MakeSyncToken(next_fence_sync_release_ - 1);
   }
 
+  void Flush() override {
+    // No need to flush in this implementation.
+  }
+
   CommandBufferId command_buffer_id() const { return command_buffer_id_; }
 
  private:

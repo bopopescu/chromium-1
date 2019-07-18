@@ -33,6 +33,8 @@ class SharedImageInterfaceProxy : public SharedImageInterface {
                           const Mailbox& mailbox) override;
   SyncToken GenUnverifiedSyncToken() override;
 
+  void Flush() override;
+
  private:
   GpuChannelHost* const host_;
   const int32_t route_id_;

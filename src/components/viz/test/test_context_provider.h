@@ -56,6 +56,7 @@ class TestSharedImageInterface : public gpu::SharedImageInterface {
 
   gpu::SyncToken GenUnverifiedSyncToken() override;
 
+  void Flush() override;
   size_t shared_image_count() const { return shared_images_.size(); }
 
  private:

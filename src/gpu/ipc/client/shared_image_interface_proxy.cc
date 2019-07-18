@@ -140,4 +140,9 @@ SyncToken SharedImageInterfaceProxy::GenUnverifiedSyncToken() {
       next_release_id_);
 }
 
+void SharedImageInterfaceProxy::Flush() {
+  base::AutoLock lock(lock_);
+  host_->EnsureFlush(last_flush_id_);
+}
+
 }  // namespace gpu

@@ -152,6 +152,10 @@ gpu::SyncToken TestSharedImageInterface::GenUnverifiedSyncToken() {
                         gpu::CommandBufferId(), ++release_id_);
 }
 
+void TestSharedImageInterface::Flush() {
+  // No need to flush in this implementation.
+}
+
 // static
 scoped_refptr<TestContextProvider> TestContextProvider::Create(
     std::string additional_extensions) {
