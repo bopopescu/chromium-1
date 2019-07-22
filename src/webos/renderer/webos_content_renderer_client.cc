@@ -55,20 +55,29 @@ void GetWebOSLocalizedErrorStrings(int error_code, const GURL& failed_url,
   error_strings.SetString("url_to_reload", failed_url_string);
 
   failed_url_string = base::UTF8ToUTF16(failed_url.host());
-  if (net::ERR_NAME_RESOLUTION_FAILED == error_code ||
-      net::ERR_NAME_NOT_RESOLVED == error_code)
-    error_strings.SetString("error_info", failed_url_string);
 
-  //We need to change some strings in case of ATSC30LegacyBoxSupport
-  if (net::ERR_CERT_DATE_INVALID == error_code) {
-    error_strings.SetString("error_title_atsc_legacy_box",
-        l10n_util::GetStringUTF16(IDS_NET_ERROR_UNABLE_TO_LOAD));
-    error_strings.SetString("error_details_atsc_legacy_box",
-        l10n_util::GetStringUTF16(IDS_NET_ERROR_CERTIFICATE_HAS_EXPIRED_UHD));
-    error_strings.SetString("error_guide_atsc_legacy_box",
-        l10n_util::GetStringUTF16(IDS_NET_ERROR_CHECK_TIME_SETTINGS));
-    error_strings.SetString("error_info_atsc_legacy_box",
-        l10n_util::GetStringUTF16(IDS_NET_ERROR_CURRENT_TIME_SETTINGS));
+  switch (error_code) {
+    case net::ERR_CERT_DATE_INVALID: {
+      // We need to change some strings in case of ATSC30LegacyBoxSupport
+      error_strings.SetString(
+          "error_title_atsc_legacy_box",
+          l10n_util::GetStringUTF16(IDS_NET_ERROR_UNABLE_TO_LOAD));
+      error_strings.SetString(
+          "error_details_atsc_legacy_box",
+          l10n_util::GetStringUTF16(IDS_NET_ERROR_CERTIFICATE_HAS_EXPIRED_UHD));
+      error_strings.SetString(
+          "error_guide_atsc_legacy_box",
+          l10n_util::GetStringUTF16(IDS_NET_ERROR_CHECK_TIME_SETTINGS));
+      error_strings.SetString(
+          "error_info_atsc_legacy_box",
+          l10n_util::GetStringUTF16(IDS_NET_ERROR_CURRENT_TIME_SETTINGS));
+      break;
+    }
+    case net::ERR_INTERNET_DISCONNECTED:
+    case net::ERR_NAME_NOT_RESOLVED:
+    case net::ERR_NAME_RESOLUTION_FAILED:
+      error_strings.SetString("error_info", failed_url_string);
+      break;
   }
 
   // We want localized Buttons on page
