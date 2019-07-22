@@ -40,11 +40,6 @@ const char kOnServiceCallbackName[] = "onservicecallback";
 const char kMethodInvocationAsConstructorOnly[] =
     "webOSServiceBridge function must be invoked as a constructor only";
 
-std::string GetServiceNameWithPID(const std::string& name) {
-  std::string result(name);
-  return result.append("-").append(std::to_string(getpid()));
-}
-
 }  // anonymous namespace
 
 namespace injections {
@@ -76,8 +71,7 @@ WebOSServiceBridgeInjection::WebOSServiceBridgeInjection()
                            mojo::MakeRequest(&provider));
 
   provider->GetSystemServiceBridge(mojo::MakeRequest(&system_bridge_));
-  system_bridge_->Connect(
-      GetServiceNameWithPID(identifier_), identifier_,
+  system_bridge_->Connect(identifier_,
       base::BindRepeating(&WebOSServiceBridgeInjection::OnConnect,
                           base::Unretained(this)));
 }

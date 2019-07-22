@@ -54,9 +54,9 @@ std::string GetServiceURI(const char* uri, const char* action) {
   return result.append(uri).append("/").append(action);
 }
 
-std::string GetServiceNameWithRandSuffix(const char* name) {
+std::string GetServiceNameWithRandSuffix(const char* name, const std::string delimiter) {
   std::string result(name);
-  return result.append(".").append(std::to_string(base::RandInt(10000, 99999)));
+  return result.append(delimiter).append(std::to_string(base::RandInt(10000, 99999)));
 }
 
 std::string GetServiceNameWithPID(const char* name) {
