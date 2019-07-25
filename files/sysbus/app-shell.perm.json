@@ -1,9 +1,6 @@
 {
     "com.webos.app.enactbrowser": [
-        "settings.read",
-        "signals.all"
-    ],
-    "com.webos.app.enactbrowser-*": [
+        "applications",
         "settings.read",
         "signals.all"
     ],

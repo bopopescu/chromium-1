@@ -3,7 +3,6 @@
     "type": "privileged",
     "allowedNames": [
         "com.webos.app.enactbrowser",
-        "com.webos.app.enactbrowser-*",
         "com.webos.chromium.memory.*",
         "com.webos.rm.client.*"
     ],
@@ -12,13 +11,7 @@
             "service": "com.webos.app.enactbrowser",
             "outbound": [
                 "com.palm.bus",
-                "com.webos.settingsservice"
-            ]
-        },
-        {
-            "service": "com.webos.app.enactbrowser-*",
-            "outbound": [
-                "com.palm.bus",
+                "com.webos.applicationManager",
                 "com.webos.settingsservice"
             ]
         },

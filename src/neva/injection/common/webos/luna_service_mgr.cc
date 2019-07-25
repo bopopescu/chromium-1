@@ -129,12 +129,16 @@ void LunaServiceManager::Init() {
   if (initialized_)
     return;
 
+  bool is_browser = identifier_.find("com.webos.app.enactbrowser") == 0;
   bool is_phone = identifier_.find("com.palm.app.phone") == 0;
 
   std::string identifier = unique_id_with_suffix(identifier_);
-  init = LSRegisterApplicationService(identifier.c_str(),
-                                      identifier_.c_str(),
-                                      &sh_, &lserror);
+  if (is_browser)
+    init = LSRegister(identifier_.c_str(), &sh_, &lserror);
+  else
+    init = LSRegisterApplicationService(identifier.c_str(),
+                                        identifier_.c_str(),
+                                        &sh_, &lserror);
   if (!init) {
     log_error(lserror);
     return;
