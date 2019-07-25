@@ -665,6 +665,13 @@ void DesktopWindowTreeHostOzone::SetFullscreen(bool fullscreen) {
   } else {
     if (state_ & Maximized)
       previous_maximize_bounds_ = previous_bounds_;
+    if (state_ & Minimized) {
+      content_window_->Show();
+      compositor()->SetVisible(true);
+
+      state_ &= ~Minimized;
+      ShowWindow();
+    }
 
     previous_bounds_ = platform_window_->GetBounds();
     if (contents_size_.IsEmpty())
