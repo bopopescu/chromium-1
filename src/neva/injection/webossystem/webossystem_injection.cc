@@ -596,13 +596,12 @@ void WebOSSystemInjection::AddBannerMessage(gin::Arguments* args) {
   if (args->Length() < 5)
     return;
 
-  std::string param;
   std::vector<std::string> arguments;
+  for (auto x : args->GetAll())
+    arguments.push_back(*v8::String::Utf8Value(blink::MainThreadIsolate(), x));
 
-  while (args->GetNext(&param))
-    arguments.push_back(param);
-
-  args->Return(CallFunction("addBannerMessage", arguments));
+  if (arguments.size())
+    args->Return(CallFunction("addBannerMessage", arguments));
 }
 
 void WebOSSystemInjection::NativePmTraceAfter(const std::string& param) {
@@ -628,26 +627,24 @@ void WebOSSystemInjection::NativePmLogString(gin::Arguments* args) {
   if (args->Length() < 4)
     return;
 
-  std::string param;
   std::vector<std::string> arguments;
+  for (auto x : args->GetAll())
+    arguments.push_back(*v8::String::Utf8Value(blink::MainThreadIsolate(), x));
 
-  while (args->GetNext(&param))
-    arguments.push_back(param);
-
-  SendCommand("PmLogString", arguments);
+  if (arguments.size())
+    SendCommand("PmLogString", arguments);
 }
 
 void WebOSSystemInjection::NativePmLogInfoWithClock(gin::Arguments* args) {
   if (args->Length() < 3)
     return;
 
-  std::string param;
   std::vector<std::string> arguments;
+  for (auto x : args->GetAll())
+    arguments.push_back(*v8::String::Utf8Value(blink::MainThreadIsolate(), x));
 
-  while (args->GetNext(&param))
-    arguments.push_back(param);
-
-  SendCommand("PmLogInfoWithClock", arguments);
+  if (arguments.size())
+    SendCommand("PmLogInfoWithClock", arguments);
 }
 
 void WebOSSystemInjection::OnCloseNotify(const std::string& param) {
