@@ -24,6 +24,8 @@ extern const char kDiskCacheSize[];
 extern const char kUserAgent[];
 extern const char kUserDataDir[];
 extern const char kEnableDevToolsExperiments[];
+extern const char kPerHostQuotaRatio[];
+extern const char kQuotaPoolSizeRatio[];
 extern const char kSharedMemMinimalLimitMB[];
 extern const char kSharedMemPressureDivider[];
 extern const char kSharedMemSystemMemReductionFactor[];

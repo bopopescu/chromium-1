@@ -19,7 +19,9 @@
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/neva/base_switches.h"
+#include "base/rand_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "base/system/sys_info.h"
 #include "cc/base/switches_neva.h"
 #include "content/browser/frame_host/render_frame_host_impl.h"
 #include "content/browser/web_contents/web_contents_impl.h"
@@ -29,6 +31,7 @@
 #include "content/public/common/content_neva_switches.h"
 #include "content/public/common/content_switches.h"
 #include "neva/app_runtime/browser/app_runtime_browser_main_parts.h"
+#include "neva/app_runtime/browser/app_runtime_browser_switches.h"
 #include "neva/app_runtime/browser/app_runtime_devtools_manager_delegate.h"
 #include "neva/app_runtime/browser/app_runtime_quota_permission_context.h"
 #include "neva/app_runtime/browser/app_runtime_quota_permission_delegate.h"
@@ -49,9 +52,59 @@
 #endif
 namespace app_runtime {
 
-#if defined(USE_NEVA_EXTENSIONS)
 namespace {
 
+bool GetConfiguredValueBySwitchName(const char switch_name[], double* value) {
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (!command_line.HasSwitch(switch_name))
+    return false;
+  if (!base::StringToDouble(command_line.GetSwitchValueASCII(switch_name),
+                            value))
+    return false;
+  return true;
+}
+
+// Skews |value| by +/- |percent|.
+int64_t RandomizeByPercent(int64_t value, int percent) {
+  double random_percent = (base::RandDouble() - 0.5) * percent * 2;
+  return value + (value * (random_percent / 100.0));
+}
+
+base::Optional<storage::QuotaSettings> GetConfiguredQuotaSettings(
+    const base::FilePath& partition_path) {
+  int64_t total = base::SysInfo::AmountOfTotalDiskSpace(partition_path);
+  const int kRandomizedPercentage = 10;
+  const double kShouldRemainAvailableRatio = 0.1;  // 10%
+  const double kMustRemainAvailableRatio = 0.01;   // 1%
+  const double kSessionOnlyHostQuotaRatio = 0.1;   // 10%
+
+  storage::QuotaSettings settings;
+  double ratio;
+  if (!GetConfiguredValueBySwitchName(kQuotaPoolSizeRatio, &ratio))
+    return base::Optional<storage::QuotaSettings>();
+
+  settings.pool_size =
+      std::min(RandomizeByPercent(total, kRandomizedPercentage),
+               static_cast<int64_t>(total * ratio));
+
+  if (!GetConfiguredValueBySwitchName(kPerHostQuotaRatio, &ratio))
+    return base::Optional<storage::QuotaSettings>();
+
+  settings.per_host_quota =
+      std::min(RandomizeByPercent(total, kRandomizedPercentage),
+               static_cast<int64_t>(settings.pool_size * ratio));
+  settings.session_only_per_host_quota = settings.per_host_quota;
+  settings.should_remain_available =
+      static_cast<int64_t>(total * kShouldRemainAvailableRatio);
+  settings.must_remain_available =
+      static_cast<int64_t>(total * kMustRemainAvailableRatio);
+  settings.refresh_interval = base::TimeDelta::Max();
+
+  return base::make_optional<storage::QuotaSettings>(std::move(settings));
+}
+
+#if defined(USE_NEVA_EXTENSIONS)
 void LoadAppsFromCommandLine(extensions::ShellExtensionSystem* extension_system,
                              content::BrowserContext* browser_context) {
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
@@ -96,9 +149,10 @@ void LoadAppsFromCommandLine(extensions::ShellExtensionSystem* extension_system,
   }
   return;
 }
+#endif
 
 }  // namespace
-#endif
+
 AppRuntimeContentBrowserClient::AppRuntimeContentBrowserClient(
     net::NetworkDelegate* delegate,
     AppRuntimeQuotaPermissionDelegate* quota_permission_delegate)
@@ -301,6 +355,25 @@ void AppRuntimeContentBrowserClient::GetQuotaSettings(
     content::BrowserContext* context,
     content::StoragePartition* partition,
     storage::OptionalQuotaSettingsCallback callback) {
+  base::Optional<storage::QuotaSettings> quota_settings;
+  if ((quota_settings = GetConfiguredQuotaSettings(partition->GetPath())) &&
+      quota_settings.has_value()) {
+    const int64_t kMBytes = 1024 * 1024;
+    LOG(INFO) << "QuotaSettings pool_size: "
+              << quota_settings->pool_size / kMBytes << "MB"
+              << ", shoud_remain_available: "
+              << quota_settings->should_remain_available / kMBytes << "MB"
+              << ", must_remain_available: "
+              << quota_settings->must_remain_available / kMBytes << "MB"
+              << ", per_host_quota: "
+              << quota_settings->per_host_quota / kMBytes << "MB"
+              << ", session_only_per_host_quota: "
+              << quota_settings->session_only_per_host_quota / kMBytes << "MB";
+
+    std::move(callback).Run(*quota_settings);
+    return;
+  }
+
   storage::GetNominalDynamicSettings(
       partition->GetPath(), context->IsOffTheRecord(), std::move(callback));
 }

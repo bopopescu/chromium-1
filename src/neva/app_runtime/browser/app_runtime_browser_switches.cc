@@ -32,6 +32,13 @@ const char kUserDataDir[] = "user-data-dir";
 // If true devtools experimental settings are enabled
 const char kEnableDevToolsExperiments[] = "enable-devtools-experiments";
 
+// Configure the portion of the pool size that can be utilized by a single host
+// for temporary storage
+const char kPerHostQuotaRatio[] = "per-host-quota-ratio";
+
+// Configure quota pool size ratio for temporary storage such as indexeddb
+const char kQuotaPoolSizeRatio[] = "quota-pool-size-ratio";
+
 // Minimal memory limit to apply in face of moderate to critical memory
 // pressure in MB.
 const char kSharedMemMinimalLimitMB[] = "shared-mem-minimal-limit-mb";
