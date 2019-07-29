@@ -46,4 +46,11 @@ mojom("interfaces") {
     "//ui/gfx/mojo",
     "//ui/latency/mojo:interfaces",
   ]
+
+  if (use_neva_media) {
+    if (!defined(enabled_features)) {
+      enabled_features = []
+    }
+    enabled_features += [ "use_neva_media" ]
+  }
 }
