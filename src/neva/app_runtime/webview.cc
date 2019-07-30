@@ -971,6 +971,11 @@ void WebView::DidStartLoading() {
     webview_delegate_->LoadStarted();
 }
 
+void WebView::DidStopLoading() {
+  if (webview_delegate_)
+    webview_delegate_->LoadStopped("");
+}
+
 void WebView::DidFinishLoad(content::RenderFrameHost* render_frame_host,
                             const GURL& validated_url) {
 #if defined(ENABLE_PLUGINS)
@@ -1001,6 +1006,15 @@ void WebView::DidUpdateFaviconURL(
   }
 }
 
+void WebView::DidStartNavigation(content::NavigationHandle* navigation_handle) {
+  if (!navigation_handle)
+    return;
+
+  if (webview_delegate_)
+    webview_delegate_->DidStartNavigation(navigation_handle->GetURL().spec(),
+                                          navigation_handle->IsInMainFrame());
+}
+
 void WebView::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   if (!navigation_handle)
@@ -1019,6 +1033,10 @@ void WebView::DidFinishNavigation(
     webview_delegate_->NavigationHistoryChanged();
   }
 
+  if (webview_delegate_ && navigation_handle->HasCommitted())
+    webview_delegate_->DidFinishNavigation(navigation_handle->GetURL().spec(),
+                                           navigation_handle->IsInMainFrame());
+
   UpdateViewportScaleFactor();
 }
 
@@ -1029,7 +1047,7 @@ void WebView::DidFailLoad(content::RenderFrameHost* render_frame_host,
   std::string url = validated_url.spec();
   if (webview_delegate_) {
     if (error_code == net::ERR_ABORTED)
-      webview_delegate_->LoadStopped(url);
+      webview_delegate_->LoadAborted(url);
     else
       webview_delegate_->LoadFailed(url, error_code,
                              base::UTF16ToUTF8(error_description));
