@@ -24,6 +24,7 @@ namespace webos {
 class WebOSContentRendererClient
     : public app_runtime::AppRuntimeContentRendererClient {
  public:
+  void RenderFrameCreated(content::RenderFrame* render_frame) override;
   void PrepareErrorPage(content::RenderFrame* render_frame,
                         const blink::WebURLRequest& failed_request,
                         const blink::WebURLError& error,

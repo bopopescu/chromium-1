@@ -50,6 +50,7 @@
         ],
         "neva_pal": [
           "neva:memorymanager",
+          "neva:networkerrorpagecontroller",
           "neva:sample",
           "neva:systemservicebridge"
         ]

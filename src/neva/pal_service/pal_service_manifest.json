@@ -6,6 +6,8 @@
       "provides": {
         "neva:memorymanager" : [
           "pal.mojom.MemoryManager" ],
+        "neva:networkerrorpagecontroller" : [
+          "pal.mojom.NetworkErrorPageController" ],
         "neva:sample" : [
           "pal.mojom.Sample" ],
         "neva:systemservicebridge" : [

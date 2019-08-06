@@ -130,4 +130,8 @@ config("config") {
   if (use_neva_v8_snapshot) {
     defines += [ "USE_NEVA_V8_SNAPSHOT=1" ]
   }
+
+  if (enable_network_error_page_controller_webapi) {
+    defines += [ "ENABLE_NETWORK_ERROR_PAGE_CONTROLLER_WEBAPI=1" ]
+  }
 }

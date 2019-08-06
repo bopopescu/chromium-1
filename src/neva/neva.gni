@@ -95,4 +95,7 @@ declare_args() {
 
   # Enable optimizations to reduce writes to eMMC storages
   enable_emmc_optimizations = is_webos
+
+  # Enable network error page controller WEBAPI
+  enable_network_error_page_controller_webapi = is_webos
 }
