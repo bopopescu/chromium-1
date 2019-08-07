@@ -74,6 +74,7 @@ WebMediaPlayerMSE::WebMediaPlayerMSE(
       additional_contents_scale_(params_neva->additional_contents_scale()),
       app_id_(params_neva->application_id().Utf8()),
       is_suspended_(false),
+      status_on_suspended_(UnknownStatus),
       is_video_offscreen_(false),
       is_fullscreen_(false),
       is_fullscreen_mode_(false),
