@@ -203,18 +203,20 @@ void AppRuntimeBrowserMainParts::PreMainMessageLoopRun() {
         command_line.GetSwitchValueASCII(switches::kWatchdogBrowserTimeout);
     if (!env_timeout.empty()) {
       int timeout;
-      base::StringToInt(env_timeout, &timeout);
-      ui_watchdog_->SetTimeout(timeout);
-      io_watchdog_->SetTimeout(timeout);
+      if (base::StringToInt(env_timeout, &timeout)) {
+        ui_watchdog_->SetTimeout(timeout);
+        io_watchdog_->SetTimeout(timeout);
+      }
     }
 
     std::string env_period =
         command_line.GetSwitchValueASCII(switches::kWatchdogBrowserPeriod);
     if (!env_period.empty()) {
       int period;
-      base::StringToInt(env_period, &period);
-      ui_watchdog_->SetPeriod(period);
-      io_watchdog_->SetPeriod(period);
+      if (base::StringToInt(env_period, &period)) {
+        ui_watchdog_->SetPeriod(period);
+        io_watchdog_->SetPeriod(period);
+      }
     }
 
     ui_watchdog_->StartWatchdog();
