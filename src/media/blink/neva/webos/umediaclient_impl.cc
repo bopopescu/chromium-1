@@ -655,8 +655,6 @@ void UMediaClientImpl::DispatchLoadCompleted() {
     video_display_window_change_cb_.Run();
 
   SetPlaybackVolume(volume_, true);
-  system_media_manager_->PlayStateChanged(
-      SystemMediaManager::PlayState::kLoaded);
 
   if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null())
     update_ums_info_cb_.Run(PlaybackNotificationToJson(
@@ -666,12 +664,15 @@ void UMediaClientImpl::DispatchLoadCompleted() {
     has_audio_ = true;
     has_video_ = video_;
     updated_source_info_ = true;
-    system_media_manager_->SourceInfoUpdated(has_audio_, has_video_);
+    system_media_manager_->SourceInfoUpdated(has_video_, has_audio_);
     if (!buffering_state_cb_.is_null()) {
       buffering_state_have_meta_data_ = true;
       buffering_state_cb_.Run(UMediaClientImpl::kHaveMetadata);
     }
   }
+
+  system_media_manager_->PlayStateChanged(
+      SystemMediaManager::PlayState::kLoaded);
 
   if (updated_source_info_ && !buffering_state_cb_.is_null())
     buffering_state_cb_.Run(UMediaClientImpl::kLoadCompleted);
@@ -712,7 +713,7 @@ void UMediaClientImpl::DispatchPreloadCompleted() {
     has_audio_ = true;
     has_video_ = video_;
     updated_source_info_ = true;
-    system_media_manager_->SourceInfoUpdated(has_audio_, has_video_);
+    system_media_manager_->SourceInfoUpdated(has_video_, has_audio_);
     if (!buffering_state_cb_.is_null()) {
       FUNC_LOG(2) << " buffering_state_have_meta_data_="
                   << buffering_state_have_meta_data_;
@@ -866,7 +867,7 @@ void UMediaClientImpl::DispatchSourceInfo(
       buffering_state_cb_.Run(UMediaClientImpl::kPreloadCompleted);
   }
   updated_source_info_ = true;
-  system_media_manager_->SourceInfoUpdated(has_audio_, has_video_);
+  system_media_manager_->SourceInfoUpdated(has_video_, has_audio_);
 
   if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null()) {
     std::string json_string = SourceInfoToJson(MediaId(), sourceInfo);
@@ -1048,7 +1049,7 @@ void UMediaClientImpl::DispatchSourceInfo(
       buffering_state_cb_.Run(UMediaClientImpl::kPreloadCompleted);
   }
   updated_source_info_ = true;
-  system_media_manager_->SourceInfoUpdated(has_audio_, has_video_);
+  system_media_manager_->SourceInfoUpdated(has_video_, has_audio_);
 
   if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null()) {
     std::string json_string = SourceInfoToJson(MediaId(), soureInfo);
