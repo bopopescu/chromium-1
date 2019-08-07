@@ -113,7 +113,6 @@ CHROME_FLAGS=" \
   --gpu-no-context-lost\
   --ignore-gpu-blacklist\
   --in-process-gpu\
-  --max-activated-media-players=1\
   --max-timeupdate-event-frequency=150\
   --mse-audio-buffer-size-limit=${MSE_AUDIO_BUFFER_SIZE_LIMIT}\
   --mse-video-buffer-size-limit=${MSE_VIDEO_BUFFER_SIZE_LIMIT}\
