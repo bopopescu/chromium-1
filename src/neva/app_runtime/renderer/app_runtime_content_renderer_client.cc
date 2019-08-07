@@ -158,16 +158,16 @@ void AppRuntimeContentRendererClient::RenderThreadStarted() {
         command_line.GetSwitchValueASCII(switches::kWatchdogRendererTimeout);
     if (!env_timeout.empty()) {
       int timeout;
-      base::StringToInt(env_timeout, &timeout);
-      watchdog_->SetTimeout(timeout);
+      if (base::StringToInt(env_timeout, &timeout))
+        watchdog_->SetTimeout(timeout);
     }
 
     std::string env_period =
         command_line.GetSwitchValueASCII(switches::kWatchdogRendererPeriod);
     if (!env_period.empty()) {
       int period;
-      base::StringToInt(env_period, &period);
-      watchdog_->SetPeriod(period);
+      if (base::StringToInt(env_period, &period))
+        watchdog_->SetPeriod(period);
     }
 
     watchdog_->StartWatchdog();
