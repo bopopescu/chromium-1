@@ -286,7 +286,11 @@ base::TimeDelta RendererImpl::GetMediaTime() {
       return restarting_audio_time_;
     }
   }
-
+#if defined(USE_NEVA_MEDIA)
+  if (media_platform_api_)
+    return base::TimeDelta::FromMilliseconds(
+        media_platform_api_->GetCurrentTime());
+#endif
   return time_source_->CurrentMediaTime();
 }
 

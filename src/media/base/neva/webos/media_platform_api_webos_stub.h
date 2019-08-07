@@ -52,6 +52,7 @@ class MEDIA_EXPORT MediaPlatformAPIWebOSStub : public MediaPlatformAPI {
   bool IsEOSReceived() override;
   void UpdateVideoConfig(const VideoDecoderConfig& video_config) override;
   void SetVisibility(bool visible) override;
+  uint64_t GetCurrentTime() override;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(MediaPlatformAPIWebOSStub);

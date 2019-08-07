@@ -96,6 +96,8 @@ class MEDIA_EXPORT MediaPlatformAPI
   virtual void SwitchToAutoLayout() = 0;
   virtual void SetDisableAudio(bool disable) = 0;
 
+  virtual uint64_t GetCurrentTime() = 0;
+
   static base::Optional<MediaTypeRestriction> GetPlatformRestrictionForType(
       const std::string& type);
   static void SetMediaCodecCapability(const std::string& codec_info);

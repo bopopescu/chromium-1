@@ -709,6 +709,10 @@ void MediaPlatformAPIWebOSGmp::UpdateCurrentTime(int64_t time) {
   current_time_ = time;
 }
 
+uint64_t MediaPlatformAPIWebOSGmp::GetCurrentTime() {
+  return current_time_;
+}
+
 void MediaPlatformAPIWebOSGmp::SetMediaVideoData(
     const std::string& video_info) {
   DCHECK(media_task_runner_->BelongsToCurrentThread());

@@ -84,6 +84,8 @@ class MEDIA_EXPORT MediaPlatformAPIWebOSGmp : public MediaPlatformAPI {
 
   void SetVisibility(bool visible) override;
 
+  uint64_t GetCurrentTime() override;
+
   void ReInitializeIfNeeded() override {}
   void SetLoadCompletedCb(const LoadCompletedCB& loaded_cb) override {}
   void SetDisableAudio(bool disable) override {}
