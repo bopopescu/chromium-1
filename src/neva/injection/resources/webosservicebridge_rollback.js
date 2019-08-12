@@ -16,5 +16,5 @@
 
 (function() {
   delete PalmServiceBridge;
-  delete webOSServiceBridge;
+  delete WebOSServiceBridge;
 })();

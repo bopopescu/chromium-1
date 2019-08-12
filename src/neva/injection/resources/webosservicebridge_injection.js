@@ -15,4 +15,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Support PalmServiceBridge for backward compatibility
-window.PalmServiceBridge = webOSServiceBridge;
+window.PalmServiceBridge = WebOSServiceBridge;

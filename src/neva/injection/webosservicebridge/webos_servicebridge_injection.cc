@@ -38,7 +38,7 @@ const char kCallMethodName[] = "call";
 const char kCancelMethodName[] = "cancel";
 const char kOnServiceCallbackName[] = "onservicecallback";
 const char kMethodInvocationAsConstructorOnly[] =
-    "webOSServiceBridge function must be invoked as a constructor only";
+    "WebOSServiceBridge function must be invoked as a constructor only";
 
 }  // anonymous namespace
 
@@ -223,7 +223,7 @@ void WebOSServiceBridgeInjectionExtension::Install(
       isolate,
       base::Bind(
           &WebOSServiceBridgeInjection::WebOSServiceBridgeConstructorCallback));
-  global->Set(gin::StringToSymbol(isolate, "webOSServiceBridge"),
+  global->Set(gin::StringToSymbol(isolate, "WebOSServiceBridge"),
               templ->GetFunction());
 
   const std::string extra_objects_js(
