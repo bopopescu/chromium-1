@@ -262,6 +262,8 @@ void UMediaClientImpl::SetPlaybackRate(float playback_rate) {
 
 void UMediaClientImpl::SetPlaybackVolume(double volume, bool forced) {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
+
+  FUNC_LOG(1) << " volume_ [" << volume_ << "] => volume [" << volume << "]";
   if (volume_ == volume && !forced)
     return;
 
@@ -275,6 +277,8 @@ void UMediaClientImpl::SetPlaybackVolume(double volume, bool forced) {
   int volume_level = (int)(volume * 100);
   int duration = 0;
   EaseType type = kEaseTypeLinear;
+
+  FUNC_LOG(1) << " volume_level [" << volume_level << "]";
   uMediaServer::uMediaClient::setVolume(volume_level, duration, type);
 }
 
@@ -397,7 +401,6 @@ bool UMediaClientImpl::SetDisplayWindow(const gfx::Rect& outRect,
 
 void UMediaClientImpl::SetVisibility(bool visible) {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
-  LOG(INFO) << __PRETTY_FUNCTION__;
   system_media_manager_->SetVisibility(visible);
 }
 
@@ -654,8 +657,6 @@ void UMediaClientImpl::DispatchLoadCompleted() {
   if (!video_display_window_change_cb_.is_null())
     video_display_window_change_cb_.Run();
 
-  SetPlaybackVolume(volume_, true);
-
   if (IsRequiredUMSInfo() && !update_ums_info_cb_.is_null())
     update_ums_info_cb_.Run(PlaybackNotificationToJson(
         MediaId(), PlaybackNotification::NotifyLoadCompleted));
@@ -673,6 +674,8 @@ void UMediaClientImpl::DispatchLoadCompleted() {
 
   system_media_manager_->PlayStateChanged(
       SystemMediaManager::PlayState::kLoaded);
+
+  SetPlaybackVolume(volume_, true);
 
   if (updated_source_info_ && !buffering_state_cb_.is_null())
     buffering_state_cb_.Run(UMediaClientImpl::kLoadCompleted);
