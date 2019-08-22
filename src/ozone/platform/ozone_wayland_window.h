@@ -158,7 +158,7 @@ class OzoneWaylandWindow : public PlatformWindow,
   scoped_refptr<BitmapCursorOzone> bitmap_;
   bool init_window_;
   app_runtime::CustomCursorType cursor_type_ =
-      app_runtime::CustomCursorType::kBlank;
+      app_runtime::CustomCursorType::kNotUse;
   bool allowed_cursor_overriding_ = false;
   base::WeakPtrFactory<OzoneWaylandWindow> weak_factory_;
 
