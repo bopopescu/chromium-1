@@ -90,6 +90,7 @@ void AXEventGenerator::ReleaseTree() {
 
 void AXEventGenerator::ClearEvents() {
   tree_events_.clear();
+  reparenting_node_events_.clear();
 }
 
 void AXEventGenerator::AddEvent(ui::AXNode* node,
@@ -324,6 +325,7 @@ void AXEventGenerator::OnTreeDataChanged(AXTree* tree,
 
 void AXEventGenerator::OnNodeWillBeDeleted(AXTree* tree, AXNode* node) {
   DCHECK_EQ(tree_, tree);
+  reparenting_node_events_.erase(node->id());
   tree_events_.erase(node);
 }
 
@@ -333,6 +335,9 @@ void AXEventGenerator::OnSubtreeWillBeDeleted(AXTree* tree, AXNode* node) {
 
 void AXEventGenerator::OnNodeWillBeReparented(AXTree* tree, AXNode* node) {
   DCHECK_EQ(tree_, tree);
+  for (const auto& event : tree_events_[node]) {
+    reparenting_node_events_[node->id()].insert(event);
+  }
   tree_events_.erase(node);
 }
 
@@ -346,6 +351,10 @@ void AXEventGenerator::OnNodeCreated(AXTree* tree, AXNode* node) {
 
 void AXEventGenerator::OnNodeReparented(AXTree* tree, AXNode* node) {
   DCHECK_EQ(tree_, tree);
+  for (const auto& event : reparenting_node_events_[node->id()]) {
+    tree_events_[node].insert(event);
+  }
+  reparenting_node_events_.erase(node->id());
 }
 
 void AXEventGenerator::OnNodeChanged(AXTree* tree, AXNode* node) {
