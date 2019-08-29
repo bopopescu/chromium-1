@@ -1100,6 +1100,7 @@ void RenderView::ApplyWebPreferences(const WebPreferences& prefs,
 #if defined(USE_NEVA_APPRUNTIME)
   settings->SetBackHistoryAPIEnabled(!prefs.back_history_api_disabled);
   settings->SetKeepAliveWebApp(prefs.keep_alive_webapp);
+  settings->SetGpuRasterizationAllowed(prefs.gpu_rasterization_allowed);
 #endif
 }
 

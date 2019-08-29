@@ -587,6 +587,11 @@ void WebViewBase::SetNetworkStableTimeout(const double timeout) {
   webview_->SetNetworkQuietTimeout(timeout);
 }
 
+void WebViewBase::SetGpuRasterizationAllowed(bool allowed) {
+  webview_->UpdatePreferencesAttribute(
+      app_runtime::WebView::Attribute::GpuRasterizationAllowed, allowed);
+}
+
 // FontFamily
 void WebViewBase::SetStandardFontFamily(const std::string& font) {
   webview_->SetFontFamily(app_runtime::WebView::FontFamily::StandardFont, font);

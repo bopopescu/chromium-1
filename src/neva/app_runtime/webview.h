@@ -69,6 +69,7 @@ class WebView : public content::WebContentsDelegate,
     AdditionalFontFamilyEnabled,
     BackHistoryAPIDisabled,
     ForceVideoTexture,
+    GpuRasterizationAllowed
   };
 
   enum FontFamily {

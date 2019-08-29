@@ -21,9 +21,12 @@ namespace content {
 
 struct WebPreferencesNeva {
   WebPreferencesNeva()
-      : back_history_api_disabled(false), keep_alive_webapp(false) {}
+      : back_history_api_disabled(false),
+        keep_alive_webapp(false),
+        gpu_rasterization_allowed(true) {}
   bool back_history_api_disabled;
   bool keep_alive_webapp;
+  bool gpu_rasterization_allowed;
 };
 
 }  // namespace content
