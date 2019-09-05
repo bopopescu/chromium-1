@@ -1,0 +1,6 @@
+[submodule "src/third_party"]
+	path = src/third_party
+	url = git@github.com:shr-project/chromium72-third-party
+[submodule "src/v8"]
+	path = src/v8
+	url = git@github.com:shr-project/v8
